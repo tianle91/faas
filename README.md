@@ -5,7 +5,10 @@ Gradient boosted trees.
 input data ----------|-> transformers + models (persist)
 meta data (persist) -|
 
-new data --|-> validation -|-> prediction
-meta data -|               |
-transformers + models -----|
+new data ---|-> scoring data 
+fill method |
+meta data --|
+
+scoring data ----------|-> prediction
+transformers + models -|
 ```
