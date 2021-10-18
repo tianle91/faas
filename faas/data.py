@@ -4,6 +4,8 @@ import pandas as pd
 from pandas.api.types import is_numeric_dtype
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 
+# TODO: convert to spark
+
 
 def validate_df(
     df: pd.DataFrame,
@@ -12,14 +14,17 @@ def validate_df(
     target_column: str
 ):
     err_msgs = []
+    # categorical columns must not be numeric
+    for c in categorical_columns:
+        if is_numeric_dtype(df.dtypes[c]):
+            err_msgs.append(f'Categorical column {c} is numeric type: {df.dtypes[c]}')
+    # covariate columns and target column must be in dataframe
     missing_covariate_columns = set(covariate_columns) - set(df.columns)
     if not len(missing_covariate_columns) == 0:
         err_msgs.append(f'Missing covariate columns: {missing_covariate_columns}')
     if target_column not in df.columns:
         err_msgs.append(f'Missing target column: {target_column}')
-    for c in categorical_columns:
-        if is_numeric_dtype(df.dtypes[c]):
-            err_msgs.append(f'Column {c} is numeric type: {df.dtypes[c]}')
+    # raise message with all failures
     if len(err_msgs) > 0:
         raise ValueError('\n'.join(err_msgs))
 
