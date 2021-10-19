@@ -6,7 +6,7 @@ from pyspark.sql import DataFrame
 
 def get_mean_std(
     df: DataFrame, column: str, group_column: Optional[str] = None
-) -> Dict[str: Tuple[float, float]]:
+) -> Dict[str, Tuple[float, float]]:
     """Return {group_value: (mean, std)} of df[column] grouped by group_column (otherwise 'all').
     """
     if group_column is not None:
