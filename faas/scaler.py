@@ -2,6 +2,7 @@ from typing import Dict, Optional, Tuple
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
+from pyspark.sql.types import NumericType
 
 
 def get_mean_std(
@@ -10,6 +11,12 @@ def get_mean_std(
     """Return {group_value: (mean, std)} of df[column] grouped by group_column (otherwise 'all').
     """
     if group_column is not None:
+        if isinstance(df.schema[group_column].dataType, NumericType):
+            raise TypeError(
+                f'Column: {group_column} '
+                f'dataType: {df.schema[group_column].dataType} is a NumericType, '
+                'which cannot be used for grouping.'
+            )
         df = df.groupBy(group_column)
     mean_stddevs = df.agg(
         F.mean(F.col(column)).alias('mean'),
