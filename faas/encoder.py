@@ -4,6 +4,12 @@ from pyspark.sql.types import LongType, NumericType
 
 
 def get_distinct_values(df: DataFrame, column: str) -> set:
+    if isinstance(df.schema[column].dataType, NumericType):
+        raise TypeError(
+            f'Column: {column} '
+            f'dataType: {df.schema[column].dataType} is a NumericType, '
+            'which cannot be used for encoding.'
+        )
     distinct_rows = (
         df
         .select(F.col(column).alias('val'))
@@ -19,13 +25,6 @@ class OrdinalEncoderSingleSpark:
         self.distincts: list = []
 
     def fit(self, df: DataFrame):
-        if isinstance(df.schema[self.column].dataType, NumericType):
-            raise TypeError(
-                f'Column: {self.column} '
-                f'dataType: {df.schema[self.column].dataType} is a NumericType, '
-                'which cannot be used for encoding.'
-            )
-
         new_values = get_distinct_values(df, self.column)
         new_values = [v for v in new_values if v not in self.distincts]
         self.distincts += new_values
