@@ -3,3 +3,4 @@ pylint
 autopep8
 pytest
 flake8
+ipykernel
