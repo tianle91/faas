@@ -8,4 +8,3 @@ def test_get_mean_std(spark):
     assert list(vals.keys()) == ['all'], vals
     mean, stddev = vals['all']
     assert mean > 0 and stddev > 0, str((mean, stddev))
-
