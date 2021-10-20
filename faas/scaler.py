@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 from typing import Dict, Optional, Tuple
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
-from pyspark.sql.types import NumericType
+from pyspark.sql.types import DoubleType, NumericType
 
 
 def get_mean_std(
@@ -34,3 +36,31 @@ def get_mean_std(
         assert len(mean_stddevs) == 1, str(mean_stddevs)
         row = mean_stddevs[0]
         return {'all': (getattr(row, 'mean'), getattr(row, 'stddev'))}
+
+
+class StandardScalerSpark:
+    def __init__(self, column, group_column: Optional[str] = None) -> None:
+        self.column = column
+        self.group_column = group_column
+        self._mean_std = None
+
+    def fit(self, df: DataFrame) -> StandardScalerSpark:
+        self._mean_std = get_mean_std(df, column=self.column, group_column=self.group_column)
+        return self
+
+    def _get_mean_std(self, value) -> Tuple[float, float]:
+        k = value if self.group_column is not None else 'all'
+        mean, std = self._mean_std.get(k, (0, 1))
+        return mean, std
+
+    def transform(self, df: DataFrame) -> DataFrame:
+        def fn(v) -> float:
+            mean, std = self._get_mean_std(v)
+            return (v - mean) / std
+        return df.withColumn(self.column, F.udf(fn, DoubleType())(F.col(self.column)))
+
+    def inverse_transform(self, df: DataFrame) -> DataFrame:
+        def fn(v) -> float:
+            mean, std = self._get_mean_std(v)
+            return std * v + mean
+        return df.withColumn(self.column, F.udf(fn, DoubleType())(F.col(self.column)))
