@@ -4,11 +4,16 @@ import logging
 from typing import List, Optional
 
 from pyspark.sql import DataFrame
+from pyspark.sql.types import NumericType
 
 from faas.encoder import OrdinalEncoderSingleSpark
 from faas.scaler import StandardScalerSpark
 
 logger = logging.getLogger(__name__)
+
+
+def non_numeric_types(df: DataFrame) -> List[str]:
+    return [c for c in df.columns if not isinstance(df.schema[c].dataType, NumericType)]
 
 
 class Preprocess:
