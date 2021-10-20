@@ -12,7 +12,7 @@ from faas.scaler import StandardScalerSpark
 logger = logging.getLogger(__name__)
 
 
-def non_numeric_types(df: DataFrame) -> List[str]:
+def get_non_numeric_types(df: DataFrame) -> List[str]:
     return [c for c in df.columns if not isinstance(df.schema[c].dataType, NumericType)]
 
 
