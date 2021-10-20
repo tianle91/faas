@@ -4,3 +4,4 @@ autopep8
 pytest
 flake8
 ipykernel
+scikit-learn==1.0
