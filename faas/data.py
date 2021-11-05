@@ -59,14 +59,10 @@ class Preprocess:
             df = enc.transform(df)
         return df
 
-    def transform_y(self, df: DataFrame) -> DataFrame:
-        if self.scaler is not None:
-            self.scaler.transform(df)
-        return df
-
     def transform(self, df: DataFrame) -> DataFrame:
+        if self.scaler is not None:
+            df = self.scaler.transform(df)
         df = self.transform_X(df)
-        df = self.transform_y(df)
         return df
 
     def inverse_transform_X(self, df: DataFrame) -> DataFrame:
@@ -74,14 +70,10 @@ class Preprocess:
             df = enc.inverse_transform(df)
         return df
 
-    def inverse_transform_y(self, df: DataFrame) -> DataFrame:
-        if self.scaler is not None:
-            self.scaler.inverse_transform(df)
-        return df
-
     def inverse_transform(self, df: DataFrame) -> DataFrame:
         df = self.inverse_transform_X(df)
-        df = self.inverse_transform_y(df)
+        if self.scaler is not None:
+            df = self.scaler.inverse_transform(df)
         return df
 
 
