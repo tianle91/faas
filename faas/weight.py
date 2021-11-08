@@ -27,7 +27,7 @@ class HistoricalDecay:
         self,
         annual_rate: float,
         timestamp_column: str,
-        weight_column: str = 'DecayWeights'
+        weight_column: str = 'HistoricalDecay'
     ):
         self.annual_rate = annual_rate
         self.timestamp_column = timestamp_column
@@ -37,27 +37,29 @@ class HistoricalDecay:
         validate_timestamp_types(df=df, cols=[self.timestamp_column])
         self.most_recent_date = (
             df.agg(
-                F.max(F.col(self.timestamp_column).alias('oldest'))
+                F.max(F.col(self.timestamp_column)).alias('oldest')
             ).collect()[0].oldest
         )
         return self
 
     def transform(self, df: DataFrame):
         validate_timestamp_types(df=df, cols=[self.timestamp_column])
+
+        def normalized_decay(dt: datetime) -> float:
+            r = historical_decay(
+                annual_rate=self.annual_rate,
+                today_dt=self.most_recent_date,
+                dt=dt
+            )
+            return 2. * r - 1.
+
         distincts = (
             df
             .select(self.timestamp_column)
             .distinct()
             .withColumn(
                 self.weight_column,
-                F.udf(
-                    lambda t: historical_decay(
-                        annual_rate=self.annual_rate,
-                        today_dt=self.most_recent_date,
-                        dt=t
-                    ),
-                    DoubleType()
-                )(self.timestamp_column)
+                F.udf(normalized_decay, DoubleType())(self.timestamp_column)
             )
         )
         return df.join(distincts, on=self.timestamp_column, how='left')
