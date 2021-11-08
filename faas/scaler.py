@@ -38,13 +38,13 @@ def get_mean_std(
         return {'all': (getattr(row, 'mean'), getattr(row, 'stddev'))}
 
 
-class StandardScalerSpark:
+class StandardScaler:
     def __init__(self, column, group_column: Optional[str] = None) -> None:
         self.column = column
         self.group_column = group_column
         self._mean_std = None
 
-    def fit(self, df: DataFrame) -> StandardScalerSpark:
+    def fit(self, df: DataFrame) -> StandardScaler:
         self._mean_std = get_mean_std(df, column=self.column, group_column=self.group_column)
         return self
 

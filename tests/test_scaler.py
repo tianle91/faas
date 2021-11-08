@@ -1,7 +1,7 @@
 import pandas as pd
 from pyspark.sql import DataFrame, SparkSession
 
-from faas.scaler import StandardScalerSpark, get_mean_std
+from faas.scaler import StandardScaler, get_mean_std
 
 
 def create_test_df(spark: SparkSession, n: int = 100) -> DataFrame:
@@ -20,17 +20,17 @@ def test_get_mean_std(spark):
     assert mean > 0 and stddev > 0, str((mean, stddev))
 
 
-def test_StandardScalerSpark(spark):
+def test_StandardScaler(spark):
     df = create_test_df(spark)
     expected = df.toPandas()
 
-    sc = StandardScalerSpark(column='q').fit(df)
+    sc = StandardScaler(column='q').fit(df)
     sc.transform(df).collect()
 
     actual = sc.inverse_transform(sc.transform(df)).toPandas()
     pd.testing.assert_frame_equal(left=expected, right=actual)
 
-    sc = StandardScalerSpark(column='q', group_column='p')
+    sc = StandardScaler(column='q', group_column='p')
     sc.fit(df)
 
     actual = sc.inverse_transform(sc.transform(df)).toPandas()
