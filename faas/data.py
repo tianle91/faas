@@ -6,32 +6,16 @@ from typing import List, Optional
 import pyspark.sql.functions as F
 from lightgbm import LGBMRegressor
 from pyspark.sql import DataFrame
-from pyspark.sql.types import DoubleType, NumericType, StringType
+from pyspark.sql.types import DoubleType
 
 from faas.encoder import OrdinalEncoderSingleSpark
 from faas.scaler import StandardScalerSpark
+from faas.utils_dataframe import (validate_categorical_types,
+                                  validate_numeric_types)
 
 logger = logging.getLogger(__name__)
 
 ROW_ID_COL = '__ROW_ID__'
-
-
-def get_non_numeric_columns(df: DataFrame) -> List[str]:
-    return [c for c in df.columns if not isinstance(df.schema[c].dataType, NumericType)]
-
-
-def validate_numeric_types(df: DataFrame, cols: List[str]):
-    for c in cols:
-        dtype = df.schema[c].dataType
-        if not isinstance(dtype, NumericType):
-            raise TypeError(f'Column {c} is {dtype} but is expected to be numeric.')
-
-
-def validate_categorical_types(df: DataFrame, cols: List[str]):
-    for c in cols:
-        dtype = df.schema[c].dataType
-        if not isinstance(dtype, StringType):
-            raise TypeError(f'Column {c} is {dtype} but is expected to be string.')
 
 
 class GetX:
