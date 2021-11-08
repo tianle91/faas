@@ -2,9 +2,15 @@
 Gradient boosted trees.
 
 ```
-data -|-> X (encoded covariates) -|-> X, y, w
-      |-> y (normalized target) --|
-      |-> weights ----------------|
+data -|-> GetX -|-> X, y, w
+      |-> GetY -|
+      |-> GetW -|
 
-X, y, w -> model -> serialized
+X, y, w -> training
+```
+
+```
+data -|-> GetX -|-> X
+
+X + model -> prediction
 ```
