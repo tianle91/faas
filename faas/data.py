@@ -8,8 +8,8 @@ from lightgbm import LGBMRegressor
 from pyspark.sql import DataFrame
 from pyspark.sql.types import DoubleType
 
-from faas.encoder import OrdinalEncoderSingleSpark
-from faas.scaler import StandardScalerSpark
+from faas.encoder import OrdinalEncoderSingle
+from faas.scaler import StandardScaler
 from faas.utils_dataframe import (validate_categorical_types,
                                   validate_numeric_types)
 
@@ -32,7 +32,7 @@ class GetX:
         self.encoder = {}
         if categorical_columns is not None:
             self.encoder = {
-                c: OrdinalEncoderSingleSpark(c)
+                c: OrdinalEncoderSingle(c)
                 for c in categorical_columns
             }
 
@@ -81,7 +81,7 @@ class GetY:
             )
         self.scaler = None
         if target_column is not None:
-            self.scaler = StandardScalerSpark(
+            self.scaler = StandardScaler(
                 column=target_column, group_column=scaling_by_column)
 
     def fit(self, df: DataFrame) -> Preprocess:
