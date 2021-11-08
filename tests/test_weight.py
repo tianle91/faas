@@ -37,4 +37,5 @@ def test_HistoricalDecay(spark: SparkSession):
     hd = HistoricalDecay(annual_rate=100., timestamp_column='dt', weight_column='hd')
     actual = hd.fit(df).transform(df).toPandas()
     assert max(actual['hd']) == 1.
+    assert actual.loc[actual['dt'] == datetime(2000, 1, 1), 'hd'].iloc[0] == 1.
     assert np.isclose(min(actual['hd']), -1.)
