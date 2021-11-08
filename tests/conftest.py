@@ -1,6 +1,5 @@
-import pandas as pd
 import pytest
-from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import SparkSession
 
 
 @pytest.fixture(scope='session')
