@@ -2,13 +2,9 @@
 Gradient boosted trees.
 
 ```
-input data ----------|-> transformers + models (persist)
-meta data (persist) -|
+data -|-> X (encoded covariates) -|-> X, y, w
+      |-> y (normalized target) --|
+      |-> weights ----------------|
 
-new data ---|-> scoring data 
-fill method |
-meta data --|
-
-scoring data ----------|-> prediction
-transformers + models -|
+X, y, w -> model -> serialized
 ```
