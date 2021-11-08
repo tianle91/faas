@@ -1,7 +1,15 @@
 import pandas as pd
+from pyspark.sql import DataFrame, SparkSession
 
 from faas.encoder import OrdinalEncoderSingleSpark
-from tests.conftest import create_test_df
+
+
+def create_test_df(spark: SparkSession, n: int = 100) -> DataFrame:
+    pdf = pd.DataFrame({
+        'p': ['abcdefghijklmnopqrstuvwxyz'[i % 26] for i in range(n)],
+        'q': [float(i) % 100 for i in range(n)],
+    })
+    return spark.createDataFrame(pdf)
 
 
 def test_OrdinalEncoderSingleSpark(spark):

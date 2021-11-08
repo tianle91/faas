@@ -6,7 +6,7 @@ from typing import List, Optional
 import pyspark.sql.functions as F
 from lightgbm import LGBMRegressor
 from pyspark.sql import DataFrame
-from pyspark.sql.types import DoubleType, NumericType
+from pyspark.sql.types import DoubleType, NumericType, StringType
 
 from faas.encoder import OrdinalEncoderSingleSpark
 from faas.scaler import StandardScalerSpark
@@ -20,60 +20,128 @@ def get_non_numeric_columns(df: DataFrame) -> List[str]:
     return [c for c in df.columns if not isinstance(df.schema[c].dataType, NumericType)]
 
 
-class Preprocess:
-    """Preprocess data.
+def validate_numeric_types(df: DataFrame, cols: List[str]):
+    for c in cols:
+        dtype = df.schema[c].dataType
+        if not isinstance(dtype, NumericType):
+            raise TypeError(f'Column {c} is {dtype} but is expected to be numeric.')
 
-    1. Convert categorical data into ordinal encoding using OrdinalEncoder.
-    2. (TBD) Scale target features within each group using StandardScaler.
-    3. (TBD) add date-related features.
-    4. (TBD) add location-related features.
-    """
+
+def validate_categorical_types(df: DataFrame, cols: List[str]):
+    for c in cols:
+        dtype = df.schema[c].dataType
+        if not isinstance(dtype, StringType):
+            raise TypeError(f'Column {c} is {dtype} but is expected to be string.')
+
+
+class GetX:
+    """Get covariates."""
 
     def __init__(
         self,
+        numeric_columns: Optional[List[str]] = None,
         categorical_columns: Optional[List[str]] = None,
-        target_scaling_group_by_column: Optional[str] = None,
+    ):
+        self.numeric_columns = []
+        if numeric_columns is not None:
+            self.numeric_columns = numeric_columns.copy()
+        self.encoder = {}
+        if categorical_columns is not None:
+            self.encoder = {
+                c: OrdinalEncoderSingleSpark(c)
+                for c in categorical_columns
+            }
+
+    def _validate_transform(self, df: DataFrame):
+        validate_numeric_types(df, cols=self.numeric_columns)
+        validate_categorical_types(df, cols=self.encoder.keys())
+
+    def fit(self, df: DataFrame) -> Preprocess:
+        self._validate_transform(df)
+        for enc in self.encoder.values():
+            enc.fit(df)
+        return self
+
+    def transform(self, df: DataFrame) -> DataFrame:
+        self._validate_transform(df)
+        df = df.select(*self.numeric_columns, *self.encoder.keys())
+        for enc in self.encoder.values():
+            df = enc.transform(df)
+        return df
+
+    def _validate_inverse_transform(self, df: DataFrame):
+        validate_numeric_types(df, cols=self.numeric_columns)
+        validate_numeric_types(df, cols=self.encoder.keys())
+
+    def inverse_transform(self, df: DataFrame) -> DataFrame:
+        self._validate_inverse_transform(df)
+        df = df.select(*self.numeric_columns, *self.encoder.keys())
+        for enc in self.encoder.values():
+            df = enc.inverse_transform(df)
+        return df
+
+
+class GetY:
+    """Get target."""
+
+    def __init__(
+        self,
+        scaling_by_column: Optional[str] = None,
         target_column: Optional[str] = None
     ):
-        self.encoder = {c: OrdinalEncoderSingleSpark(c) for c in categorical_columns}
-        if target_column is None and target_scaling_group_by_column is not None:
+        if target_column is None and scaling_by_column is not None:
             raise ValueError(
                 f'Cannot specify '
-                f'target_scaling_group_by_column: {target_scaling_group_by_column} '
+                f'scaling_by_column: {scaling_by_column} '
                 f'without specifying target_column.'
             )
         self.scaler = None
         if target_column is not None:
             self.scaler = StandardScalerSpark(
-                column=target_column, group_column=target_scaling_group_by_column)
+                column=target_column, group_column=scaling_by_column)
 
     def fit(self, df: DataFrame) -> Preprocess:
         if self.scaler is not None:
             self.scaler.fit(df)
-        for enc in self.encoder.values():
-            enc.fit(df)
         return self
-
-    def transform_X(self, df: DataFrame) -> DataFrame:
-        for enc in self.encoder.values():
-            df = enc.transform(df)
-        return df
 
     def transform(self, df: DataFrame) -> DataFrame:
         if self.scaler is not None:
             df = self.scaler.transform(df)
-        df = self.transform_X(df)
-        return df
-
-    def inverse_transform_X(self, df: DataFrame) -> DataFrame:
-        for enc in self.encoder.values():
-            df = enc.inverse_transform(df)
         return df
 
     def inverse_transform(self, df: DataFrame) -> DataFrame:
-        df = self.inverse_transform_X(df)
         if self.scaler is not None:
             df = self.scaler.inverse_transform(df)
+        return df
+
+
+class Preprocess:
+    """Preprocess data."""
+
+    def __init__(
+        self,
+        numeric_columns: Optional[List[str]] = None,
+        categorical_columns: Optional[List[str]] = None,
+        scale_by_column: Optional[str] = None,
+        target_column: Optional[str] = None
+    ):
+        self.GetX = GetX(numeric_columns=numeric_columns, categorical_columns=categorical_columns)
+        self.GetY = GetY(scaling_by_column=scale_by_column, target_column=target_column)
+
+    def fit(self, df: DataFrame) -> Preprocess:
+        self.GetX.fit(df)
+        self.GetY.fit(df)
+        return self
+
+    def transform(self, df: DataFrame) -> DataFrame:
+        df = self.GetY.transform(df)
+        df = self.GetX.transform(df)
+        return df
+
+    def inverse_transform(self, df: DataFrame) -> DataFrame:
+        df = self.GetX.inverse_transform(df)
+        df = self.GetY.inverse_transform(df)
         return df
 
 
@@ -91,7 +159,7 @@ class LGBMDataWrapper:
         self.pp = Preprocess(
             categorical_columns=categorical_columns,
             target_column=target_column,
-            target_scaling_group_by_column=target_scaling_group_by_column,
+            scale_by_column=target_scaling_group_by_column,
         )
         self.m = LGBMRegressor(**lgbm_params)
 
