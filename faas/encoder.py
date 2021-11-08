@@ -21,13 +21,13 @@ def get_distinct_values(df: DataFrame, column: str) -> set:
     return {row.val for row in distinct_rows}
 
 
-class OrdinalEncoderSingleSpark:
+class OrdinalEncoderSingle:
     def __init__(self, column: str) -> None:
         self.column = column
         self.distincts: list = []
         self.column_type = None
 
-    def fit(self, df: DataFrame) -> OrdinalEncoderSingleSpark:
+    def fit(self, df: DataFrame) -> OrdinalEncoderSingle:
         self.column_type = df.schema[self.column].dataType
         new_values = get_distinct_values(df, self.column)
         new_values = [v for v in new_values if v not in self.distincts]

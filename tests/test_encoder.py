@@ -1,7 +1,7 @@
 import pandas as pd
 from pyspark.sql import DataFrame, SparkSession
 
-from faas.encoder import OrdinalEncoderSingleSpark
+from faas.encoder import OrdinalEncoderSingle
 
 
 def create_test_df(spark: SparkSession, n: int = 100) -> DataFrame:
@@ -12,11 +12,11 @@ def create_test_df(spark: SparkSession, n: int = 100) -> DataFrame:
     return spark.createDataFrame(pdf)
 
 
-def test_OrdinalEncoderSingleSpark(spark):
+def test_OrdinalEncoderSingle(spark):
     df = create_test_df(spark)
     expected = df.toPandas()
 
-    enc = OrdinalEncoderSingleSpark('p').fit(df)
+    enc = OrdinalEncoderSingle('p').fit(df)
     encoded_rows = enc.transform(df).distinct().collect()
 
     encoded_values = {row.p for row in encoded_rows}
