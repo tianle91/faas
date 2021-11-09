@@ -25,15 +25,6 @@ class InvertibleTransformer(BaseTransformer):
         return df
 
 
-class SelectTransformer(BaseTransformer):
-
-    def __init__(self, columns: List[str]) -> None:
-        self.columns = columns
-
-    def transform(self, df: DataFrame) -> DataFrame:
-        return df.select(*self.columns)
-
-
 class Pipeline(BaseTransformer):
     def __init__(self, steps: List[BaseTransformer]):
         self.steps = steps
@@ -42,7 +33,7 @@ class Pipeline(BaseTransformer):
     def feature_columns(self) -> List[str]:
         res = []
         for transformer in self.steps:
-            res.append(transformer.feature_columns)
+            res += transformer.feature_columns
         return res
 
     def fit(self, df: DataFrame) -> Pipeline:
