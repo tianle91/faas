@@ -21,11 +21,11 @@ data, y -GetY-> data[y]
 
 # Tools
 `faas.encoder`
-categorical features -> OrdinalEncoderSingle
+- categorical features -> OrdinalEncoderSingle
 
 `faas.scaler`
-categorical features strongly correlated with target -> StandardScaler
+- categorical features strongly correlated with target -> StandardScaler
 
 `faas.weight`
-recent trends are more important -> HistoricalDecay
-performance among groups are equally important -> Normalize
+- recent trends are more important -> HistoricalDecay
+- performance among groups are equally important -> Normalize
