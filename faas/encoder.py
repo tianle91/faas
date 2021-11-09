@@ -34,6 +34,10 @@ class OrdinalEncoder(BaseTransformer):
     def feature_column(self) -> str:
         return f'OrdinalEncoder_{self.categorical_column}'
 
+    @property
+    def feature_columns(self) -> str:
+        return [self.feature_column]
+
     def validate(self, df: DataFrame):
         validate_categorical_types(df, cols=[self.categorical_column])
 

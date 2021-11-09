@@ -73,6 +73,10 @@ class Normalize(BaseTransformer):
     def feature_column(self) -> str:
         return f'Normalize_{self.group_column}'
 
+    @property
+    def feature_columns(self) -> str:
+        return [self.feature_column]
+
     def transform(self, df: DataFrame):
         dtype = df.schema[self.group_column].dataType
         if not (isinstance(dtype, StringType) or isinstance(dtype, DateType)):

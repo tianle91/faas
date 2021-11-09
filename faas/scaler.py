@@ -51,6 +51,10 @@ class StandardScaler(InvertibleTransformer):
     def feature_column(self) -> str:
         return f'StandardScaler_{self.column}_by_{self.group_column}'
 
+    @property
+    def feature_columns(self) -> str:
+        return [self.feature_column]
+
     def validate(self, df: DataFrame, is_inverse=False):
         if not is_inverse:
             validate_numeric_types(df, cols=[self.column])
