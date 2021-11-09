@@ -1,14 +1,14 @@
 from typing import Dict, List
 
+import pandas as pd
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.stat import Correlation
 from pyspark.sql import DataFrame
-import pandas as pd
 
 __CORRELATION_VECTOR_COL__ = "__CORRELATION_VECTOR_COL__"
 
 
-def target_correlation(
+def correlation(
     df: DataFrame,
     feature_columns: List[str],
     target_column: str
