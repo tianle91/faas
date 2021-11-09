@@ -4,6 +4,7 @@ import pandas as pd
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.stat import Correlation
 from pyspark.sql import DataFrame
+from pyspark.sql.types import NumericType
 
 __CORRELATION_VECTOR_COL__ = "__CORRELATION_VECTOR_COL__"
 
@@ -13,7 +14,10 @@ def correlation(
     feature_columns: List[str],
     target_column: str
 ) -> pd.DataFrame:
-    columns = feature_columns + [target_column]
+    columns = [
+        c for c in feature_columns + [target_column]
+        if isinstance(df.schema[c].dataType, NumericType)
+    ]
     assembler = VectorAssembler(
         inputCols=columns,
         outputCol=__CORRELATION_VECTOR_COL__
