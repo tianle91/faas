@@ -5,7 +5,8 @@ import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
 from pyspark.sql.types import DoubleType
 
-from faas.utils_dataframe import validate_timestamp_types
+from faas.utils_dataframe import (validate_categorical_types,
+                                  validate_timestamp_types)
 
 
 def historical_decay(annual_rate: float, today_dt: datetime, dt: datetime) -> float:
@@ -62,3 +63,30 @@ class HistoricalDecay:
             )
         )
         return df.join(distincts, on=self.timestamp_column, how='left')
+
+
+class Normalize:
+    """Weights to ensure that for each group, sum of weights is 1."""
+
+    def __init__(
+        self,
+        categorical_column: str,
+        weight_column: str = 'Normalize'
+    ):
+        self.categorical_column = categorical_column
+        self.weight_column = weight_column
+
+    def fit(self):
+        return self
+
+    def transform(self, df: DataFrame):
+        validate_categorical_types(df=df, cols=[self.categorical_column])
+        COUNTS_COL = '__COUNTS__'
+        counts = (
+            df
+            .groupBy(self.categorical_column)
+            .agg(F.sum(F.lit(1.)).alias(COUNTS_COL))
+        )
+        df = df.join(counts, on=self.categorical_column, how='left')
+        df = df.withColumn(self.weight_column, 1. / F.col(COUNTS_COL)).drop(COUNTS_COL)
+        return df
