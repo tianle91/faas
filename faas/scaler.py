@@ -32,7 +32,11 @@ def get_mean_std(
             for row in mean_stddevs
         }
     else:
-        assert len(mean_stddevs) == 1, str(mean_stddevs)
+        if not len(mean_stddevs) == 1:
+            raise ValueError(
+                'Expecting mean_stddevs to be length 1 because group_column is None '
+                f'but found {mean_stddevs} instead.'
+            )
         row = mean_stddevs[0]
         return {'all': (getattr(row, 'mean'), getattr(row, 'stddev'))}
 
