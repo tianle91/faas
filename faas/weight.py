@@ -5,7 +5,7 @@ import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
 from pyspark.sql.types import DoubleType
 
-from faas.base import WTransformer
+from faas.base import BaseTransformer
 from faas.utils_dataframe import (validate_categorical_types,
                                   validate_timestamp_types)
 
@@ -22,7 +22,7 @@ def historical_decay(annual_rate: float, today_dt: datetime, dt: datetime) -> fl
     return float(np.exp(-1. * annual_rate * years_ago))
 
 
-class HistoricalDecay(WTransformer):
+class HistoricalDecay(BaseTransformer):
     """Weights with decreasing weight from 1 (newest) to 0 (infinitely old)."""
 
     def __init__(
@@ -58,7 +58,7 @@ class HistoricalDecay(WTransformer):
         return df.join(distincts, on=self.timestamp_column, how='left')
 
 
-class Normalize(WTransformer):
+class Normalize(BaseTransformer):
     """Weights to ensure that for each group, sum of weights is 1."""
 
     def __init__(

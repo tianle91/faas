@@ -6,7 +6,7 @@ import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
 from pyspark.sql.types import DoubleType, NumericType
 
-from faas.base import YTransformer
+from faas.base import InvertibleTransformer
 from faas.utils_dataframe import (validate_categorical_types,
                                   validate_numeric_types)
 
@@ -42,7 +42,7 @@ def get_mean_std(
         return {'all': (getattr(row, 'mean'), getattr(row, 'stddev'))}
 
 
-class StandardScaler(YTransformer):
+class StandardScaler(InvertibleTransformer):
     def __init__(self, column, group_column: Optional[str] = None) -> None:
         self.column = column
         self.group_column = group_column

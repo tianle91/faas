@@ -19,16 +19,7 @@ class BaseTransformer:
         raise NotImplementedError
 
 
-class XTransformer(BaseTransformer):
-    pass
-
-
-class WTransformer(BaseTransformer):
-    pass
-
-
-class YTransformer(BaseTransformer):
-    """YTransformers need to implement inverse"""
+class InvertibleTransformer(BaseTransformer):
 
     def inverse_transform(self, df: DataFrame) -> DataFrame:
         raise NotImplementedError
@@ -54,11 +45,9 @@ class Pipeline(BaseTransformer):
 
     def inverse_transform(self, df: DataFrame) -> DataFrame:
         for name, transformer in self.steps[::-1]:
-            if not isinstance(transformer, YTransformer):
+            if not isinstance(transformer, InvertibleTransformer):
                 raise TypeError(
-                    f'Transformer name: {name}, {transformer} should be a YTransformer '
-                    'in order to be invertible.'
-                )
-            transformer: YTransformer = transformer
+                    f'Transformer {name}, {transformer} should be InvertibleTransformer')
+            transformer: InvertibleTransformer = transformer
             df = transformer.inverse_transform(df)
         return df

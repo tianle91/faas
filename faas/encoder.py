@@ -4,7 +4,7 @@ import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
 from pyspark.sql.types import LongType, NumericType
 
-from faas.base import XTransformer
+from faas.base import BaseTransformer
 from faas.utils_dataframe import validate_categorical_types
 
 
@@ -24,7 +24,7 @@ def get_distinct_values(df: DataFrame, column: str) -> set:
     return {row.val for row in distinct_rows}
 
 
-class OrdinalEncoder(XTransformer):
+class OrdinalEncoder(BaseTransformer):
     def __init__(self, categorical_column: str) -> None:
         self.categorical_column = categorical_column
         self.distincts: list = []
