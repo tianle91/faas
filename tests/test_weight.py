@@ -40,7 +40,7 @@ def test_Normalize(spark: SparkSession):
     df = spark.createDataFrame(pd.DataFrame({
         'col': ['A', 'A', 'A', 'A', 'B', 'B', 'C'],
     }))
-    nm = Normalize(categorical_column='col')
+    nm = Normalize(group_column='col')
     actual = nm.transform(df).orderBy('col').toPandas()
     expected = pd.DataFrame({
         'col': ['A', 'A', 'A', 'A', 'B', 'B', 'C'],

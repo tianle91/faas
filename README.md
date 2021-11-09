@@ -35,5 +35,4 @@ data+y -YTransformers(inverse)-> data+predictions
 3. Any features strongly correlated with target? If categorical, use `faas.scaler.StandardScaler`.
 If numeric, TBD.
 4. Are recent trends more important? If so, use `faas.weight.HistoricalDecay`
-5. Do we care equally about performance among groups? If so, use `faas.weight.Normalize`.
-6. (TBD) Do we care equally about performance for each date?
+5. Do we care equally about performance among groups (or dates)? If so, use `faas.weight.Normalize`.
