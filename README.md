@@ -28,13 +28,12 @@ data, y -JoinableByRowID-> data+y
 data+y -YTransformers(inverse)-> data+predictions
 ```
 
-# Tools
-`faas.encoder`
-- categorical features -> OrdinalEncoder
-
-`faas.scaler`
-- categorical features strongly correlated with target -> StandardScaler
-
-`faas.weight`
-- recent trends are more important -> HistoricalDecay
-- performance among groups are equally important -> Normalize
+# Steps
+1. Identify target columns. If target is categorical, use `faas.encoder.OrdinalEncoder`.
+2. Identify which columns to use as predictive features? For any categorical columns, use 
+`faas.encoder.OrdinalEncoder`.
+3. Any features strongly correlated with target? If categorical, use `faas.scaler.StandardScaler`.
+If numeric, TBD.
+4. Are recent trends more important? If so, use `faas.weight.HistoricalDecay`
+5. Do we care equally about performance among groups? If so, use `faas.weight.Normalize`.
+6. (TBD) Do we care equally about performance for each date?
