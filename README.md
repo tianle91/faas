@@ -32,8 +32,6 @@ data+y -YTransformers(inverse)-> data+predictions
 1. Identify target columns. If target is categorical, use `faas.encoder.OrdinalEncoder`.
 2. Identify which columns to use as predictive features? For any categorical columns, use 
 `faas.encoder.OrdinalEncoder`.
-3. Are recent trends more important? If so, use `faas.weight.HistoricalDecay`
-4. Do we care equally about performance among groups (or dates)? If so, use `faas.weight.Normalize`.
 
 ## Numeric Target
 1. Any features strongly correlated with target? For categorical features, use
@@ -41,3 +39,7 @@ data+y -YTransformers(inverse)-> data+predictions
 
 ## Binary Target
 1. Are the classes imbalanced? TBD.
+
+## Weights
+1. Are recent trends more important? If so, use `faas.weight.HistoricalDecay`
+2. Do we care equally about performance among groups (or dates)? If so, use `faas.weight.Normalize`.
