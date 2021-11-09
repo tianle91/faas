@@ -32,7 +32,7 @@ class GetX:
         self.encoder = {}
         if categorical_columns is not None:
             self.encoder = {
-                c: OrdinalEncoderSingle(c)
+                c: OrdinalEncoderSingle(categorical_column=c)
                 for c in categorical_columns
             }
 
