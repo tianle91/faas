@@ -4,7 +4,7 @@ from typing import Dict, Optional, Tuple
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
-from pyspark.sql.types import DoubleType, NumericType
+from pyspark.sql.types import DoubleType
 
 from faas.base import InvertibleTransformer
 from faas.utils_dataframe import (validate_categorical_types,
