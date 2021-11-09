@@ -3,25 +3,33 @@ Gradient boosted trees.
 
 
 # Pipelines
-Training
+Given some pre-defined pipeline components.
 ```
-data -GetX-> X
-     -GetY-> y
-     -GetW-> w
+XTransformers = [...]
+YTransformers = [...]
+WTransformers = [...]
+```
 
+Training looks like:
+```
+data -XTransformers-> data+x
+data -YTransformers-> data+y
+data -WTransformers-> data+w
+data+x -> X, data+y -> y, data+w -> w
 X, y, w -training-> model
 ```
 
-Prediction
+Prediction looks like:
 ```
-data -GetX-> X
-X, model -> y
-data, y -GetY(inv)-> predictions
+data -XTransformers-> data+x
+data+x -> X, X, model -> y
+data, y -JoinableByRowID-> data+y
+data+y -YTransformers(inverse)-> data+predictions
 ```
 
 # Tools
 `faas.encoder`
-- categorical features -> OrdinalEncoderSingle
+- categorical features -> OrdinalEncoder
 
 `faas.scaler`
 - categorical features strongly correlated with target -> StandardScaler
