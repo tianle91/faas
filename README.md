@@ -33,6 +33,6 @@ data+y -YTransformers(inverse)-> data+predictions
 2. Identify which columns to use as predictive features? For any categorical columns, use 
 `faas.encoder.OrdinalEncoder`.
 3. Any features strongly correlated with target? If categorical, use `faas.scaler.StandardScaler`.
-If numeric, TBD.
+If numeric, use `faas.scaler.NumericScaler`.
 4. Are recent trends more important? If so, use `faas.weight.HistoricalDecay`
 5. Do we care equally about performance among groups (or dates)? If so, use `faas.weight.Normalize`.
