@@ -22,7 +22,8 @@ X, y, w -training-> model
 Prediction looks like:
 ```
 data -XTransformers-> data+x
-data+x -> X, X, model -> y
+data+x -> X
+X -model-> y
 data, y -JoinableByRowID-> data+y
 data+y -YTransformers(inverse)-> data+predictions
 ```
