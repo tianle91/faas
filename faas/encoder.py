@@ -1,8 +1,13 @@
 from __future__ import annotations
 
+from typing import List
+
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
-from pyspark.sql.types import LongType, NumericType
+from pyspark.sql.types import LongType, NumericType, StringType
+
+from faas.utils_dataframe import (validate_categorical_types,
+                                  validate_numeric_types)
 
 
 def get_distinct_values(df: DataFrame, column: str) -> set:
@@ -27,29 +32,44 @@ class OrdinalEncoderSingle:
         self.distincts: list = []
         self.column_type = None
 
+    def validate(self, df: DataFrame):
+        validate_categorical_types(df, cols=[self.column])
+
     def fit(self, df: DataFrame) -> OrdinalEncoderSingle:
-        self.column_type = df.schema[self.column].dataType
-        new_values = get_distinct_values(df, self.column)
-        new_values = [v for v in new_values if v not in self.distincts]
-        self.distincts += new_values
+        self.validate(df)
+        for v in get_distinct_values(df, self.column):
+            if v not in self.distincts:
+                self.distincts.append(v)
         return self
 
     def transform(self, df: DataFrame) -> DataFrame:
+        self.validate(df)
         mapping = {k: i for i, k in enumerate(self.distincts)}
-        return df.withColumn(
-            self.column,
-            F.udf(
-                lambda v: mapping.get(v, None),
-                LongType()
-            )(F.col(self.column))
-        )
+        udf = F.udf(lambda v: mapping.get(v, None), LongType())
+        return df.withColumn(self.column, udf(F.col(self.column)))
 
     def inverse_transform(self, df: DataFrame) -> DataFrame:
-        mapping = {i: k for i, k in enumerate(self.distincts)}
-        return df.withColumn(
-            self.column,
-            F.udf(
-                lambda v: mapping.get(v, None),
-                self.column_type
-            )(F.col(self.column))
-        )
+        validate_numeric_types(df, cols=[self.column])
+        inverse_mapping = {i: k for i, k in enumerate(self.distincts)}
+        udf = F.udf(lambda v: inverse_mapping.get(v, None), StringType())
+        return df.withColumn(self.column, udf(F.col(self.column)))
+
+
+class OrdinalEncoder:
+    def __init__(self, categorical_columns: List[str]):
+        self.encoder = {c: OrdinalEncoderSingle(c) for c in categorical_columns}
+
+    def fit(self, df: DataFrame) -> OrdinalEncoder:
+        for enc in self.encoder.values():
+            enc.fit(df)
+        return self
+
+    def transform(self, df: DataFrame) -> DataFrame:
+        for enc in self.encoder.values():
+            df = enc.transform(df)
+        return df
+
+    def inverse_transform(self, df: DataFrame) -> DataFrame:
+        for enc in self.encoder.values():
+            df = enc.inverse_transform(df)
+        return df
