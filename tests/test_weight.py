@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 import pytest
-from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import SparkSession
 
 from faas.weight import HistoricalDecay, Normalize, historical_decay
 
