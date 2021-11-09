@@ -4,7 +4,7 @@ from pyspark.sql import DataFrame
 
 
 class BaseTransformer:
-    """Transformers can only add a single column, i.e. feature_column"""
+    """A BaseTransformer adds a single column, i.e. feature_column"""
 
     @property
     def feature_column(self) -> str:
