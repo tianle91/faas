@@ -25,6 +25,16 @@ class InvertibleTransformer(BaseTransformer):
         return df
 
 
+class Passthrough(InvertibleTransformer):
+
+    def __init__(self, columns: str) -> None:
+        self.columns = columns
+
+    @property
+    def feature_columns(self) -> List[str]:
+        return self.columns
+
+
 class Pipeline(BaseTransformer):
     def __init__(self, steps: List[BaseTransformer]):
         self.steps = steps
