@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date
 
 import numpy as np
 import pyspark.sql.functions as F
@@ -7,10 +7,10 @@ from pyspark.sql.types import DoubleType
 
 from faas.base import BaseTransformer
 from faas.utils_dataframe import (validate_categorical_types,
-                                  validate_timestamp_types)
+                                  validate_date_types)
 
 
-def historical_decay(annual_rate: float, today_dt: datetime, dt: datetime) -> float:
+def historical_decay(annual_rate: float, today_dt: date, dt: date) -> float:
     """Discounted value of historical observations based on today_dt and dt with an annual rate.
     For dt==today_dt, the amount is 1. For dt==today_dt-1year, the amount is e^-annual_rate.
     """
@@ -28,23 +28,23 @@ class HistoricalDecay(BaseTransformer):
     def __init__(
         self,
         annual_rate: float,
-        timestamp_column: str,
+        date_column: str,
     ):
         self.annual_rate = annual_rate
-        self.timestamp_column = timestamp_column
+        self.date_column = date_column
 
     @property
     def feature_column(self) -> str:
-        return f'HistoricalDecay_{self.timestamp_column}'
+        return f'HistoricalDecay_{self.date_column}'
 
     def fit(self, df: DataFrame):
-        validate_timestamp_types(df=df, cols=[self.timestamp_column])
-        newest_df = df.agg(F.max(F.col(self.timestamp_column)).alias('newest'))
+        validate_date_types(df=df, cols=[self.date_column])
+        newest_df = df.agg(F.max(F.col(self.date_column)).alias('newest'))
         self.most_recent_date = newest_df.collect()[0].newest
         return self
 
     def transform(self, df: DataFrame):
-        validate_timestamp_types(df=df, cols=[self.timestamp_column])
+        validate_date_types(df=df, cols=[self.date_column])
         udf = F.udf(
             lambda dt: historical_decay(
                 annual_rate=self.annual_rate,
@@ -53,9 +53,9 @@ class HistoricalDecay(BaseTransformer):
             ),
             DoubleType()
         )
-        distincts = df.select(self.timestamp_column).distinct()
-        distincts = distincts.withColumn(self.feature_column, udf(self.timestamp_column))
-        return df.join(distincts, on=self.timestamp_column, how='left')
+        distincts = df.select(self.date_column).distinct()
+        distincts = distincts.withColumn(self.feature_column, udf(self.date_column))
+        return df.join(distincts, on=self.date_column, how='left')
 
 
 class Normalize(BaseTransformer):

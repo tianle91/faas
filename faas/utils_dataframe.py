@@ -2,8 +2,7 @@ from typing import List
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
-from pyspark.sql.types import (DoubleType, NumericType, StringType,
-                               TimestampType)
+from pyspark.sql.types import DateType, DoubleType, NumericType, StringType
 
 
 def get_non_numeric_columns(df: DataFrame) -> List[str]:
@@ -24,10 +23,10 @@ def validate_categorical_types(df: DataFrame, cols: List[str]):
             raise TypeError(f'Column {c} is {dtype} but is expected to be string.')
 
 
-def validate_timestamp_types(df: DataFrame, cols: List[str]):
+def validate_date_types(df: DataFrame, cols: List[str]):
     for c in cols:
         dtype = df.schema[c].dataType
-        if not isinstance(dtype, TimestampType):
+        if not isinstance(dtype, DateType):
             raise TypeError(f'Column {c} is {dtype} but is expected to be timestamp.')
 
 
