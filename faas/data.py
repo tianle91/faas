@@ -8,7 +8,7 @@ from lightgbm import LGBMRegressor
 from pyspark.sql import DataFrame
 from pyspark.sql.types import DoubleType
 
-from faas.encoder import OrdinalEncoderSingle
+from faas.encoder import OrdinalEncoder
 from faas.scaler import StandardScaler
 from faas.utils_dataframe import (validate_categorical_types,
                                   validate_numeric_types)
@@ -32,7 +32,7 @@ class GetX:
         self.encoder = {}
         if categorical_columns is not None:
             self.encoder = {
-                c: OrdinalEncoderSingle(categorical_column=c)
+                c: OrdinalEncoder(categorical_column=c)
                 for c in categorical_columns
             }
 
