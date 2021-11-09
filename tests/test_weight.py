@@ -29,21 +29,21 @@ def test_HistoricalDecay(spark: SparkSession):
     df = spark.createDataFrame(pd.DataFrame({
         'dt': [datetime(2000, 1, 1) - timedelta(weeks=i) for i in range(100)],
     }))
-    hd = HistoricalDecay(annual_rate=100., timestamp_column='dt', weight_column='hd')
-    actual = hd.fit(df).transform(df).toPandas()
-    assert max(actual['hd']) == 1.
-    assert actual.loc[actual['dt'] == datetime(2000, 1, 1), 'hd'].iloc[0] == 1.
-    assert np.isclose(min(actual['hd']), 0.)
+    hd = HistoricalDecay(annual_rate=100., timestamp_column='dt').fit(df)
+    actual = hd.transform(df).toPandas()
+    assert max(actual[hd.feature_column]) == 1.
+    assert actual.loc[actual['dt'] == datetime(2000, 1, 1), hd.feature_column].iloc[0] == 1.
+    assert np.isclose(min(actual[hd.feature_column]), 0.)
 
 
 def test_Normalize(spark: SparkSession):
     df = spark.createDataFrame(pd.DataFrame({
         'col': ['A', 'A', 'A', 'A', 'B', 'B', 'C'],
     }))
-    nm = Normalize(categorical_column='col', weight_column='nm')
+    nm = Normalize(categorical_column='col')
     actual = nm.transform(df).orderBy('col').toPandas()
     expected = pd.DataFrame({
         'col': ['A', 'A', 'A', 'A', 'B', 'B', 'C'],
-        'nm': [.25, .25, .25, .25, .5, .5, 1.],
+        nm.feature_column: [.25, .25, .25, .25, .5, .5, 1.],
     })
     pd.testing.assert_frame_equal(expected, actual)
