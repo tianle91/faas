@@ -17,12 +17,7 @@ def get_mean_std(
     """Return {group_value: (mean, std)} of df[column] grouped by group_column (otherwise 'all').
     """
     if group_column is not None:
-        if isinstance(df.schema[group_column].dataType, NumericType):
-            raise TypeError(
-                f'Column: {group_column} '
-                f'dataType: {df.schema[group_column].dataType} is a NumericType, '
-                'which cannot be used for grouping.'
-            )
+        validate_categorical_types(df=df, cols=[group_column])
         df = df.groupBy(group_column)
     mean_stddevs = df.agg(
         F.mean(F.col(column)).alias('mean'),
