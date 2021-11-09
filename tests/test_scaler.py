@@ -25,13 +25,13 @@ def test_StandardScaler(spark):
     expected = df.toPandas()
 
     sc = StandardScaler(column='q').fit(df)
-    sc.transform(df).collect()
-
-    actual = sc.inverse_transform(sc.transform(df)).toPandas()
+    transformed_df = sc.transform(df).drop('q')
+    transformed_df.collect()
+    actual = sc.inverse_transform(transformed_df).select('p', 'q').toPandas()
     pd.testing.assert_frame_equal(left=expected, right=actual)
 
-    sc = StandardScaler(column='q', group_column='p')
-    sc.fit(df)
-
-    actual = sc.inverse_transform(sc.transform(df)).toPandas()
+    sc = StandardScaler(column='q', group_column='p').fit(df)
+    transformed_df = sc.transform(df).drop('q')
+    transformed_df.collect()
+    actual = sc.inverse_transform(transformed_df).select('p', 'q').toPandas()
     pd.testing.assert_frame_equal(left=expected, right=actual)

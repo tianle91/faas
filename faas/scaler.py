@@ -6,6 +6,10 @@ import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
 from pyspark.sql.types import DoubleType, NumericType
 
+from faas.base import YTransformer
+from faas.utils_dataframe import (validate_categorical_types,
+                                  validate_numeric_types)
+
 
 def get_mean_std(
     df: DataFrame, column: str, group_column: Optional[str] = None
@@ -38,13 +42,26 @@ def get_mean_std(
         return {'all': (getattr(row, 'mean'), getattr(row, 'stddev'))}
 
 
-class StandardScaler:
+class StandardScaler(YTransformer):
     def __init__(self, column, group_column: Optional[str] = None) -> None:
         self.column = column
         self.group_column = group_column
         self._mean_std = None
 
+    @property
+    def feature_column(self) -> str:
+        return f'StandardScaler_{self.column}_by_{self.group_column}'
+
+    def validate(self, df: DataFrame, is_inverse=False):
+        if not is_inverse:
+            validate_numeric_types(df, cols=[self.column])
+        else:
+            validate_numeric_types(df, cols=[self.feature_column])
+        if self.group_column is not None:
+            validate_categorical_types(df, cols=[self.group_column])
+
     def fit(self, df: DataFrame) -> StandardScaler:
+        self.validate(df)
         self._mean_std = get_mean_std(df, column=self.column, group_column=self.group_column)
         return self
 
@@ -54,13 +71,19 @@ class StandardScaler:
         return mean, std
 
     def transform(self, df: DataFrame) -> DataFrame:
+        self.validate(df)
+
         def fn(v) -> float:
             mean, std = self._get_mean_std(v)
             return (v - mean) / std
-        return df.withColumn(self.column, F.udf(fn, DoubleType())(F.col(self.column)))
+        udf = F.udf(fn, DoubleType())
+        return df.withColumn(self.feature_column, udf(F.col(self.column)))
 
     def inverse_transform(self, df: DataFrame) -> DataFrame:
+        self.validate(df, is_inverse=True)
+
         def fn(v) -> float:
             mean, std = self._get_mean_std(v)
             return std * v + mean
-        return df.withColumn(self.column, F.udf(fn, DoubleType())(F.col(self.column)))
+        udf = F.udf(fn, DoubleType())
+        return df.withColumn(self.column, udf(F.col(self.feature_column)))
