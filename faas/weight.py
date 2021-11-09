@@ -21,7 +21,7 @@ def historical_decay(annual_rate: float, today_dt: datetime, dt: datetime) -> fl
 
 
 class HistoricalDecay:
-    """Weights with decreasing weight from 1 (newest) to -1 (infinitely old)."""
+    """Weights with decreasing weight from 1 (newest) to 0 (infinitely old)."""
 
     def __init__(
         self,
@@ -45,13 +45,12 @@ class HistoricalDecay:
     def transform(self, df: DataFrame):
         validate_timestamp_types(df=df, cols=[self.timestamp_column])
 
-        def normalized_decay(dt: datetime) -> float:
-            r = historical_decay(
+        def f(dt: datetime) -> float:
+            return historical_decay(
                 annual_rate=self.annual_rate,
                 today_dt=self.most_recent_date,
                 dt=dt
             )
-            return 2. * r - 1.
 
         distincts = (
             df
@@ -59,7 +58,7 @@ class HistoricalDecay:
             .distinct()
             .withColumn(
                 self.weight_column,
-                F.udf(normalized_decay, DoubleType())(self.timestamp_column)
+                F.udf(f, DoubleType())(self.timestamp_column)
             )
         )
         return df.join(distincts, on=self.timestamp_column, how='left')
