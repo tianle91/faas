@@ -3,11 +3,10 @@ from datetime import date
 import numpy as np
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
-from pyspark.sql.types import DoubleType
+from pyspark.sql.types import DateType, DoubleType, StringType
 
 from faas.base import BaseTransformer
-from faas.utils_dataframe import (validate_categorical_types,
-                                  validate_date_types)
+from faas.utils_dataframe import validate_date_types
 
 
 def historical_decay(annual_rate: float, today_dt: date, dt: date) -> float:
@@ -58,27 +57,34 @@ class HistoricalDecay(BaseTransformer):
         return df.join(distincts, on=self.date_column, how='left')
 
 
+COUNTS_COL = '__COUNTS__'
+
+
 class Normalize(BaseTransformer):
     """Weights to ensure that for each group, sum of weights is 1."""
 
     def __init__(
         self,
-        categorical_column: str,
+        group_column: str,
     ):
-        self.categorical_column = categorical_column
+        self.group_column = group_column
 
     @property
     def feature_column(self) -> str:
-        return f'Normalize_{self.categorical_column}'
+        return f'Normalize_{self.group_column}'
 
     def transform(self, df: DataFrame):
-        validate_categorical_types(df=df, cols=[self.categorical_column])
-        COUNTS_COL = '__COUNTS__'
+        dtype = df.schema[self.group_column].dataType
+        if not (isinstance(dtype, StringType) or isinstance(dtype, DateType)):
+            raise TypeError(
+                f'The group_column: {self.group_column} should be StringType or a DateType '
+                f'but received {dtype} instead,'
+            )
         counts = (
             df
-            .groupBy(self.categorical_column)
+            .groupBy(self.group_column)
             .agg(F.sum(F.lit(1.)).alias(COUNTS_COL))
         )
-        df = df.join(counts, on=self.categorical_column, how='left')
+        df = df.join(counts, on=self.group_column, how='left')
         df = df.withColumn(self.feature_column, 1. / F.col(COUNTS_COL)).drop(COUNTS_COL)
         return df
