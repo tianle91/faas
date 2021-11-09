@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Tuple
+from typing import List
 
 from pyspark.sql import DataFrame
 
