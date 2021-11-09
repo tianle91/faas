@@ -86,3 +86,28 @@ class StandardScaler(InvertibleTransformer):
             return std * v + mean
         udf = F.udf(fn, DoubleType())
         return df.withColumn(self.column, udf(F.col(self.feature_column)))
+
+
+class NumericScaler(InvertibleTransformer):
+    def __init__(self, column, base_column: str) -> None:
+        self.column = column
+        self.base_column = base_column
+
+    @property
+    def feature_column(self) -> str:
+        return f'NumericScaler_{self.column}_by_{self.base_column}'
+
+    def validate(self, df: DataFrame, is_inverse=False):
+        if not is_inverse:
+            validate_numeric_types(df, cols=[self.column])
+        else:
+            validate_numeric_types(df, cols=[self.feature_column])
+        validate_numeric_types(df, cols=[self.base_column])
+
+    def transform(self, df: DataFrame) -> DataFrame:
+        self.validate(df)
+        return df.withColumn(self.feature_column, F.col(self.column) / F.col(self.base_column))
+
+    def inverse_transform(self, df: DataFrame) -> DataFrame:
+        self.validate(df, is_inverse=True)
+        return df.withColumn(self.column, F.col(self.feature_column) * F.col(self.base_column))
