@@ -45,23 +45,16 @@ class HistoricalDecay:
 
     def transform(self, df: DataFrame):
         validate_timestamp_types(df=df, cols=[self.timestamp_column])
-
-        def f(dt: datetime) -> float:
-            return historical_decay(
+        udf = F.udf(
+            lambda dt: historical_decay(
                 annual_rate=self.annual_rate,
                 today_dt=self.most_recent_date,
                 dt=dt
-            )
-
-        distincts = (
-            df
-            .select(self.timestamp_column)
-            .distinct()
-            .withColumn(
-                self.weight_column,
-                F.udf(f, DoubleType())(self.timestamp_column)
-            )
+            ),
+            DoubleType()
         )
+        distincts = df.select(self.timestamp_column).distinct()
+        distincts = distincts.withColumn(self.weight_column, udf(self.timestamp_column))
         return df.join(distincts, on=self.timestamp_column, how='left')
 
 
