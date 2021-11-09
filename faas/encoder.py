@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-from typing import List
-
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
-from pyspark.sql.types import LongType, NumericType, StringType
+from pyspark.sql.types import LongType, NumericType
 
-from faas.utils_dataframe import (validate_categorical_types,
-                                  validate_numeric_types)
+from faas.base import XTransformer
+from faas.utils_dataframe import validate_categorical_types
 
 
 def get_distinct_values(df: DataFrame, column: str) -> set:
@@ -26,11 +24,15 @@ def get_distinct_values(df: DataFrame, column: str) -> set:
     return {row.val for row in distinct_rows}
 
 
-class OrdinalEncoder:
+class OrdinalEncoder(XTransformer):
     def __init__(self, categorical_column: str) -> None:
         self.categorical_column = categorical_column
         self.distincts: list = []
         self.column_type = None
+
+    @property
+    def feature_column(self) -> str:
+        return f'OrdinalEncoder_{self.categorical_column}'
 
     def validate(self, df: DataFrame):
         validate_categorical_types(df, cols=[self.categorical_column])
@@ -44,12 +46,10 @@ class OrdinalEncoder:
 
     def transform(self, df: DataFrame) -> DataFrame:
         self.validate(df)
+        # create udf to do the mapping because joining requires access to a spark session
         mapping = {k: i for i, k in enumerate(self.distincts)}
         udf = F.udf(lambda v: mapping.get(v, None), LongType())
-        return df.withColumn(self.categorical_column, udf(F.col(self.categorical_column)))
-
-    def inverse_transform(self, df: DataFrame) -> DataFrame:
-        validate_numeric_types(df, cols=[self.categorical_column])
-        inverse_mapping = {i: k for i, k in enumerate(self.distincts)}
-        udf = F.udf(lambda v: inverse_mapping.get(v, None), StringType())
-        return df.withColumn(self.categorical_column, udf(F.col(self.categorical_column)))
+        return df.withColumn(
+            self.feature_column,
+            udf(F.col(self.categorical_column))
+        )

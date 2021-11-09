@@ -14,13 +14,9 @@ def create_test_df(spark: SparkSession, n: int = 100) -> DataFrame:
 
 def test_OrdinalEncoder(spark):
     df = create_test_df(spark)
-    expected = df.toPandas()
 
     enc = OrdinalEncoder('p').fit(df)
     encoded_rows = enc.transform(df).distinct().collect()
 
-    encoded_values = {row.p for row in encoded_rows}
+    encoded_values = {row.OrdinalEncoder_p for row in encoded_rows}
     assert encoded_values == {i for i in range(26)}
-
-    actual = enc.inverse_transform(enc.transform(df)).toPandas()
-    pd.testing.assert_frame_equal(left=expected, right=actual)
