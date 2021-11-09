@@ -16,7 +16,7 @@ Prediction
 ```
 data -GetX-> X
 X, model -> y
-data, y -GetY-> data[y]
+data, y -GetY(inv)-> predictions
 ```
 
 # Tools
