@@ -88,6 +88,9 @@ class StandardScaler(InvertibleTransformer):
         return df.withColumn(self.column, udf(F.col(self.feature_column)))
 
 
+__BASE_NORMALIZED__ = '__BASE_NORMALIZED__'
+
+
 class NumericScaler(InvertibleTransformer):
     def __init__(self, column, base_column: str) -> None:
         self.column = column
@@ -104,10 +107,27 @@ class NumericScaler(InvertibleTransformer):
             validate_numeric_types(df, cols=[self.feature_column])
         validate_numeric_types(df, cols=[self.base_column])
 
+    def normalize_base(self, df: DataFrame) -> DataFrame:
+        return df.withColumn(
+            __BASE_NORMALIZED__,
+            F.when(
+                F.col(self.base_column).isNull(),
+                F.lit(1.)
+            ).otherwise(
+                F.col(self.base_column)
+            )
+        )
+
     def transform(self, df: DataFrame) -> DataFrame:
         self.validate(df)
-        return df.withColumn(self.feature_column, F.col(self.column) / F.col(self.base_column))
+        df = self.normalize_base(df)
+        df = df.withColumn(self.feature_column, F.col(self.column) / F.col(__BASE_NORMALIZED__))
+        df = df.drop(__BASE_NORMALIZED__)
+        return df
 
     def inverse_transform(self, df: DataFrame) -> DataFrame:
         self.validate(df, is_inverse=True)
-        return df.withColumn(self.column, F.col(self.feature_column) * F.col(self.base_column))
+        df = self.normalize_base(df)
+        df = df.withColumn(self.column, F.col(self.feature_column) * F.col(__BASE_NORMALIZED__))
+        df = df.drop(__BASE_NORMALIZED__)
+        return df
