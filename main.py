@@ -1,8 +1,6 @@
 import os
 from tempfile import TemporaryDirectory
 
-import lightgbm
-import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
 from pyspark.sql import SparkSession

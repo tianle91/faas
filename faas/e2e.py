@@ -8,7 +8,6 @@ import pandas as pd
 from lightgbm import LGBMModel
 from matplotlib.figure import Figure
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import asc
 from pyspark.sql.types import NumericType
 
 from faas.base import Passthrough, Pipeline
@@ -113,5 +112,5 @@ def plot_feature_importances(m: LGBMModel, top_n: int = 10) -> Figure:
         fig, ax = plt.subplots(figsize=(8, 4))
         ax.bar(x=top_df['name'], height=top_df['importance'])
         ax.tick_params(labelrotation=90)
-        ax.set_title(f'Feature Importances')
+        ax.set_title('Feature Importances')
     return fig
