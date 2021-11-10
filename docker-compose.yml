@@ -6,3 +6,9 @@ services:
     ports:
       - "8501:8501"
     entrypoint: streamlit run ui.py
+  api:
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    entrypoint: uvicorn api:app --reload

@@ -26,6 +26,20 @@ def create_key() -> str:
         return k
 
 
+def list_models() -> dict:
+    d_print = {}
+    with SqliteDict(MODEL_STORE) as d:
+        for k, v in d.items():
+            dt, e2e = v
+            e2e: E2EPipline = e2e
+            d_print[k] = {
+                'timestamp': dt,
+                'target_column': e2e.target_column,
+                'feature_columns': e2e.feature_columns,
+            }
+    return d_print
+
+
 def write_model(model: E2EPipline) -> str:
     with SqliteDict(MODEL_STORE) as d:
         key = create_key()
