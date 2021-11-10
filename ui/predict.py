@@ -4,12 +4,43 @@ from tempfile import TemporaryDirectory
 
 import pandas as pd
 import streamlit as st
-from pyspark.sql import SparkSession
+from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.types import NumericType
 
 from faas.e2e import E2EPipline, plot_feature_importances
 from faas.loss import plot_prediction_vs_actual
 from faas.utils_dataframe import JoinableByRowID
+
+
+def run_checklist(e2e: E2EPipline, df: DataFrame) -> bool:
+
+    target_is_numeric = isinstance(df.schema[e2e.target_column].dataType, NumericType)
+    target_column_passed = (e2e.target_is_numeric == target_is_numeric)
+    st.markdown('Target column: ' + '✅' if target_column_passed else '❌')
+
+    feature_columns_passed = [c in df.columns for c in e2e.feature_columns]
+    st.markdown('Feature columns: ' + '✅' if feature_columns_passed else '❌')
+
+    numeric_features_passed = [
+        isinstance(df.schema[c].dataType, NumericType)
+        for c in e2e.numeric_features
+    ]
+    st.markdown('Numeric columns: ' + '✅' if numeric_features_passed else '❌')
+
+    categorical_features_passed = [
+        not isinstance(df.schema[c].dataType, NumericType)
+        for c in e2e.categorical_features
+    ]
+    st.markdown('Categorical columns: ' + '✅' if categorical_features_passed else '❌')
+
+    all_good = all([
+        target_column_passed,
+        feature_columns_passed,
+        numeric_features_passed,
+        categorical_features_passed
+    ])
+    st.markdown('All good: ' + '✅' if all_good else '❌')
+    return all_good
 
 
 def run_predict():
@@ -19,10 +50,10 @@ def run_predict():
     st.title('Predict')
 
     e2e = st.session_state.get('trained_model', None)
-
     upload_trained = st.file_uploader('Upload trained', type='model')
     if upload_trained is not None:
         e2e: E2EPipline = pickle.loads(upload_trained.getvalue())
+        st.session_state['trained_model'] = e2e
 
     if e2e is not None:
         st.pyplot(plot_feature_importances(m=e2e.m))
@@ -46,48 +77,23 @@ def run_predict():
             st.write(df.limit(10).toPandas())
 
             st.markdown('## Checklist')
-            target_is_numeric = isinstance(df.schema[e2e.target_column].dataType, NumericType)
-            target_column_passed = (e2e.target_is_numeric == target_is_numeric)
-            st.markdown('Target column: ' + '✅' if target_column_passed else '❌')
+            all_good = run_checklist(e2e, df=df)
 
-            feature_columns_passed = [c in df.columns for c in e2e.feature_columns]
-            st.markdown('Feature columns: ' + '✅' if feature_columns_passed else '❌')
-
-            numeric_features_passed = [
-                isinstance(df.schema[c].dataType, NumericType)
-                for c in e2e.numeric_features
-            ]
-            st.markdown('Numeric columns: ' + '✅' if numeric_features_passed else '❌')
-
-            categorical_features_passed = [
-                not isinstance(df.schema[c].dataType, NumericType)
-                for c in e2e.categorical_features
-            ]
-            st.markdown('Categorical columns: ' + '✅' if categorical_features_passed else '❌')
-
-            all_good = all([
-                target_column_passed,
-                feature_columns_passed,
-                numeric_features_passed,
-                categorical_features_passed
-            ])
-            st.markdown('All good: ' + '✅' if all_good else '❌')
-
-            st.markdown('# Predict Now?')
-            if st.button('Yes'):
-                df_predict = e2e.predict(df)
-                st.write(df_predict.limit(10).toPandas())
-                st.download_button(
-                    'Download prediction',
-                    data=df_predict.toPandas().to_csv(),
-                    file_name='prediction.csv'
-                )
-                if e2e.target_column in df.columns:
-                    st.pyplot(
-                        plot_prediction_vs_actual(
-                            df_prediction=df_predict.select(e2e.target_column).toPandas(),
-                            df_actual=df.select(e2e.target_column).toPandas(),
-                            column=e2e.target_column,
-                        )
+            if all_good:
+                st.markdown('# Predict Now?')
+                if st.button('Yes'):
+                    df_predict = e2e.predict(df)
+                    st.write(df_predict.limit(10).toPandas())
+                    st.download_button(
+                        'Download prediction',
+                        data=df_predict.toPandas().to_csv(),
+                        file_name='prediction.csv'
                     )
-                    pass
+                    if e2e.target_column in df.columns:
+                        st.pyplot(
+                            plot_prediction_vs_actual(
+                                df_prediction=df_predict.select(e2e.target_column).toPandas(),
+                                df_actual=df.select(e2e.target_column).toPandas(),
+                                column=e2e.target_column,
+                            )
+                        )
