@@ -12,30 +12,30 @@ from faas.utils_dataframe import JoinableByRowID
 from ui.storage import read_model
 
 
-def run_checklist(e2e: E2EPipline, df: DataFrame) -> bool:
-
+def run_target_checklist(e2e: E2EPipline, df: DataFrame) -> bool:
     target_is_numeric = isinstance(df.schema[e2e.target_column].dataType, NumericType)
     target_column_passed = (e2e.target_is_numeric == target_is_numeric)
+    st.markdown('Target column: ' + '✅' if target_column_passed else '❌')
+    return target_column_passed
 
-    feature_columns_passed = all([c in df.columns for c in e2e.feature_columns])
 
+def run_features_checklist(e2e: E2EPipline, df: DataFrame) -> bool:
+    feature_columns_passed = all([
+        c in df.columns for c in e2e.feature_columns
+    ])
     numeric_features_passed = [
         isinstance(df.schema[c].dataType, NumericType)
         for c in e2e.numeric_features
     ]
-
     categorical_features_passed = [
         not isinstance(df.schema[c].dataType, NumericType)
         for c in e2e.categorical_features
     ]
-
     all_good = all([
-        target_column_passed,
         feature_columns_passed,
         numeric_features_passed,
         categorical_features_passed
     ])
-    st.markdown('Target column: ' + '✅' if target_column_passed else '❌')
     st.markdown('Feature columns: ' + '✅' if feature_columns_passed else '❌')
     st.markdown('Numeric columns: ' + '✅' if numeric_features_passed else '❌')
     st.markdown('Categorical columns: ' + '✅' if categorical_features_passed else '❌')
@@ -78,11 +78,9 @@ def run_predict():
 
             st.markdown('# Uploaded dataset')
             st.write(df.limit(10).toPandas())
+            all_good_x = run_features_checklist(e2e, df=df)
 
-            st.markdown('## Checklist')
-            all_good = run_checklist(e2e, df=df)
-
-            if all_good:
+            if all_good_x:
                 st.markdown('# Predict Now?')
                 if st.button('Yes'):
                     df_predict = e2e.predict(df)
@@ -93,10 +91,13 @@ def run_predict():
                         file_name='prediction.csv'
                     )
                     if e2e.target_column in df.columns:
-                        st.pyplot(
-                            plot_prediction_vs_actual(
-                                df_prediction=df_predict.select(e2e.target_column).toPandas(),
-                                df_actual=df.select(e2e.target_column).toPandas(),
-                                column=e2e.target_column,
+                        st.markdown('## Evaluation')
+                        all_good_target = run_target_checklist(e2e, df=df)
+                        if all_good_target:
+                            st.pyplot(
+                                plot_prediction_vs_actual(
+                                    df_prediction=df_predict.select(e2e.target_column).toPandas(),
+                                    df_actual=df.select(e2e.target_column).toPandas(),
+                                    column=e2e.target_column,
+                                )
                             )
-                        )
