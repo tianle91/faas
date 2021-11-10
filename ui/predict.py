@@ -8,7 +8,6 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import NumericType
 
 from faas.e2e import E2EPipline, plot_feature_importances
-from faas.eda import correlation, plot_target_correlation
 from faas.loss import plot_prediction_vs_actual
 from faas.utils_dataframe import JoinableByRowID
 
@@ -49,22 +48,22 @@ def run_predict():
             st.markdown('## Checklist')
             target_is_numeric = isinstance(df.schema[e2e.target_column].dataType, NumericType)
             target_column_passed = (e2e.target_is_numeric == target_is_numeric)
-            st.markdown(f'Target column: ' + '✅' if target_column_passed else '❌')
+            st.markdown('Target column: ' + '✅' if target_column_passed else '❌')
 
             feature_columns_passed = [c in df.columns for c in e2e.feature_columns]
-            st.markdown(f'Feature columns: ' + '✅' if feature_columns_passed else '❌')
+            st.markdown('Feature columns: ' + '✅' if feature_columns_passed else '❌')
 
             numeric_features_passed = [
                 isinstance(df.schema[c].dataType, NumericType)
                 for c in e2e.numeric_features
             ]
-            st.markdown(f'Numeric columns: ' + '✅' if numeric_features_passed else '❌')
+            st.markdown('Numeric columns: ' + '✅' if numeric_features_passed else '❌')
 
             categorical_features_passed = [
                 not isinstance(df.schema[c].dataType, NumericType)
                 for c in e2e.categorical_features
             ]
-            st.markdown(f'Categorical columns: ' + '✅' if categorical_features_passed else '❌')
+            st.markdown('Categorical columns: ' + '✅' if categorical_features_passed else '❌')
 
             all_good = all([
                 target_column_passed,
@@ -72,7 +71,7 @@ def run_predict():
                 numeric_features_passed,
                 categorical_features_passed
             ])
-            st.markdown(f'All good: ' + '✅' if all_good else '❌')
+            st.markdown('All good: ' + '✅' if all_good else '❌')
 
             st.markdown('# Predict Now?')
             if st.button('Yes'):
