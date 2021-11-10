@@ -7,9 +7,9 @@ from pyspark.sql import SparkSession
 
 from faas.e2e import plot_feature_importances
 from faas.loss import plot_prediction_vs_actual
+from faas.storage import read_model
 from faas.utils_dataframe import JoinableByRowID
 from ui.checklist import run_features_checklist, run_target_checklist
-from ui.storage import read_model
 
 
 def run_predict():
@@ -28,10 +28,11 @@ def run_predict():
             st.error(f'Key {key} not found!')
 
     if e2e is not None:
-        st.pyplot(plot_feature_importances(m=e2e.m))
-        st.markdown(f'Target column: `{e2e.target_column}`')
-        formatted_feature_cols = ' '.join([f'`{c}`' for c in e2e.feature_columns])
-        st.markdown(f'Feature columns: {formatted_feature_cols}')
+        with st.expander('Details on loaded model'):
+            st.pyplot(plot_feature_importances(m=e2e.m))
+            st.markdown(f'Target column: `{e2e.target_column}`')
+            formatted_feature_cols = ' '.join([f'`{c}`' for c in e2e.feature_columns])
+            st.markdown(f'Feature columns: {formatted_feature_cols}')
 
     st.markdown('# Upload dataset')
     predict_file = st.file_uploader('Predict data', type='csv')
@@ -45,12 +46,12 @@ def run_predict():
             df = spark.read.options(header=True, inferSchema=True).csv(predict_path)
             df = JoinableByRowID(df).df
 
-            st.markdown('# Uploaded dataset')
-            st.write(df.limit(10).toPandas())
             all_good_x = run_features_checklist(e2e, df=df)
+            with st.expander('Details on uploaded dataset'):
+                st.write(df.limit(10).toPandas())
 
             if all_good_x:
-                st.markdown('# Predict Now?')
+                st.markdown('## Predict Now?')
                 if st.button('Yes'):
                     df_predict = e2e.predict(df)
                     st.write(df_predict.limit(10).toPandas())
@@ -60,13 +61,21 @@ def run_predict():
                         file_name='prediction.csv'
                     )
                     if e2e.target_column in df.columns:
-                        st.markdown('## Evaluation')
-                        all_good_target = run_target_checklist(e2e, df=df)
-                        if all_good_target:
-                            st.pyplot(
-                                plot_prediction_vs_actual(
-                                    df_prediction=df_predict.select(e2e.target_column).toPandas(),
-                                    df_actual=df.select(e2e.target_column).toPandas(),
-                                    column=e2e.target_column,
+                        with st.expander(f'Found target: {e2e.target_column}. See evaluation?'):
+                            all_good_target = run_target_checklist(e2e, df=df)
+                            if all_good_target:
+                                st.pyplot(
+                                    plot_prediction_vs_actual(
+                                        df_prediction=(
+                                            df_predict
+                                            .select(e2e.target_column)
+                                            .toPandas()
+                                        ),
+                                        df_actual=(
+                                            df
+                                            .select(e2e.target_column)
+                                            .toPandas()
+                                        ),
+                                        column=e2e.target_column,
+                                    )
                                 )
-                            )

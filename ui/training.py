@@ -8,7 +8,7 @@ from pyspark.sql import SparkSession
 
 from faas.e2e import E2EPipline, plot_feature_importances
 from faas.eda import correlation, plot_target_correlation
-from ui.storage import write_model
+from faas.storage import write_model
 
 logger = logging.getLogger(__name__)
 
