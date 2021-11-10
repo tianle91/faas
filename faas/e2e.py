@@ -5,12 +5,10 @@ from typing import List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import pandas as pd
-import streamlit as st
 from lightgbm import LGBMModel
 from matplotlib.figure import Figure
 from pyspark.sql import DataFrame
 from pyspark.sql.types import DataType, NumericType, StringType
-from streamlit.elements.arrow import Data
 
 from faas.base import Passthrough, Pipeline
 from faas.encoder import OrdinalEncoder

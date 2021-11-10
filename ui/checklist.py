@@ -1,6 +1,5 @@
 import streamlit as st
 from pyspark.sql import DataFrame
-from pyspark.sql.types import NumericType
 
 from faas.e2e import E2EPipline, check_categorical, check_numeric, check_target
 
@@ -24,7 +23,7 @@ def run_numeric_features_checklist(e2e: E2EPipline, df: DataFrame) -> bool:
 
 
 def run_categorical_features_checklist(e2e: E2EPipline, df: DataFrame) -> bool:
-    ok, messages = check_numeric(e2e, df=df)
+    ok, messages = check_categorical(e2e, df=df)
     st.markdown('Categorical features: ' + '✅' if ok else '❌')
     if not ok:
         for message in messages:
