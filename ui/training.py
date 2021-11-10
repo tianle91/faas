@@ -52,6 +52,7 @@ def run_training():
 
             if e2e is not None:
                 st.markdown('# Done!')
+                st.session_state['trained_model'] = e2e
                 st.download_button(
                     'Download trained', data=pickle.dumps(e2e), file_name='trained.model')
                 st.pyplot(plot_feature_importances(m=e2e.m))
