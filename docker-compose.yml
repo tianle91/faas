@@ -5,4 +5,4 @@ services:
       context: .
     ports:
       - "8501:8501"
-    entrypoint: streamlit run main.py
+    entrypoint: streamlit run ui.py
