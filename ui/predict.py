@@ -1,5 +1,4 @@
 import os
-import pickle
 from tempfile import TemporaryDirectory
 
 import pandas as pd
