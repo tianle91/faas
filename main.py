@@ -10,7 +10,7 @@ from faas.eda import correlation, plot_target_correlation
 
 spark = SparkSession.builder.getOrCreate()
 
-st.markdown('# Training dataset')
+st.title('Training')
 training_file = st.file_uploader('Training data', type='csv')
 
 with TemporaryDirectory() as temp_dir:
@@ -21,10 +21,10 @@ with TemporaryDirectory() as temp_dir:
 
         df = spark.read.options(header=True, inferSchema=True).csv(training_path)
 
-        st.markdown('## Uploaded dataset')
+        st.markdown('# Uploaded dataset')
         st.write(df.limit(10).toPandas())
 
-        st.markdown('## What to train?')
+        st.markdown('# What to train?')
         target_column = st.selectbox('target column', options=df.columns)
         non_target_columns = df.columns
         if target_column is not None:
@@ -34,13 +34,12 @@ with TemporaryDirectory() as temp_dir:
             'feature columns', options=non_target_columns, default=non_target_columns)
 
         if target_column is not None and feature_columns is not None:
-            st.markdown(f'### Correlation with {target_column}')
             corr_df = correlation(df, feature_columns=feature_columns, target_column=target_column)
             st.pyplot(plot_target_correlation(corr_df, target_column=target_column))
 
-        st.markdown('## Training')
+        st.markdown('# Train Now?')
         e2e = None
-        if st.button('Train'):
+        if st.button('Yes'):
             e2e = E2EPipline(
                 df=df,
                 target_column=target_column,
