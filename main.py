@@ -1,4 +1,5 @@
 import os
+import pickle
 from tempfile import TemporaryDirectory
 
 import pandas as pd
@@ -44,4 +45,9 @@ with TemporaryDirectory() as temp_dir:
                 df=df,
                 target_column=target_column,
             ).fit(df)
+
+        if e2e is not None:
+            st.markdown('# Done!')
+            st.download_button(
+                'Download trained', data=pickle.dumps(e2e), file_name='trained.model')
             st.pyplot(plot_feature_importances(m=e2e.m))
