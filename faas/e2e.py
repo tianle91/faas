@@ -3,9 +3,12 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
+import matplotlib.pyplot as plt
 import pandas as pd
 from lightgbm import LGBMModel
+from matplotlib.figure import Figure
 from pyspark.sql import DataFrame
+from pyspark.sql.functions import asc
 from pyspark.sql.types import NumericType
 
 from faas.base import Passthrough, Pipeline
@@ -98,3 +101,17 @@ class E2EPipline:
         )
         df_pred = self.y_pipeline.inverse_transform(df_with_y)
         return df_pred
+
+
+def plot_feature_importances(m: LGBMModel, top_n: int = 10) -> Figure:
+    df = pd.DataFrame({
+        'name': m.feature_name_,
+        'importance': m.feature_importances_,
+    }).sort_values('importance', ascending=False)
+    top_df = df.iloc[:top_n]
+    with plt.xkcd():
+        fig, ax = plt.subplots(figsize=(8, 4))
+        ax.bar(x=top_df['name'], height=top_df['importance'])
+        ax.tick_params(labelrotation=90)
+        ax.set_title(f'Feature Importances')
+    return fig

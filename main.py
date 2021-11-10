@@ -7,8 +7,8 @@ import pandas as pd
 import streamlit as st
 from pyspark.sql import SparkSession
 
-from faas.e2e import E2EPipline
-from faas.eda import correlation
+from faas.e2e import E2EPipline, plot_feature_importances
+from faas.eda import correlation, plot_target_correlation
 
 spark = SparkSession.builder.getOrCreate()
 
@@ -36,9 +36,9 @@ with TemporaryDirectory() as temp_dir:
             'feature columns', options=non_target_columns, default=non_target_columns)
 
         if target_column is not None and feature_columns is not None:
-            st.markdown('### Correlation')
+            st.markdown(f'### Correlation with {target_column}')
             corr_df = correlation(df, feature_columns=feature_columns, target_column=target_column)
-            st.write(corr_df)
+            st.pyplot(plot_target_correlation(corr_df, target_column=target_column))
 
         st.markdown('## Training')
         e2e = None
@@ -47,6 +47,4 @@ with TemporaryDirectory() as temp_dir:
                 df=df,
                 target_column=target_column,
             ).fit(df)
-            fig, ax = plt.subplots(figsize=(5, 5))
-            lightgbm.plot_importance(e2e.m, ax=ax)
-            st.pyplot(fig)
+            st.pyplot(plot_feature_importances(m=e2e.m))
