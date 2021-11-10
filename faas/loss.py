@@ -17,7 +17,7 @@ def plot_prediction_vs_actual(
         v = sorted(all_vals)
         ax.plot(v, v, ls=':', color='red')
 
-        ax.scatter(x=actual, y=pred)
+        ax.scatter(x=actual, y=pred, alpha=.5)
         ax.set_xlabel('Actual')
         ax.set_xlim(min_val, max_val)
         ax.set_ylabel('Predicted')
