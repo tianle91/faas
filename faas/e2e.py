@@ -87,7 +87,12 @@ class E2EPipline:
         self.x_pipeline.fit(df)
         self.y_pipeline.fit(df)
         X, y = self.get_x(df), self.get_y(df)
-        self.m.fit(X=X, y=y)
+        self.m.fit(
+            X=X,
+            y=y,
+            feature_name=self.feature_columns,
+            categorical_feature=self.categorical_features
+        )
         return self
 
     def predict(self, df: DataFrame) -> DataFrame:
