@@ -3,44 +3,13 @@ from tempfile import TemporaryDirectory
 
 import pandas as pd
 import streamlit as st
-from pyspark.sql import DataFrame, SparkSession
-from pyspark.sql.types import NumericType
+from pyspark.sql import SparkSession
 
-from faas.e2e import E2EPipline, plot_feature_importances
+from faas.e2e import plot_feature_importances
 from faas.loss import plot_prediction_vs_actual
 from faas.utils_dataframe import JoinableByRowID
+from ui.checklist import run_features_checklist, run_target_checklist
 from ui.storage import read_model
-
-
-def run_target_checklist(e2e: E2EPipline, df: DataFrame) -> bool:
-    target_is_numeric = isinstance(df.schema[e2e.target_column].dataType, NumericType)
-    target_column_passed = (e2e.target_is_numeric == target_is_numeric)
-    st.markdown('Target column: ' + '✅' if target_column_passed else '❌')
-    return target_column_passed
-
-
-def run_features_checklist(e2e: E2EPipline, df: DataFrame) -> bool:
-    feature_columns_passed = all([
-        c in df.columns for c in e2e.feature_columns
-    ])
-    numeric_features_passed = [
-        isinstance(df.schema[c].dataType, NumericType)
-        for c in e2e.numeric_features
-    ]
-    categorical_features_passed = [
-        not isinstance(df.schema[c].dataType, NumericType)
-        for c in e2e.categorical_features
-    ]
-    all_good = all([
-        feature_columns_passed,
-        numeric_features_passed,
-        categorical_features_passed
-    ])
-    st.markdown('Feature columns: ' + '✅' if feature_columns_passed else '❌')
-    st.markdown('Numeric columns: ' + '✅' if numeric_features_passed else '❌')
-    st.markdown('Categorical columns: ' + '✅' if categorical_features_passed else '❌')
-    st.markdown('All good: ' + '✅' if all_good else '❌')
-    return all_good
 
 
 def run_predict():
