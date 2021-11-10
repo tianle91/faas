@@ -16,4 +16,4 @@ RUN pip install -r requirements.txt
 COPY ./requirements-dev.txt ./
 RUN pip install -r requirements-dev.txt
 
-CMD [ "streamlit", "run", "main.py"]
+WORKDIR /workdir
