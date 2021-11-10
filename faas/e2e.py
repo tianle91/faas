@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
+from typing import List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import streamlit as st
 from lightgbm import LGBMModel
 from matplotlib.figure import Figure
 from pyspark.sql import DataFrame
-from pyspark.sql.types import NumericType
+from pyspark.sql.types import DataType, NumericType, StringType
+from streamlit.elements.arrow import Data
 
 from faas.base import Passthrough, Pipeline
 from faas.encoder import OrdinalEncoder
@@ -121,3 +123,44 @@ def plot_feature_importances(m: LGBMModel, top_n: int = 10) -> Figure:
         ax.tick_params(labelrotation=90)
         ax.set_title('Feature Importances')
     return fig
+
+
+def check_columns_are_desired_type(
+    columns: List[str], dtype: DataType, df: DataFrame
+) -> Tuple[bool, List[str]]:
+    all_passed = True
+    messages = []
+    for c in columns:
+        actual = df.schema[c].dataType
+        if not isinstance(actual, dtype):
+            all_passed = False
+            messages.append(
+                f'Expected column: {c} to be {dtype} but received {actual} instead.')
+    return all_passed, messages
+
+
+def check_target(e2e: E2EPipline, df: DataFrame) -> bool:
+    ok, messages = check_columns_are_desired_type(
+        columns=[e2e.target_column],
+        dtype=NumericType if e2e.target_is_numeric else StringType,
+        df=df
+    )
+    return ok, messages
+
+
+def check_numeric(e2e: E2EPipline, df: DataFrame) -> Tuple[bool, List[str]]:
+    ok, messages = check_columns_are_desired_type(
+        columns=e2e.numeric_features,
+        dtype=NumericType,
+        df=df
+    )
+    return ok, messages
+
+
+def check_categorical(e2e: E2EPipline, df: DataFrame) -> bool:
+    ok, messages = check_columns_are_desired_type(
+        columns=e2e.categorical_features,
+        dtype=StringType,
+        df=df
+    )
+    return ok, messages
