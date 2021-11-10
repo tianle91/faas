@@ -1,6 +1,6 @@
-from faas.storage import read_model, list_models
-
 from fastapi import FastAPI
+
+from faas.storage import list_models, read_model
 
 app = FastAPI()
 
