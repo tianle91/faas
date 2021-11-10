@@ -18,7 +18,7 @@ from faas.utils_dataframe import JoinableByRowID, get_non_numeric_columns
 logger = logging.getLogger(__name__)
 
 
-def is_numeric(df: DataFrame, column: str) -> str:
+def is_numeric(df: DataFrame, column: str) -> bool:
     return isinstance(df.schema[column].dataType, NumericType)
 
 
@@ -32,6 +32,8 @@ class E2EPipline:
         feature_columns: Optional[str] = None
     ):
         self.target_column = target_column
+        self.target_is_numeric = is_numeric(df=df, column=self.target_column)
+
         if feature_columns is None:
             feature_columns = [c for c in df.columns if c != target_column]
             logger.info(
@@ -63,7 +65,7 @@ class E2EPipline:
         self.y_pipeline = Pipeline(steps=ysteps)
 
         self.m = LGBMModel(
-            objective='regression' if is_numeric(df=df, column=self.target_column) else 'binary',
+            objective='regression' if self.target_is_numeric else 'binary',
             deterministic=True,
         )
 
