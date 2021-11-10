@@ -1,3 +1,4 @@
+import logging
 import os
 import pickle
 from tempfile import TemporaryDirectory
@@ -8,6 +9,9 @@ from pyspark.sql import SparkSession
 
 from faas.e2e import E2EPipline, plot_feature_importances
 from faas.eda import correlation, plot_target_correlation
+from ui.storage import write_model
+
+logger = logging.getLogger(__name__)
 
 
 def run_training():
@@ -53,6 +57,9 @@ def run_training():
             if e2e is not None:
                 st.markdown('# Done!')
                 st.session_state['trained_model'] = e2e
-                st.download_button(
-                    'Download trained', data=pickle.dumps(e2e), file_name='trained.model')
+
+                key = write_model(e2e)
+                st.markdown(f'Model key (save this for prediction): `{key}`')
+                logger.info(f'wrote model key: {key}')
+
                 st.pyplot(plot_feature_importances(m=e2e.m))

@@ -10,6 +10,7 @@ from pyspark.sql.types import NumericType
 from faas.e2e import E2EPipline, plot_feature_importances
 from faas.loss import plot_prediction_vs_actual
 from faas.utils_dataframe import JoinableByRowID
+from ui.storage import read_model
 
 
 def run_checklist(e2e: E2EPipline, df: DataFrame) -> bool:
@@ -50,10 +51,13 @@ def run_predict():
     st.title('Predict')
 
     e2e = st.session_state.get('trained_model', None)
-    upload_trained = st.file_uploader('Upload trained', type='model')
-    if upload_trained is not None:
-        e2e: E2EPipline = pickle.loads(upload_trained.getvalue())
-        st.session_state['trained_model'] = e2e
+    key = st.text_input('Model key (obtain this from training)')
+    if key is not None and key != '':
+        try:
+            e2e = read_model(key=key)
+            st.session_state['trained_model'] = e2e
+        except KeyError:
+            st.error(f'Key {key} not found!')
 
     if e2e is not None:
         st.pyplot(plot_feature_importances(m=e2e.m))
