@@ -16,22 +16,18 @@ def run_checklist(e2e: E2EPipline, df: DataFrame) -> bool:
 
     target_is_numeric = isinstance(df.schema[e2e.target_column].dataType, NumericType)
     target_column_passed = (e2e.target_is_numeric == target_is_numeric)
-    st.markdown('Target column: ' + '✅' if target_column_passed else '❌')
 
-    feature_columns_passed = [c in df.columns for c in e2e.feature_columns]
-    st.markdown('Feature columns: ' + '✅' if feature_columns_passed else '❌')
+    feature_columns_passed = all([c in df.columns for c in e2e.feature_columns])
 
     numeric_features_passed = [
         isinstance(df.schema[c].dataType, NumericType)
         for c in e2e.numeric_features
     ]
-    st.markdown('Numeric columns: ' + '✅' if numeric_features_passed else '❌')
 
     categorical_features_passed = [
         not isinstance(df.schema[c].dataType, NumericType)
         for c in e2e.categorical_features
     ]
-    st.markdown('Categorical columns: ' + '✅' if categorical_features_passed else '❌')
 
     all_good = all([
         target_column_passed,
@@ -39,6 +35,10 @@ def run_checklist(e2e: E2EPipline, df: DataFrame) -> bool:
         numeric_features_passed,
         categorical_features_passed
     ])
+    st.markdown('Target column: ' + '✅' if target_column_passed else '❌')
+    st.markdown('Feature columns: ' + '✅' if feature_columns_passed else '❌')
+    st.markdown('Numeric columns: ' + '✅' if numeric_features_passed else '❌')
+    st.markdown('Categorical columns: ' + '✅' if categorical_features_passed else '❌')
     st.markdown('All good: ' + '✅' if all_good else '❌')
     return all_good
 
