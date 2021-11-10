@@ -40,9 +40,9 @@ def plot_target_correlation(corr_df: pd.DataFrame, target_column: str, top_n: in
     corr_df = corr_df.sort_values(by='abs_corr', ascending=False).reset_index()
 
     with plt.xkcd():
-        fig, ax = plt.subplots(figsize=(8, 4))
+        fig, ax = plt.subplots(figsize=(10, 5))
         top_corr = corr_df.iloc[:top_n]
         ax.bar(x=top_corr['index'], height=top_corr[target_column])
         ax.tick_params(labelrotation=90)
-        ax.set_title(f'Top {top_n}')
+        ax.set_title(f'Top {top_n} Correlated Features')
     return fig

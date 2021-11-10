@@ -109,7 +109,7 @@ def plot_feature_importances(m: LGBMModel, top_n: int = 10) -> Figure:
     }).sort_values('importance', ascending=False)
     top_df = df.iloc[:top_n]
     with plt.xkcd():
-        fig, ax = plt.subplots(figsize=(8, 4))
+        fig, ax = plt.subplots(figsize=(10, 5))
         ax.bar(x=top_df['name'], height=top_df['importance'])
         ax.tick_params(labelrotation=90)
         ax.set_title('Feature Importances')
