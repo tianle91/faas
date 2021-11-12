@@ -16,7 +16,8 @@ def normalized_sine(x: float, period: float, phase: int):
 
 
 class SeasonalityFeature(BaseTransformer):
-
+    """Use when there are date columns.
+    """
     def __init__(self, date_column: str) -> None:
         self.date_column = date_column
 
