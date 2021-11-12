@@ -3,8 +3,8 @@ from datetime import date
 import numpy as np
 import pytest
 
-from faas.date import (DayOfWeekFeatures, SeasonalityFeature, get_dom, get_dow,
-                       get_doy, get_woy, normalized_sine)
+from faas.date import (DayOfWeekFeatures, get_dom, get_dow, get_doy, get_woy,
+                       normalized_sine)
 
 
 @pytest.mark.parametrize(
