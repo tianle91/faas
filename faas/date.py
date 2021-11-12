@@ -11,7 +11,7 @@ from faas.utils_dataframe import validate_date_types
 
 
 def normalized_sine(x: float, period: float, phase: int):
-    x = (x + phase) / period
+    x = 2. * math.pi * (x + phase) / period
     return math.sin(x)
 
 
@@ -61,7 +61,7 @@ def get_dow(dt: date) -> float:
     return dt.weekday()
 
 
-class DayOfWeekFeatures(BaseTransformer):
+class DayOfWeekFeatures(SeasonalityFeature):
     get_value = get_dow
     period = ('WeekOfDay', 6)
 
@@ -70,7 +70,7 @@ def get_dom(dt: date) -> float:
     return dt.day
 
 
-class DayOfMonthFeatures(BaseTransformer):
+class DayOfMonthFeatures(SeasonalityFeature):
     get_value = get_dom
     period = ('DayOfMonth', 31)
 
@@ -79,7 +79,7 @@ def get_doy(dt: date) -> float:
     return (dt - date(dt.year, 1, 1)).days
 
 
-class DayOfYearFeatures(BaseTransformer):
+class DayOfYearFeatures(SeasonalityFeature):
     get_value = get_doy
     period = ('DayOfyear', 365.25)
 
@@ -88,6 +88,6 @@ def get_woy(dt: date) -> float:
     return dt.isocalendar()[1]
 
 
-class WeekOfYearFeatures(BaseTransformer):
+class WeekOfYearFeatures(SeasonalityFeature):
     get_value = get_woy
     period = ('WeekOfYear', 52.1429)
