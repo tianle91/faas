@@ -22,7 +22,8 @@ def historical_decay(annual_rate: float, today_dt: date, dt: date) -> float:
 
 
 class HistoricalDecay(BaseTransformer):
-    """Weights with decreasing weight from 1 (newest) to 0 (infinitely old)."""
+    """Weights with decreasing weight from 1 (newest) to 0 (infinitely old). Use if time series.
+    """
 
     def __init__(
         self,
@@ -61,7 +62,8 @@ COUNTS_COL = '__COUNTS__'
 
 
 class Normalize(BaseTransformer):
-    """Weights to ensure that for each group, sum of weights is 1."""
+    """Weights to ensure that for each group, sum of weights is 1. Use if multivariate ts.
+    """
 
     def __init__(
         self,
