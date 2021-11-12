@@ -36,7 +36,7 @@ class SeasonalityFeature(BaseTransformer):
             out[f'Seasonality_{period_name}_{i}'] = F.udf(
                 lambda dt: normalized_sine(
                     self.get_value(dt),
-                    period=self.period,
+                    period=period_value,
                     phase=i
                 ),
                 FloatType()
@@ -57,37 +57,29 @@ class SeasonalityFeature(BaseTransformer):
         return df
 
 
-def get_dow(dt: date) -> float:
-    return dt.weekday()
-
-
 class DayOfWeekFeatures(SeasonalityFeature):
-    get_value = get_dow
     period = ('WeekOfDay', 6)
 
-
-def get_dom(dt: date) -> float:
-    return dt.day
+    def get_value(self, dt: date) -> float:
+        return dt.weekday()
 
 
 class DayOfMonthFeatures(SeasonalityFeature):
-    get_value = get_dom
     period = ('DayOfMonth', 31)
 
-
-def get_doy(dt: date) -> float:
-    return (dt - date(dt.year, 1, 1)).days
+    def get_value(self, dt: date) -> float:
+        return dt.day
 
 
 class DayOfYearFeatures(SeasonalityFeature):
-    get_value = get_doy
     period = ('DayOfyear', 365.25)
 
-
-def get_woy(dt: date) -> float:
-    return dt.isocalendar()[1]
+    def get_value(self, dt: date) -> float:
+        return (dt - date(dt.year, 1, 1)).days
 
 
 class WeekOfYearFeatures(SeasonalityFeature):
-    get_value = get_woy
     period = ('WeekOfYear', 52.1429)
+
+    def get_value(self, dt: date) -> float:
+        return dt.isocalendar()[1]

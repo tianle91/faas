@@ -1,10 +1,11 @@
-from datetime import date
+from datetime import date, timedelta
 
 import numpy as np
+import pandas as pd
 import pytest
+from pyspark.sql import SparkSession
 
-from faas.date import (DayOfWeekFeatures, get_dom, get_dow, get_doy, get_woy,
-                       normalized_sine)
+from faas.date import DayOfWeekFeatures, normalized_sine
 
 
 @pytest.mark.parametrize(
@@ -19,25 +20,16 @@ def test_normalized_sine(x: float, period: float, phase: int, expected: float):
     assert np.isclose(actual, expected)
 
 
-def test_DayOfWeekFeatures():
+def test_DayOfWeekFeatures(spark: SparkSession):
     dowf = DayOfWeekFeatures(date_column='dt')
-    assert dowf.feature_columns == [
+    expected_feature_columns = [
         f'Seasonality_{DayOfWeekFeatures.period[0]}_{i}'
         for i in range(7)
     ]
-
-
-def test_get_dow():
-    assert get_dow(dt=date(2021, 11, 12)) == 4
-
-
-def test_get_dom():
-    assert get_dom(dt=date(2021, 11, 12)) == 12
-
-
-def test_get_doy():
-    assert get_doy(dt=date(2021, 1, 1)) == 0
-
-
-def test_get_woy():
-    assert get_woy(dt=date(2021, 1, 7)) == 1
+    assert dowf.feature_columns == expected_feature_columns
+    df = spark.createDataFrame(pd.DataFrame({
+        'dt': [date(2021, 1, 1) + timedelta(days=i) for i in range(100)]
+    }))
+    df = dowf.transform(df)
+    assert set(df.columns) == (set(expected_feature_columns) | {'dt', })
+    df.collect()
