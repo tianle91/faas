@@ -1,6 +1,7 @@
 # Forests As A Service
 Gradient boosted trees.
 
+![flow](flow.png)
 
 # TODO
 
