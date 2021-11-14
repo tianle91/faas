@@ -6,7 +6,7 @@ import streamlit as st
 from pyspark.sql import SparkSession
 
 from faas.e2e import plot_feature_importances
-from faas.loss import plot_prediction_vs_actual
+from faas.evaluation.iid import plot_target_scatter
 from faas.storage import read_model
 from faas.utils_dataframe import JoinableByRowID
 from ui.checklist import run_features_checklist, run_target_checklist
@@ -65,7 +65,7 @@ def run_predict():
                             all_good_target = run_target_checklist(e2e, df=df)
                             if all_good_target:
                                 st.pyplot(
-                                    plot_prediction_vs_actual(
+                                    plot_target_scatter(
                                         df_prediction=(
                                             df_predict
                                             .select(e2e.target_column)
@@ -76,6 +76,6 @@ def run_predict():
                                             .select(e2e.target_column)
                                             .toPandas()
                                         ),
-                                        column=e2e.target_column,
+                                        target_column=e2e.target_column,
                                     )
                                 )
