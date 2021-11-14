@@ -5,7 +5,8 @@ import pandas as pd
 import pytest
 from pyspark.sql import SparkSession
 
-from faas.transformer.weight import HistoricalDecay, Normalize, historical_decay
+from faas.transformer.weight import (HistoricalDecay, Normalize,
+                                     historical_decay)
 
 
 @pytest.mark.parametrize(
