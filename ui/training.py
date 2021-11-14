@@ -2,7 +2,6 @@ import logging
 import os
 from tempfile import TemporaryDirectory
 
-import pandas as pd
 import streamlit as st
 from pyspark.sql import SparkSession
 
