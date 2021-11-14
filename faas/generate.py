@@ -1,5 +1,5 @@
 from datetime import date, timedelta
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 from numpy.random import default_rng
 
