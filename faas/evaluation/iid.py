@@ -3,13 +3,13 @@ import pandas as pd
 from matplotlib.figure import Figure
 
 
-def plot_prediction_vs_actual(
+def plot_target_scatter(
     df_prediction: pd.DataFrame,
     df_actual: pd.DataFrame,
-    column: str
+    target_column: str
 ) -> Figure:
-    pred = df_prediction[column].to_list()
-    actual = df_actual[column].to_list()
+    pred = df_prediction[target_column].to_list()
+    actual = df_actual[target_column].to_list()
     all_vals = pred + actual
     min_val, max_val = min(all_vals), max(all_vals)
     with plt.xkcd():
@@ -22,5 +22,5 @@ def plot_prediction_vs_actual(
         ax.set_xlim(min_val, max_val)
         ax.set_ylabel('Predicted')
         ax.set_ylim(min_val, max_val)
-        ax.set_title(column)
+        ax.set_title(target_column)
     return fig
