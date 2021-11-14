@@ -10,9 +10,9 @@ from matplotlib.figure import Figure
 from pyspark.sql import DataFrame
 from pyspark.sql.types import DataType, NumericType, StringType
 
-from faas.base import Passthrough, Pipeline
-from faas.encoder import OrdinalEncoder
-from faas.scaler import StandardScaler
+from faas.transformer.base import Passthrough, Pipeline
+from faas.transformer.encoder import OrdinalEncoder
+from faas.transformer.scaler import StandardScaler
 from faas.utils_dataframe import JoinableByRowID, get_non_numeric_columns
 
 logger = logging.getLogger(__name__)
