@@ -10,7 +10,7 @@ class GenerateSynthetic:
     """Generate synthetic data.
     """
 
-    def __init__(self, num_categorical: int = 1, num_numeric: int = 1):
+    def __init__(self, num_categorical: int = 2, num_numeric: int = 2):
         self.rng = default_rng()
         self.num_categorical = num_categorical
         self.num_numeric = num_numeric
