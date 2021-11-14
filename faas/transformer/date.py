@@ -6,7 +6,7 @@ import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
 from pyspark.sql.types import FloatType
 
-from faas.base import BaseTransformer
+from faas.transformer.base import BaseTransformer
 from faas.utils_dataframe import validate_date_types
 
 

@@ -1,7 +1,7 @@
 import pandas as pd
 from pyspark.sql import DataFrame, SparkSession
 
-from faas.encoder import OrdinalEncoder
+from faas.transformer.encoder import OrdinalEncoder
 
 
 def create_test_df(spark: SparkSession, n: int = 100) -> DataFrame:

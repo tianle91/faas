@@ -1,7 +1,7 @@
 import pandas as pd
 from pyspark.sql import DataFrame, SparkSession
 
-from faas.scaler import NumericScaler, StandardScaler, get_mean_std
+from faas.transformer.scaler import NumericScaler, StandardScaler, get_mean_std
 
 
 def create_test_df(spark: SparkSession, n: int = 100) -> DataFrame:

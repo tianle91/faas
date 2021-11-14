@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 from pyspark.sql import SparkSession
 
-from faas.date import DayOfWeekFeatures, normalized_sine
+from faas.transformer.date import DayOfWeekFeatures, normalized_sine
 
 
 @pytest.mark.parametrize(
