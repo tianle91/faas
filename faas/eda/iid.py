@@ -21,7 +21,7 @@ def correlation(
         if isinstance(df.schema[c].dataType, NumericType)
     ]
     if target_column not in columns:
-        raise TypeError(f'Target: {columns} should be numeric.')
+        raise TypeError(f'Target: {target_column} should be numeric.')
     assembler = VectorAssembler(
         inputCols=columns,
         outputCol=__CORRELATION_VECTOR_COL__
