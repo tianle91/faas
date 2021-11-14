@@ -18,6 +18,6 @@ def test_multi_ts():
     assert len(df) == 200
 
 
-def test_multi_ts():
+def test_spatial():
     df = pd.DataFrame(GenerateSynthetic().generate_spatial(num_locations=100))
     assert len(df) == 100
