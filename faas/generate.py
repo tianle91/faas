@@ -35,9 +35,9 @@ class GenerateSynthetic:
     def generate_iid(self, n: int = 1000) -> Dict[str, list]:
         res = {}
         for c in self.categorical_names:
-            res[c] = self.rng.choice(ALPHABETS, size=n)
+            res[c] = list(self.rng.choice(ALPHABETS, size=n))
         for c in self.numeric_names:
-            res[c] = self.rng.standard_normal(size=n)
+            res[c] = list(self.rng.standard_normal(size=n))
         return res
 
     def generate_ts(
