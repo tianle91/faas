@@ -9,6 +9,7 @@ from pyspark.sql import SparkSession
 from faas.e2e import E2EPipline, plot_feature_importances
 from faas.eda.iid import correlation, plot_target_correlation
 from faas.storage import write_model
+from ui.src.io import dump_file_to_location
 
 logger = logging.getLogger(__name__)
 
@@ -22,10 +23,10 @@ def run_training():
 
     with TemporaryDirectory() as temp_dir:
         if training_file is not None:
+
             # get the file into a local path
             training_path = os.path.join(temp_dir, 'train.csv')
-            pd.read_csv(training_file).to_csv(training_path, index=False)
-
+            dump_file_to_location(training_file, p=training_path)
             df = spark.read.options(header=True, inferSchema=True).csv(training_path)
 
             st.markdown('# Uploaded dataset')

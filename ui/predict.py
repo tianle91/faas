@@ -10,6 +10,7 @@ from faas.evaluation.iid import plot_target_scatter
 from faas.storage import read_model
 from faas.utils_dataframe import JoinableByRowID
 from ui.checklist import run_features_checklist, run_target_checklist
+from ui.src.io import dump_file_to_location
 
 
 def run_predict():
@@ -41,8 +42,7 @@ def run_predict():
         if predict_file is not None:
             # get the file into a local path
             predict_path = os.path.join(temp_dir, 'predict.csv')
-            pd.read_csv(predict_file).to_csv(predict_path, index=False)
-
+            dump_file_to_location(predict_file, p=predict_path)
             df = spark.read.options(header=True, inferSchema=True).csv(predict_path)
             df = JoinableByRowID(df).df
 
