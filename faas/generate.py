@@ -3,7 +3,7 @@ from typing import Dict, List
 
 from numpy.random import default_rng
 
-ALPHABET = [c for c in 'ABCDEFGHIJLKMNOPQRSTUVWXYZ']
+ALPHABETS = [c for c in 'ABCDEFGHIJLKMNOPQRSTUVWXYZ']
 
 
 class GenerateSynthetic:
@@ -26,7 +26,7 @@ class GenerateSynthetic:
     def generate_iid(self, n: int = 1000) -> Dict[str, list]:
         res = {}
         for c in self.categorical_names:
-            res[c] = self.rng.choice(ALPHABET, size=n)
+            res[c] = self.rng.choice(ALPHABETS, size=n)
         for c in self.numeric_names:
             res[c] = self.rng.standard_normal(size=n)
         return res
