@@ -5,6 +5,10 @@ from pyspark.sql import DataFrame
 from pyspark.sql.types import DateType, DoubleType, NumericType, StringType
 
 
+def is_numeric(df: DataFrame, column: str) -> bool:
+    return isinstance(df.schema[column].dataType, NumericType)
+
+
 def get_non_numeric_columns(df: DataFrame) -> List[str]:
     return [c for c in df.columns if not isinstance(df.schema[c].dataType, NumericType)]
 
