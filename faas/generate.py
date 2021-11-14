@@ -1,9 +1,18 @@
 from datetime import date, timedelta
 from typing import Dict, List
 
-from numpy.random import default_rng
+import numpy as np
+from numpy.random import Generator, default_rng
 
 ALPHABETS = [c for c in 'ABCDEFGHIJLKMNOPQRSTUVWXYZ']
+
+
+def latitude(rng: Generator, n: int = 1) -> np.ndarray:
+    return rng.uniform(low=-90., high=90., size=n)
+
+
+def longitude(rng: Generator, n: int = 1) -> np.ndarray:
+    return rng.uniform(low=-180., high=180., size=n)
 
 
 class GenerateSynthetic:
@@ -53,4 +62,15 @@ class GenerateSynthetic:
             res_ts[ts_type_column] = [ts_type, ] * num_days
             for k, l in res_ts.items():
                 res[k] = res.get(k, []) + l
+        return res
+
+    def generate_spatial(
+        self,
+        num_locations: int = 100,
+        latitude_column: str = 'lat',
+        longitude_column: str = 'lon',
+    ) -> Dict[str, list]:
+        res = self.generate_iid(n=num_locations)
+        res[latitude_column] = latitude(rng=self.rng, n=num_locations)
+        res[longitude_column] = longitude(rng=self.rng, n=num_locations)
         return res
