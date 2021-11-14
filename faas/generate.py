@@ -47,10 +47,10 @@ class GenerateSynthetic:
         num_days: int = 750,
         date_column: str = 'date'
     ) -> Dict[str, list]:
-        num_ts = len(ts_types)
-        res = self.generate_iid(n=num_ts * num_days)
-        res[date_column] = [date(2000, 1, 1) + timedelta(days=i) for i in range(num_days)] * num_ts
-        res[ts_type_column] = []
+        res = {}
         for ts_type in ts_types:
-            res[ts_type_column] += [ts_type, ] * num_days
+            res_ts = self.generate_ts(num_days=num_days, date_column=date_column)
+            res_ts[ts_type_column] = [ts_type, ] * num_days
+            for k, l in res_ts.items():
+                res[k] = res.get(k, []) + l
         return res
