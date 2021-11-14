@@ -1,8 +1,9 @@
-from typing import List
+from typing import List, Tuple
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
-from pyspark.sql.types import DateType, DoubleType, NumericType, StringType
+from pyspark.sql.types import (DataType, DateType, DoubleType, NumericType,
+                               StringType)
 
 
 def is_numeric(df: DataFrame, column: str) -> bool:

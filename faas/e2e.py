@@ -8,7 +8,7 @@ import pandas as pd
 from lightgbm import LGBMModel
 from matplotlib.figure import Figure
 from pyspark.sql import DataFrame
-from pyspark.sql.types import DataType, NumericType, StringType
+from pyspark.sql.types import NumericType, StringType
 
 from faas.transformer.base import Passthrough, Pipeline
 from faas.transformer.encoder import OrdinalEncoder
