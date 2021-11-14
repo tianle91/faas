@@ -13,8 +13,9 @@ from pyspark.sql.types import DataType, NumericType, StringType
 from faas.transformer.base import Passthrough, Pipeline
 from faas.transformer.encoder import OrdinalEncoder
 from faas.transformer.scaler import StandardScaler
-from faas.utils_dataframe import (JoinableByRowID, get_non_numeric_columns,
-                                  is_numeric)
+from faas.utils_dataframe import (JoinableByRowID,
+                                  check_columns_are_desired_type,
+                                  get_non_numeric_columns, is_numeric)
 
 logger = logging.getLogger(__name__)
 
@@ -118,20 +119,6 @@ def plot_feature_importances(m: LGBMModel, top_n: int = 10) -> Figure:
         ax.tick_params(labelrotation=90)
         ax.set_title('Feature Importances')
     return fig
-
-
-def check_columns_are_desired_type(
-    columns: List[str], dtype: DataType, df: DataFrame
-) -> Tuple[bool, List[str]]:
-    all_passed = True
-    messages = []
-    for c in columns:
-        actual = df.schema[c].dataType
-        if not isinstance(actual, dtype):
-            all_passed = False
-            messages.append(
-                f'Expected column: {c} to be {dtype} but received {actual} instead.')
-    return all_passed, messages
 
 
 def check_target(e2e: E2EPipline, df: DataFrame) -> bool:
