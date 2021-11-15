@@ -11,7 +11,7 @@ from faas.storage import write_model
 from faas.utils.dataframe import (get_date_columns, get_non_numeric_columns,
                                   get_numeric_columns)
 from faas.utils.io import dump_file_to_location
-from faas.utils.types import load_csv, DEFAULT_DATE_FORMAT
+from faas.utils.types import DEFAULT_DATE_FORMAT, load_csv
 
 logger = logging.getLogger(__name__)
 

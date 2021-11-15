@@ -9,6 +9,7 @@ from faas.evaluation.iid import plot_target_scatter
 from faas.storage import read_model
 from faas.utils.dataframe import JoinableByRowID
 from faas.utils.io import dump_file_to_location
+from faas.utils.types import DEFAULT_DATE_FORMAT
 from ui.checklist import run_features_checklist, run_target_checklist
 
 
