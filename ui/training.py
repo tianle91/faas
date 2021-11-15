@@ -32,10 +32,9 @@ def run_training():
             df = load_csv(spark=spark, p=training_path)
 
             ########################################################################################
-            st.markdown('# Uploaded dataset')
+            st.markdown('# What to train?')
             st.write(df.limit(10).toPandas())
 
-            st.markdown('# What to train?')
             target_column = st.selectbox('target column', options=df.columns)
 
             _ = st.selectbox(label='date column', options=get_date_columns(df))
