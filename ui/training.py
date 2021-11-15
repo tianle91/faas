@@ -69,9 +69,9 @@ def run_training():
                     )
 
             ########################################################################################
-            st.header('Train Now')
-            train_now = st.select_slider('Train now?', options=['No', 'Yes'])
-            if train_now == 'Yes':
+            st.header('Train Now?')
+            train_now = st.button('Train now!')
+            if train_now:
                 e2e = E2EPipline(
                     df=df,
                     target_column=target_column,
