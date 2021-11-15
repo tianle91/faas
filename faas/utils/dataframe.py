@@ -6,6 +6,18 @@ from pyspark.sql.types import (DataType, DateType, DoubleType, NumericType,
                                StringType)
 
 
+def get_non_numeric_columns(df: DataFrame) -> List[str]:
+    return [c for c in df.columns if not isinstance(df.schema[c].dataType, NumericType)]
+
+
+def get_numeric_columns(df: DataFrame) -> List[str]:
+    return [c for c in df.columns if isinstance(df.schema[c].dataType, NumericType)]
+
+
+def get_date_columns(df: DataFrame) -> List[str]:
+    return [c for c in df.columns if isinstance(df.schema[c].dataType, DateType)]
+
+
 def is_numeric(df: DataFrame, column: str) -> bool:
     return isinstance(df.schema[column].dataType, NumericType)
 
@@ -22,10 +34,6 @@ def check_columns_are_desired_type(
             messages.append(
                 f'Expected column: {c} to be {dtype} but received {actual} instead.')
     return all_passed, messages
-
-
-def get_non_numeric_columns(df: DataFrame) -> List[str]:
-    return [c for c in df.columns if not isinstance(df.schema[c].dataType, NumericType)]
 
 
 def validate_numeric_types(df: DataFrame, cols: List[str]):
