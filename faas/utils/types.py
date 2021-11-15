@@ -10,7 +10,7 @@ from faas.utils.dataframe import (get_date_columns, get_non_numeric_columns,
 
 
 @dataclass
-class CSVTypes:
+class DeclaredTypes:
     numeric_columns: Optional[List[str]] = None,
     categorical_columns: Optional[List[str]] = None,
     date_columns: Optional[List[str]] = None,
@@ -22,7 +22,7 @@ class CSVTypes:
             raise ValueError('One of numeric or categorical must be set.')
 
 
-def load_csv_with_types(spark: SparkSession, p: str, csv_type: CSVTypes) -> DataFrame:
+def load_csv_with_types(spark: SparkSession, p: str, csv_type: DeclaredTypes) -> DataFrame:
     fields = []
     csv_type.validate()
     if csv_type.numeric_columns is not None:
@@ -51,8 +51,8 @@ def load_csv_with_types(spark: SparkSession, p: str, csv_type: CSVTypes) -> Data
     return df
 
 
-def inferred_types(df: DataFrame) -> CSVTypes:
-    return CSVTypes(
+def inferred_types(df: DataFrame) -> DeclaredTypes:
+    return DeclaredTypes(
         numeric_columns=get_numeric_columns(df),
         categorical_columns=get_non_numeric_columns(df),
         date_columns=get_date_columns(df),
