@@ -7,9 +7,9 @@ from pyspark.sql import SparkSession
 from faas.e2e import plot_feature_importances
 from faas.evaluation.iid import plot_target_scatter
 from faas.storage import read_model
-from faas.utils_dataframe import JoinableByRowID
+from faas.utils.dataframe import JoinableByRowID
+from faas.utils.io import dump_file_to_location
 from ui.checklist import run_features_checklist, run_target_checklist
-from ui.src.io import dump_file_to_location
 
 
 def run_predict():

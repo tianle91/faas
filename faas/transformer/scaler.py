@@ -7,7 +7,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql.types import DoubleType
 
 from faas.transformer.base import InvertibleTransformer
-from faas.utils_dataframe import (validate_categorical_types,
+from faas.utils.dataframe import (validate_categorical_types,
                                   validate_numeric_types)
 
 

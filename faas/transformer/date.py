@@ -7,7 +7,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql.types import FloatType
 
 from faas.transformer.base import BaseTransformer
-from faas.utils_dataframe import validate_date_types
+from faas.utils.dataframe import validate_date_types
 
 
 def normalized_sine(x: float, period: float, phase: int):
