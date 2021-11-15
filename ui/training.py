@@ -8,7 +8,10 @@ from pyspark.sql import SparkSession
 from faas.e2e import E2EPipline, plot_feature_importances
 from faas.eda.iid import correlation, plot_target_correlation
 from faas.storage import write_model
+from faas.utils.dataframe import (get_date_columns, get_non_numeric_columns,
+                                  get_numeric_columns)
 from faas.utils.io import dump_file_to_location
+from faas.utils.types import load_csv
 
 logger = logging.getLogger(__name__)
 
@@ -26,39 +29,58 @@ def run_training():
             # get the file into a local path
             training_path = os.path.join(temp_dir, 'train.csv')
             dump_file_to_location(training_file, p=training_path)
-            df = spark.read.options(header=True, inferSchema=True).csv(training_path)
+            df = load_csv(spark=spark, p=training_path)
 
+            ########################################################################################
             st.markdown('# Uploaded dataset')
             st.write(df.limit(10).toPandas())
 
             st.markdown('# What to train?')
             target_column = st.selectbox('target column', options=df.columns)
-            non_target_columns = df.columns
-            if target_column is not None:
-                non_target_columns.pop(non_target_columns.index(target_column))
 
-            feature_columns = st.multiselect(
-                'feature columns', options=non_target_columns, default=non_target_columns)
+            _ = st.selectbox(label='date column', options=get_date_columns(df))
 
-            if target_column is not None and feature_columns is not None:
-                corr_df = correlation(df, feature_columns=feature_columns,
-                                      target_column=target_column)
-                st.pyplot(plot_target_correlation(corr_df, target_column=target_column))
+            categorical_columns = get_non_numeric_columns(df)
+            if target_column in categorical_columns:
+                categorical_columns.pop(categorical_columns.index(target_column))
+            categorical_columns = st.multiselect(
+                'categorical columns', options=categorical_columns, default=categorical_columns
+            )
 
+            numeric_columns = get_numeric_columns(df)
+            if target_column in numeric_columns:
+                numeric_columns.pop(numeric_columns.index(target_column))
+            numeric_columns = st.multiselect(
+                'numeric columns', options=numeric_columns, default=numeric_columns
+            )
+
+            with st.expander('Correlation'):
+                if target_column in get_numeric_columns(df):
+                    corr_df = correlation(
+                        df,
+                        feature_columns=numeric_columns,
+                        target_column=target_column
+                    )
+                    st.pyplot(plot_target_correlation(corr_df, target_column=target_column))
+                else:
+                    st.warning(
+                        'Correlation not available because '
+                        f'target: {target_column} is not numeric.'
+                    )
+
+            ########################################################################################
             st.markdown('# Train Now?')
-            e2e = None
-            if st.button('Yes'):
+            train_now = st.select_slider('Train now?', options=['No', 'Yes'])
+            if train_now == 'Yes':
                 e2e = E2EPipline(
                     df=df,
                     target_column=target_column,
+                    feature_columns=categorical_columns + numeric_columns,
                 ).fit(df)
-
-            if e2e is not None:
-                st.markdown('# Done!')
                 st.session_state['trained_model'] = e2e
-
                 key = write_model(e2e)
-                st.markdown(f'Model key (save this for prediction): `{key}`')
+                st.success(f'Model key (save this for prediction): `{key}`')
                 logger.info(f'wrote model key: {key}')
 
-                st.pyplot(plot_feature_importances(m=e2e.m))
+                with st.expander('Feature importances'):
+                    st.pyplot(plot_feature_importances(m=e2e.m))
