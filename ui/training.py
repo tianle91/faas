@@ -11,7 +11,7 @@ from faas.storage import write_model
 from faas.utils.dataframe import (get_date_columns, get_non_numeric_columns,
                                   get_numeric_columns)
 from faas.utils.io import dump_file_to_location
-from faas.utils.types import load_csv
+from faas.utils.types import load_csv, DEFAULT_DATE_FORMAT
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +21,7 @@ def run_training():
     spark = SparkSession.builder.getOrCreate()
 
     st.title('Training')
+    st.markdown(f'Ensure that dates are in the `{DEFAULT_DATE_FORMAT}` format.')
     training_file = st.file_uploader('Training data', type='csv')
 
     with TemporaryDirectory() as temp_dir:

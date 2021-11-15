@@ -35,6 +35,7 @@ def run_predict():
             st.markdown(f'Feature columns: {formatted_feature_cols}')
 
     st.markdown('# Upload dataset')
+    st.markdown(f'Ensure that dates are in the `{DEFAULT_DATE_FORMAT}` format.')
     predict_file = st.file_uploader('Predict data', type='csv')
 
     with TemporaryDirectory() as temp_dir:
