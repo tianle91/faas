@@ -32,7 +32,7 @@ def run_training():
             df = load_csv(spark=spark, p=training_path)
 
             ########################################################################################
-            st.markdown('# What to train?')
+            st.header('What to train?')
             st.write(df.limit(10).toPandas())
 
             target_column = st.selectbox('target column', options=df.columns)
@@ -68,7 +68,7 @@ def run_training():
                     )
 
             ########################################################################################
-            st.markdown('# Train Now?')
+            st.header('Train Now')
             train_now = st.select_slider('Train now?', options=['No', 'Yes'])
             if train_now == 'Yes':
                 e2e = E2EPipline(
