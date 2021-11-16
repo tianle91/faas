@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import date
 from typing import List, Optional, Tuple
 
 import matplotlib.pyplot as plt
@@ -13,11 +14,32 @@ from pyspark.sql.types import NumericType, StringType
 from faas.transformer.base import Passthrough, Pipeline
 from faas.transformer.encoder import OrdinalEncoder
 from faas.transformer.scaler import StandardScaler
+from faas.transformer.weight import Normalize
 from faas.utils.dataframe import (JoinableByRowID,
-                                  check_columns_are_desired_type,
-                                  get_non_numeric_columns, is_numeric)
+                                  check_columns_are_desired_type)
 
 logger = logging.getLogger(__name__)
+
+
+def get_x_pipeline(numeric_features: List[str], categorical_features: List[str]) -> Pipeline:
+    xsteps = [Passthrough(columns=numeric_features)]
+    xsteps += [OrdinalEncoder(c) for c in categorical_features]
+    return Pipeline(steps=xsteps)
+
+
+def get_y_pipeline(
+    target_column: str, target_is_numeric: bool = True, group_column: Optional[str] = None,
+) -> Pipeline:
+    if not target_is_numeric:
+        return Pipeline([OrdinalEncoder(categorical_column=target_column)])
+    if group_column is not None:
+        return Pipeline([StandardScaler(column=target_column, group_column=group_column)])
+    else:
+        return Pipeline([Passthrough(columns=[target_column])])
+
+
+def get_w_pipeline(date_column: str) -> Pipeline:
+    return Pipeline([Normalize(group_column=date_column)])
 
 
 class E2EPipline:
@@ -26,78 +48,82 @@ class E2EPipline:
         self,
         df: DataFrame,
         target_column: str,
-        target_group: Optional[str] = None,  # = 'protocol_type'
-        feature_columns: Optional[str] = None
+        target_group_column: Optional[str] = None,
+        date_column: Optional[str] = None,
+        categorical_features: Optional[List[str]] = None,
+        numeric_features: Optional[List[str]] = None,
     ):
         self.target_column = target_column
-        self.target_is_numeric = is_numeric(df=df, column=self.target_column)
+        self.target_is_numeric = isinstance(df.schema[self.target_column].dataType, NumericType)
+        self.target_group_column = target_group_column
 
-        if feature_columns is None:
-            feature_columns = [c for c in df.columns if c != target_column]
-            logger.info(
-                'Received None as feature_columns, automatically using all non-target columns. '
-                f'len(feature_columns): {len(feature_columns)}'
-            )
-        self.feature_columns = feature_columns
-
-        categorical_features = get_non_numeric_columns(df.select(*feature_columns))
-        numeric_features = [c for c in feature_columns if c not in categorical_features]
+        self.date_column = date_column
+        self.categorical_features = categorical_features
+        self.numeric_features = numeric_features
         logger.info(
-            f'num_features: {len(feature_columns)} '
             f'num_categorical_features: {len(categorical_features)} '
             f'num_numeric_features: {len(numeric_features)}'
         )
-        self.categorical_features = categorical_features
-        self.numeric_features = numeric_features
 
-        xsteps = [Passthrough(columns=self.numeric_features)]
-        for c in self.categorical_features:
-            xsteps.append(OrdinalEncoder(c))
-        self.x_pipeline = Pipeline(steps=xsteps)
-
-        ysteps = []
-        if target_group is not None:
-            ysteps.append(StandardScaler(column=target_column, group_column=target_group))
-        else:
-            ysteps.append(Passthrough(columns=[self.target_column]))
-        self.y_pipeline = Pipeline(steps=ysteps)
+        self.x_pipeline = get_x_pipeline(
+            numeric_features=self.numeric_features,
+            categorical_features=self.categorical_features
+        )
+        self.y_pipeline = get_y_pipeline(
+            target_column=self.target_column,
+            target_is_numeric=self.target_is_numeric,
+            group_column=self.target_group_column
+        )
+        self.w_pipeline = None
+        if self.date_column is not None:
+            self.w_pipeline = get_w_pipeline(date_column=self.date_column)
 
         self.m = LGBMModel(
             objective='regression' if self.target_is_numeric else 'binary',
             deterministic=True,
         )
 
-    def get_x(self, df: DataFrame) -> pd.DataFrame:
-        return (
-            self.x_pipeline
-            .transform(df)
-            .select(self.x_pipeline.feature_columns)
-            .toPandas()
-        )
+    @property
+    def feature_columns(self) -> List[str]:
+        out = []
+        if self.categorical_features is not None:
+            out += self.categorical_features
+        if self.numeric_features is not None:
+            out += self.numeric_features
+        return out
 
-    def get_y(self, df: DataFrame) -> pd.DataFrame:
-        return (
-            self.y_pipeline
-            .transform(df)
-            .select(self.y_pipeline.feature_columns)
-            .toPandas()
-        )
+    def check_target(self, df: DataFrame) -> Tuple[bool, List[str]]:
+        expected_dtype = NumericType if self.target_is_numeric else StringType
+        return check_columns_are_desired_type(
+            columns=[self.target_column], dtype=expected_dtype, df=df)
+
+    def check_numeric(self, df: DataFrame) -> Tuple[bool, List[str]]:
+        return check_columns_are_desired_type(
+            columns=self.numeric_features, dtype=NumericType, df=df)
+
+    def check_categorical(self, df: DataFrame) -> Tuple[bool, List[str]]:
+        return check_columns_are_desired_type(
+            columns=self.categorical_features, dtype=StringType, df=df)
 
     def fit(self, df: DataFrame) -> E2EPipline:
-        self.x_pipeline.fit(df)
-        self.y_pipeline.fit(df)
-        X, y = self.get_x(df), self.get_y(df)
+        X = self.x_pipeline.fit(df).get_transformed_as_pdf(df)
+        y = self.y_pipeline.fit(df).get_transformed_as_pdf(df)
+        p = {}
+        if self.w_pipeline is not None:
+            p['sample_weight'] = self.w_pipeline.fit(df).get_transformed_as_pdf(df)
+
         self.m.fit(
             X=X,
             y=y,
             feature_name=self.feature_columns,
-            categorical_feature=self.categorical_features
+            categorical_feature=self.categorical_features,
+            **p
         )
         return self
 
     def predict(self, df: DataFrame) -> DataFrame:
         jb = JoinableByRowID(df)
-        Xpred = self.get_x(jb.df)
+        Xpred = self.x_pipeline.get_transformed_as_pdf(jb.df)
         ypred = self.m.predict(Xpred)
         df_with_y = jb.join_by_row_id(
             ypred,
@@ -119,30 +145,3 @@ def plot_feature_importances(m: LGBMModel, top_n: int = 10) -> Figure:
         ax.tick_params(labelrotation=90)
         ax.set_title('Feature Importances')
     return fig
-
-
-def check_target(e2e: E2EPipline, df: DataFrame) -> bool:
-    ok, messages = check_columns_are_desired_type(
-        columns=[e2e.target_column],
-        dtype=NumericType if e2e.target_is_numeric else StringType,
-        df=df
-    )
-    return ok, messages
-
-
-def check_numeric(e2e: E2EPipline, df: DataFrame) -> Tuple[bool, List[str]]:
-    ok, messages = check_columns_are_desired_type(
-        columns=e2e.numeric_features,
-        dtype=NumericType,
-        df=df
-    )
-    return ok, messages
-
-
-def check_categorical(e2e: E2EPipline, df: DataFrame) -> bool:
-    ok, messages = check_columns_are_desired_type(
-        columns=e2e.categorical_features,
-        dtype=StringType,
-        df=df
-    )
-    return ok, messages

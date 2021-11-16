@@ -38,27 +38,27 @@ def run_training():
 
             target_column = st.selectbox('target column', options=df.columns)
 
-            _ = st.selectbox(label='date column', options=get_date_columns(df))
+            date_column = st.selectbox(label='date column', options=get_date_columns(df))
 
-            categorical_columns = get_non_numeric_columns(df)
-            if target_column in categorical_columns:
-                categorical_columns.pop(categorical_columns.index(target_column))
-            categorical_columns = st.multiselect(
-                'categorical columns', options=categorical_columns, default=categorical_columns
+            categorical_features = get_non_numeric_columns(df)
+            if target_column in categorical_features:
+                categorical_features.pop(categorical_features.index(target_column))
+            categorical_features = st.multiselect(
+                'categorical features', options=categorical_features, default=categorical_features
             )
 
-            numeric_columns = get_numeric_columns(df)
-            if target_column in numeric_columns:
-                numeric_columns.pop(numeric_columns.index(target_column))
-            numeric_columns = st.multiselect(
-                'numeric columns', options=numeric_columns, default=numeric_columns
+            numeric_features = get_numeric_columns(df)
+            if target_column in numeric_features:
+                numeric_features.pop(numeric_features.index(target_column))
+            numeric_features = st.multiselect(
+                'numeric features', options=numeric_features, default=numeric_features
             )
 
             with st.expander('Correlation'):
                 if target_column in get_numeric_columns(df):
                     corr_df = correlation(
                         df,
-                        feature_columns=numeric_columns,
+                        feature_columns=numeric_features,
                         target_column=target_column
                     )
                     st.pyplot(plot_target_correlation(corr_df, target_column=target_column))
@@ -75,7 +75,9 @@ def run_training():
                 e2e = E2EPipline(
                     df=df,
                     target_column=target_column,
-                    feature_columns=categorical_columns + numeric_columns,
+                    date_column=date_column,
+                    categorical_features=categorical_features,
+                    numeric_features=numeric_features,
                 ).fit(df)
                 st.session_state['trained_model'] = e2e
                 key = write_model(e2e)

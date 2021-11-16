@@ -18,10 +18,6 @@ def get_date_columns(df: DataFrame) -> List[str]:
     return [c for c in df.columns if isinstance(df.schema[c].dataType, DateType)]
 
 
-def is_numeric(df: DataFrame, column: str) -> bool:
-    return isinstance(df.schema[column].dataType, NumericType)
-
-
 def check_columns_are_desired_type(
     columns: List[str], dtype: DataType, df: DataFrame
 ) -> Tuple[bool, List[str]]:

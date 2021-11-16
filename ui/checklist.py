@@ -1,11 +1,11 @@
 import streamlit as st
 from pyspark.sql import DataFrame
 
-from faas.e2e import E2EPipline, check_categorical, check_numeric, check_target
+from faas.e2e import E2EPipline
 
 
 def run_target_checklist(e2e: E2EPipline, df: DataFrame) -> bool:
-    ok, messages = check_target(e2e, df=df)
+    ok, messages = e2e.check_target(df)
     st.markdown('Target column: ' + '✅' if ok else '❌')
     if not ok:
         for message in messages:
@@ -14,7 +14,7 @@ def run_target_checklist(e2e: E2EPipline, df: DataFrame) -> bool:
 
 
 def run_numeric_features_checklist(e2e: E2EPipline, df: DataFrame) -> bool:
-    ok, messages = check_numeric(e2e, df=df)
+    ok, messages = e2e.check_numeric(df)
     if not ok:
         for message in messages:
             st.error(message)
@@ -22,7 +22,7 @@ def run_numeric_features_checklist(e2e: E2EPipline, df: DataFrame) -> bool:
 
 
 def run_categorical_features_checklist(e2e: E2EPipline, df: DataFrame) -> bool:
-    ok, messages = check_categorical(e2e, df=df)
+    ok, messages = e2e.check_categorical(df)
     if not ok:
         for message in messages:
             st.error(message)
