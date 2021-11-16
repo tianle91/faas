@@ -27,7 +27,7 @@ class InvertibleTransformer(BaseTransformer):
 
 class Passthrough(InvertibleTransformer):
 
-    def __init__(self, columns: str) -> None:
+    def __init__(self, columns: List[str]) -> None:
         self.columns = columns
 
     @property
