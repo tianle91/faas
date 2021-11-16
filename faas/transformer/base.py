@@ -56,6 +56,9 @@ class Pipeline(BaseTransformer):
             df = transformer.transform(df)
         return df
 
+    def get_transformed_as_pdf(self, df: DataFrame) -> pd.DataFrame:
+        return self.transform(df).select(*self.feature_columns).toPandas()
+
     def inverse_transform(self, df: DataFrame) -> DataFrame:
         for transformer in self.steps[::-1]:
             if not isinstance(transformer, InvertibleTransformer):
