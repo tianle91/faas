@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from datetime import date
 from typing import List, Optional, Tuple
 
 import matplotlib.pyplot as plt
