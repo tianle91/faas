@@ -34,7 +34,7 @@ def run_training():
 
             ########################################################################################
             st.header('What to train?')
-            st.write(df.limit(10).toPandas())
+            st.dataframe(df.limit(10).toPandas())
 
             target_column = st.selectbox('target column', options=df.columns)
 

@@ -1,6 +1,7 @@
 import os
 from tempfile import TemporaryDirectory
 
+import pandas as pd
 import streamlit as st
 from pyspark.sql import SparkSession
 
@@ -11,6 +12,13 @@ from faas.utils.dataframe import JoinableByRowID
 from faas.utils.io import dump_file_to_location
 from faas.utils.types import DEFAULT_DATE_FORMAT
 from ui.checklist import run_features_checklist, run_target_checklist
+
+
+def highlight_target(s: pd.Series, target_column: str):
+    if s.name == target_column:
+        return ['background-color: #ff0000'] * len(s)
+    else:
+        return ['background-color: #000000'] * len(s)
 
 
 def run_predict():
@@ -29,6 +37,7 @@ def run_predict():
             st.error(f'Key {key} not found!')
 
     if e2e is not None:
+        st.success('Model loaded!')
         with st.expander('Details on loaded model'):
             st.pyplot(plot_feature_importances(m=e2e.m))
             st.markdown(f'Target column: `{e2e.target_column}`')
@@ -48,14 +57,26 @@ def run_predict():
             df = JoinableByRowID(df).df
 
             all_good_x = run_features_checklist(e2e, df=df)
+            if all_good_x:
+                st.success('Uploaded dataset is valid!')
             with st.expander('Details on uploaded dataset'):
-                st.write(df.limit(10).toPandas())
+                st.dataframe(df.limit(10).toPandas())
 
             if all_good_x:
                 st.markdown('## Predict Now?')
                 if st.button('Yes'):
                     df_predict = e2e.predict(df)
-                    st.write(df_predict.limit(10).toPandas())
+                    st.dataframe((
+                        df_predict
+                        .select(*e2e.feature_columns, e2e.target_column)
+                        .limit(10)
+                        .toPandas()
+                        .style
+                        .apply(
+                            lambda s: highlight_target(s, target_column=e2e.target_column),
+                            axis=0
+                        )
+                    ))
                     st.download_button(
                         'Download prediction',
                         data=df_predict.toPandas().to_csv(),
