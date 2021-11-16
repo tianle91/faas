@@ -25,8 +25,8 @@ def plot_target_scatter(
         fig, ax = plt.subplots(figsize=(5, 5))
         ax.plot(joined[date_column], joined[PRED_TARGET_COL], label='Predicted', alpha=.5)
         ax.plot(joined[date_column], joined[ACTUAL_TARGET_COL], label='Actual', alpha=.5)
+
         ax.set_title(target_column)
         ax.set_ylabel(target_column)
         ax.legend()
-
     return fig
