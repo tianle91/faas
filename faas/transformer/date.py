@@ -15,9 +15,15 @@ def normalized_sine(x: float, period: float, phase: int):
     return math.sin(x)
 
 
+def normalized_cosine(x: float, period: float, phase: int):
+    x = 2. * math.pi * (x + phase) / period
+    return math.cos(x)
+
+
 class SeasonalityFeature(BaseTransformer):
     """Use when there are date columns.
     """
+
     def __init__(self, date_column: str) -> None:
         self.date_column = date_column
 
@@ -33,9 +39,17 @@ class SeasonalityFeature(BaseTransformer):
         out = {}
         period_name, period_value = self.period
         i = 0
-        while i <= period_value:
-            out[f'Seasonality_{period_name}_{i}'] = F.udf(
+        while i <= (period_value / 2.):
+            out[f'Seasonality_{period_name}_sin_{i}'] = F.udf(
                 lambda dt: normalized_sine(
+                    self.get_value(dt),
+                    period=period_value,
+                    phase=i
+                ),
+                FloatType()
+            )
+            out[f'Seasonality_{period_name}_cos_{i}'] = F.udf(
+                lambda dt: normalized_cosine(
                     self.get_value(dt),
                     period=period_value,
                     phase=i
