@@ -79,7 +79,8 @@ class E2EPipline:
 
         self.x_pipeline = get_x_pipeline(
             numeric_features=self.numeric_features,
-            categorical_features=self.categorical_features
+            categorical_features=self.categorical_features,
+            date_column=self.date_column
         )
         self.y_pipeline = get_y_pipeline(
             target_column=self.target_column,
