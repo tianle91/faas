@@ -11,6 +11,8 @@ from pyspark.sql import DataFrame
 from pyspark.sql.types import NumericType, StringType
 
 from faas.transformer.base import Passthrough, Pipeline
+from faas.transformer.date import (DayOfMonthFeatures, DayOfWeekFeatures,
+                                   DayOfYearFeatures, WeekOfYearFeatures)
 from faas.transformer.encoder import OrdinalEncoder
 from faas.transformer.scaler import StandardScaler
 from faas.transformer.weight import Normalize
@@ -20,9 +22,20 @@ from faas.utils.dataframe import (JoinableByRowID,
 logger = logging.getLogger(__name__)
 
 
-def get_x_pipeline(numeric_features: List[str], categorical_features: List[str]) -> Pipeline:
+def get_x_pipeline(
+    numeric_features: List[str],
+    categorical_features: List[str],
+    date_column: Optional[str] = None
+) -> Pipeline:
     xsteps = [Passthrough(columns=numeric_features)]
     xsteps += [OrdinalEncoder(c) for c in categorical_features]
+    if date_column is not None:
+        xsteps += [
+            DayOfMonthFeatures(date_column=date_column),
+            DayOfWeekFeatures(date_column=date_column),
+            DayOfYearFeatures(date_column=date_column),
+            WeekOfYearFeatures(date_column=date_column),
+        ]
     return Pipeline(steps=xsteps)
 
 
