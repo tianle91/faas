@@ -42,6 +42,9 @@ def get_mean_std(
 
 
 class StandardScaler(InvertibleTransformer):
+    """Use if categorical column correlates strongly with target.
+    """
+
     def __init__(self, column: str, group_column: Optional[str] = None) -> None:
         self.column = column
         self.group_column = group_column
@@ -96,6 +99,9 @@ __BASE_NORMALIZED__ = '__BASE_NORMALIZED__'
 
 
 class NumericScaler(InvertibleTransformer):
+    """Use if numeric column correlates strongly with target.
+    """
+
     def __init__(self, column: str, base_column: str) -> None:
         self.column = column
         self.base_column = base_column
@@ -142,6 +148,9 @@ class NumericScaler(InvertibleTransformer):
 
 
 class LogTransform(InvertibleTransformer):
+    """Use if target is non-negative.
+    """
+
     def __init__(self, column: str) -> None:
         self.column = column
 
