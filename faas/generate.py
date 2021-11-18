@@ -1,18 +1,38 @@
 from datetime import date, timedelta
 from typing import Dict, List
 
-import numpy as np
 from numpy.random import Generator, default_rng
 
 ALPHABETS = [c for c in 'ABCDEFGHIJLKMNOPQRSTUVWXYZ']
 
 
-def latitude(rng: Generator, n: int = 1) -> np.ndarray:
-    return rng.uniform(low=-90., high=90., size=n)
+def numeric(rng, n: int = 1) -> List[float]:
+    return [float(v) for v in rng.standard_normal(size=n)]
 
 
-def longitude(rng: Generator, n: int = 1) -> np.ndarray:
-    return rng.uniform(low=-180., high=180., size=n)
+def categorical(rng, n: int = 1) -> List[float]:
+    return [str(v) for v in rng.choice(ALPHABETS, size=n)]
+
+
+def latitude(rng: Generator, n: int = 1) -> List[float]:
+    return [float(v) for v in rng.uniform(low=-90., high=90., size=n)]
+
+
+def longitude(rng: Generator, n: int = 1) -> List[float]:
+    return [float(v) for v in rng.uniform(low=-180., high=180., size=n)]
+
+
+def convert_dict_to_list(d: Dict[str, list]) -> List[dict]:
+    first_key = list(d.keys())[0]
+    n = len(d[first_key])
+    for k, v in d.items():
+        if len(v) != n:
+            raise ValueError(f'Value for key: {k} is not of length {n}! It is {len(v)} instead.')
+    data = [
+        {k: d[k][i] for k in d}
+        for i in range(n)
+    ]
+    return data
 
 
 class GenerateSynthetic:
@@ -35,9 +55,9 @@ class GenerateSynthetic:
     def generate_iid(self, n: int = 1000) -> Dict[str, list]:
         res = {}
         for c in self.categorical_names:
-            res[c] = list(self.rng.choice(ALPHABETS, size=n))
+            res[c] = categorical(self.rng, n)
         for c in self.numeric_names:
-            res[c] = list(self.rng.standard_normal(size=n))
+            res[c] = numeric(self.rng, n)
         return res
 
     def generate_ts(
@@ -66,7 +86,7 @@ class GenerateSynthetic:
 
     def generate_spatial(
         self,
-        num_locations: int = 100,
+        num_locations: int = 1000,
         latitude_column: str = 'lat',
         longitude_column: str = 'lon',
     ) -> Dict[str, list]:
