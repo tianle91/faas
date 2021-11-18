@@ -42,7 +42,7 @@ def get_mean_std(
 
 
 class StandardScaler(InvertibleTransformer):
-    def __init__(self, column, group_column: Optional[str] = None) -> None:
+    def __init__(self, column: str, group_column: Optional[str] = None) -> None:
         self.column = column
         self.group_column = group_column
         self._mean_std = None
@@ -96,13 +96,17 @@ __BASE_NORMALIZED__ = '__BASE_NORMALIZED__'
 
 
 class NumericScaler(InvertibleTransformer):
-    def __init__(self, column, base_column: str) -> None:
+    def __init__(self, column: str, base_column: str) -> None:
         self.column = column
         self.base_column = base_column
 
     @property
     def feature_column(self) -> str:
         return f'NumericScaler_{self.column}_by_{self.base_column}'
+
+    @property
+    def feature_columns(self) -> str:
+        return [self.feature_column]
 
     def validate(self, df: DataFrame, is_inverse=False):
         if not is_inverse:
@@ -134,4 +138,39 @@ class NumericScaler(InvertibleTransformer):
         df = self.normalize_base(df)
         df = df.withColumn(self.column, F.col(self.feature_column) * F.col(__BASE_NORMALIZED__))
         df = df.drop(__BASE_NORMALIZED__)
+        return df
+
+
+class LogTransform(InvertibleTransformer):
+    def __init__(self, column: str) -> None:
+        self.column = column
+
+    @property
+    def feature_column(self) -> str:
+        return f'LogTransform_{self.column}'
+
+    @property
+    def feature_columns(self) -> str:
+        return [self.feature_column]
+
+    def validate(self, df: DataFrame, is_inverse=False):
+        if not is_inverse:
+            validate_numeric_types(df, cols=[self.column])
+            num_negative = df.filter(F.col(self.column) < 0).count()
+            if num_negative > 0:
+                raise ValueError(
+                    'Negative values cannot be used in LogTransform. '
+                    f'num_negative: {num_negative}'
+                )
+        else:
+            validate_numeric_types(df, cols=[self.feature_column])
+
+    def transform(self, df: DataFrame) -> DataFrame:
+        self.validate(df)
+        df = df.withColumn(self.feature_column, F.log(F.lit(1.) + F.col(self.column)))
+        return df
+
+    def inverse_transform(self, df: DataFrame) -> DataFrame:
+        self.validate(df, is_inverse=True)
+        df = df.withColumn(self.column, F.exp(self.feature_column) - F.lit(1.))
         return df
