@@ -5,8 +5,8 @@ import pandas as pd
 import streamlit as st
 from pyspark.sql import SparkSession
 
-from faas.e2e import plot_feature_importances
 from faas.evaluation.iid import plot_target_scatter
+from faas.explain import plot_feature_importances
 from faas.storage import read_model
 from faas.utils.dataframe import JoinableByRowID
 from faas.utils.io import dump_file_to_location

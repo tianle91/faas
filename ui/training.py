@@ -5,8 +5,9 @@ from tempfile import TemporaryDirectory
 import streamlit as st
 from pyspark.sql import SparkSession
 
-from faas.e2e import E2EPipline, plot_feature_importances
+from faas.e2e import E2EPipline
 from faas.eda.iid import correlation, plot_target_correlation
+from faas.explain import plot_feature_importances
 from faas.storage import write_model
 from faas.utils.dataframe import (get_date_columns, get_non_numeric_columns,
                                   get_numeric_columns)

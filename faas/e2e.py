@@ -37,10 +37,8 @@ def get_x_pipeline(
 
 
 def get_y_pipeline(
-    target_column: str, target_is_numeric: bool = True, group_column: Optional[str] = None,
+    target_column: str, group_column: Optional[str] = None,
 ) -> Pipeline:
-    if not target_is_numeric:
-        return Pipeline([OrdinalEncoder(categorical_column=target_column)])
     if group_column is not None:
         return Pipeline([StandardScaler(column=target_column, group_column=group_column)])
     else:
@@ -82,17 +80,13 @@ class E2EPipline:
         )
         self.y_pipeline = get_y_pipeline(
             target_column=self.target_column,
-            target_is_numeric=self.target_is_numeric,
             group_column=self.target_group_column
         )
         self.w_pipeline = None
         if self.date_column is not None:
             self.w_pipeline = get_w_pipeline(date_column=self.date_column)
 
-        self.m = LGBMModel(
-            objective='regression' if self.target_is_numeric else 'binary',
-            deterministic=True,
-        )
+        self.m = LGBMModel(objective='regression', deterministic=True)
 
     @property
     def feature_columns(self) -> List[str]:
@@ -104,9 +98,8 @@ class E2EPipline:
         return out
 
     def check_target(self, df: DataFrame) -> Tuple[bool, List[str]]:
-        expected_dtype = NumericType if self.target_is_numeric else StringType
         return check_columns_are_desired_type(
-            columns=[self.target_column], dtype=expected_dtype, df=df)
+            columns=[self.target_column], dtype=NumericType, df=df)
 
     def check_numeric(self, df: DataFrame) -> Tuple[bool, List[str]]:
         return check_columns_are_desired_type(
