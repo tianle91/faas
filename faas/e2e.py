@@ -18,24 +18,24 @@ class E2EPipline:
     def __init__(
         self,
         target_column: str,
-        target_log_transform: bool,
+        target_log_transform: bool = False,
         target_normalize_by_categorical: Optional[str] = None,
         target_normalize_by_numerical: Optional[str] = None,
-        weight_group_columns: Optional[List[str]] = None,
         x_date_column: Optional[str] = None,
         x_categorical_columns: Optional[List[str]] = None,
         x_numeric_features: Optional[List[str]] = None,
+        weight_group_columns: Optional[List[str]] = None,
     ):
-        self.xtransformer = XTransformer(
-            numeric_features=x_numeric_features,
-            categorical_features=x_categorical_columns,
-            date_column=x_date_column
-        )
         self.ytransformer = YTransformer(
             target_column=target_column,
             log_transform=target_log_transform,
             normalize_by_categorical=target_normalize_by_categorical,
             normalize_by_numerical=target_normalize_by_numerical,
+        )
+        self.xtransformer = XTransformer(
+            numeric_features=x_numeric_features,
+            categorical_features=x_categorical_columns,
+            date_column=x_date_column
         )
         self.wtransformer = None
         if weight_group_columns is not None:
@@ -60,23 +60,17 @@ class E2EPipline:
         p = {}
         if self.wtransformer is not None:
             p['sample_weight'] = self.wtransformer.fit(df).get_transformed_as_pdf(df)
-
-        self.m.fit(
-            X=X,
-            y=y,
-            feature_name=self.xtransformer.feature_columns,
-            categorical_feature=self.xtransformer.categorical_features,
-            **p
-        )
+        # fit
+        feature_name = self.xtransformer.feature_columns
+        categorical_feature = self.xtransformer.categorical_features,
+        self.m.fit(X=X, y=y, feature_name=feature_name,
+                   categorical_feature=categorical_feature, **p)
         return self
 
     def predict(self, df: DataFrame) -> DataFrame:
         jb = JoinableByRowID(df)
         Xpred = self.xtransformer.get_transformed_as_pdf(jb.df)
         ypred = self.m.predict(Xpred)
-        df_with_y = jb.join_by_row_id(
-            ypred,
-            column=self.ytransformer.feature_columns[0]
-        )
+        df_with_y = jb.join_by_row_id(ypred, column=self.ytransformer.feature_columns[0])
         df_pred = self.ytransformer.inverse_transform(df_with_y)
         return df_pred
