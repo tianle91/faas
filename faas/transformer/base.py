@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import List
 
-import pandas as pd
 from pyspark.sql import DataFrame
 
 
@@ -21,16 +20,13 @@ class BaseTransformer:
         return self
 
     def transform(self, df: DataFrame) -> DataFrame:
-        return df
-
-
-class InvertibleTransformer(BaseTransformer):
+        raise NotImplementedError
 
     def inverse_transform(self, df: DataFrame) -> DataFrame:
-        return df
+        raise NotImplementedError
 
 
-class Passthrough(InvertibleTransformer):
+class Passthrough(BaseTransformer):
 
     def __init__(self, columns: List[str]) -> None:
         self.columns = columns
@@ -42,6 +38,12 @@ class Passthrough(InvertibleTransformer):
     @property
     def feature_columns(self) -> List[str]:
         return self.columns
+
+    def transform(self, df: DataFrame) -> DataFrame:
+        return df
+
+    def inverse_transform(self, df: DataFrame) -> DataFrame:
+        return df
 
 
 class Pipeline(BaseTransformer):
@@ -74,14 +76,7 @@ class Pipeline(BaseTransformer):
             df = transformer.transform(df)
         return df
 
-    def get_transformed_as_pdf(self, df: DataFrame) -> pd.DataFrame:
-        return self.transform(df).select(*self.feature_columns).toPandas()
-
     def inverse_transform(self, df: DataFrame) -> DataFrame:
         for transformer in self.steps[::-1]:
-            if not isinstance(transformer, InvertibleTransformer):
-                raise TypeError(
-                    f'Transformer {transformer} should be InvertibleTransformer')
-            transformer: InvertibleTransformer = transformer
             df = transformer.inverse_transform(df)
         return df

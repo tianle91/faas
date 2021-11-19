@@ -6,7 +6,7 @@ import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
 from pyspark.sql.types import DoubleType
 
-from faas.transformer.base import InvertibleTransformer
+from faas.transformer.base import BaseTransformer
 from faas.utils.dataframe import (validate_categorical_types,
                                   validate_numeric_types)
 
@@ -41,7 +41,7 @@ def get_mean_std(
         return {'all': (getattr(row, 'mean'), getattr(row, 'stddev'))}
 
 
-class StandardScaler(InvertibleTransformer):
+class StandardScaler(BaseTransformer):
     """Use if categorical column correlates strongly with target.
     """
 
@@ -105,7 +105,7 @@ class StandardScaler(InvertibleTransformer):
 __BASE_NORMALIZED__ = '__BASE_NORMALIZED__'
 
 
-class NumericScaler(InvertibleTransformer):
+class NumericScaler(BaseTransformer):
     """Use if numeric column correlates strongly with target.
     """
 
@@ -158,7 +158,7 @@ class NumericScaler(InvertibleTransformer):
         return df
 
 
-class LogTransform(InvertibleTransformer):
+class LogTransform(BaseTransformer):
     """Use if target is non-negative.
     """
 
