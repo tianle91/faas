@@ -163,6 +163,7 @@ class WTransformer(PipelineTransformer):
             wgt_cols = []
             for step in steps:
                 wgt_cols += step.feature_columns
+            # adding preserves group summation equality
             steps += AddTransformer(columns=wgt_cols)
         self.pipeline = Pipeline(steps)
 
