@@ -3,10 +3,7 @@ from __future__ import annotations
 import logging
 from typing import List, Optional, Tuple
 
-import matplotlib.pyplot as plt
-import pandas as pd
 from lightgbm import LGBMModel
-from matplotlib.figure import Figure
 from pyspark.sql import DataFrame
 from pyspark.sql.types import NumericType, StringType
 
@@ -58,9 +55,6 @@ class E2EPipline:
 
     def __init__(
         self,
-        # x_pipeline: Pipeline,
-        # y_pipeline: Pipeline,
-        # w_pipeline: Pipeline,
         df: DataFrame,
         target_column: str,
         target_group_column: Optional[str] = None,
@@ -148,17 +142,3 @@ class E2EPipline:
         )
         df_pred = self.y_pipeline.inverse_transform(df_with_y)
         return df_pred
-
-
-def plot_feature_importances(m: LGBMModel, top_n: int = 10) -> Figure:
-    df = pd.DataFrame({
-        'name': m.feature_name_,
-        'importance': m.feature_importances_,
-    }).sort_values('importance', ascending=False)
-    top_df = df.iloc[:top_n]
-    with plt.xkcd():
-        fig, ax = plt.subplots(figsize=(10, 5))
-        ax.bar(x=top_df['name'], height=top_df['importance'])
-        ax.tick_params(labelrotation=90)
-        ax.set_title('Feature Importances')
-    return fig
