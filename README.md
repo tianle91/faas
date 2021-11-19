@@ -15,7 +15,7 @@ y steps
 		- correlated with categorical - standardscaler
 		- correlated with numeric - numericscaler
 		- else - passthrough
-(kiv) target is categorical - encode
+- (kiv) target is categorical - encode
 
 w steps
 - ts - historical decay (?)
