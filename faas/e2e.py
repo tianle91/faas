@@ -5,11 +5,10 @@ from typing import List, Optional, Tuple
 
 from lightgbm import LGBMModel
 from pyspark.sql import DataFrame
-from pyspark.sql.types import NumericType, StringType
 
-from faas.etl import WTransformer, XTransformer, YTransformer
-from faas.utils.dataframe import (JoinableByRowID,
-                                  check_columns_are_desired_type)
+from faas.etl import (WTransformer, XTransformer, YTransformer,
+                      merge_validations)
+from faas.utils.dataframe import JoinableByRowID
 
 logger = logging.getLogger(__name__)
 
@@ -18,61 +17,42 @@ class E2EPipline:
 
     def __init__(
         self,
-        df: DataFrame,
         target_column: str,
-        target_group_column: Optional[str] = None,
-        date_column: Optional[str] = None,
-        categorical_features: Optional[List[str]] = None,
-        numeric_features: Optional[List[str]] = None,
+        target_log_transform: bool,
+        target_normalize_by_categorical: Optional[str] = None,
+        target_normalize_by_numerical: Optional[str] = None,
+        weight_group_columns: Optional[List[str]] = None,
+        x_date_column: Optional[str] = None,
+        x_categorical_columns: Optional[List[str]] = None,
+        x_numeric_features: Optional[List[str]] = None,
     ):
-        self.target_column = target_column
-        if not isinstance(df.schema[self.target_column].dataType, NumericType):
-            raise TypeError(f'Currently only supporting numeric target: {target_column}')
-        self.target_group_column = target_group_column
-
-        self.date_column = date_column
-        self.categorical_features = categorical_features
-        self.numeric_features = numeric_features
-        logger.info(
-            f'num_categorical_features: {len(categorical_features)} '
-            f'num_numeric_features: {len(numeric_features)}'
-        )
-
         self.xtransformer = XTransformer(
-            numeric_features=self.numeric_features,
-            categorical_features=self.categorical_features,
-            date_column=self.date_column
+            numeric_features=x_numeric_features,
+            categorical_features=x_categorical_columns,
+            date_column=x_date_column
         )
         self.ytransformer = YTransformer(
-            target_column=self.target_column,
-            group_column=self.target_group_column
+            target_column=target_column,
+            log_transform=target_log_transform,
+            normalize_by_categorical=target_normalize_by_categorical,
+            normalize_by_numerical=target_normalize_by_numerical,
         )
         self.wtransformer = None
-        if self.date_column is not None:
-            self.wtransformer = WTransformer(date_column=self.date_column)
-
+        if weight_group_columns is not None:
+            self.wtransformer = WTransformer(date_column=weight_group_columns)
         self.m = LGBMModel(objective='regression', deterministic=True)
 
-    @property
-    def feature_columns(self) -> List[str]:
-        out = []
-        if self.categorical_features is not None:
-            out += self.categorical_features
-        if self.numeric_features is not None:
-            out += self.numeric_features
-        return out
+    def check_df_prediction(self, df: DataFrame) -> Tuple[bool, List[str]]:
+        return merge_validations([
+            self.xtransformer.validate_input(df=df),
+            self.ytransformer.validate_input(df=df),
+        ])
 
-    def check_target(self, df: DataFrame) -> Tuple[bool, List[str]]:
-        return check_columns_are_desired_type(
-            columns=[self.target_column], dtype=NumericType, df=df)
-
-    def check_numeric(self, df: DataFrame) -> Tuple[bool, List[str]]:
-        return check_columns_are_desired_type(
-            columns=self.numeric_features, dtype=NumericType, df=df)
-
-    def check_categorical(self, df: DataFrame) -> Tuple[bool, List[str]]:
-        return check_columns_are_desired_type(
-            columns=self.categorical_features, dtype=StringType, df=df)
+    def check_df_train(self, df: DataFrame) -> Tuple[bool, List[str]]:
+        validations = [self.check_df_prediction(df)]
+        if self.wtransformer is not None:
+            validations.append(self.wtransformer.validate_input(df=df))
+        return merge_validations(validations)
 
     def fit(self, df: DataFrame) -> E2EPipline:
         X = self.xtransformer.fit(df).get_transformed_as_pdf(df)
@@ -84,8 +64,8 @@ class E2EPipline:
         self.m.fit(
             X=X,
             y=y,
-            feature_name=self.feature_columns,
-            categorical_feature=self.categorical_features,
+            feature_name=self.xtransformer.feature_columns,
+            categorical_feature=self.xtransformer.categorical_features,
             **p
         )
         return self
