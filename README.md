@@ -11,9 +11,10 @@ x steps
 
 y steps
 - target is numeric
-	- correlated with categorical - standardscaler
-	- correlated with numeric - numericscaler
-	- else - passthrough
+	- target is positive - logtransform
+		- correlated with categorical - standardscaler
+		- correlated with numeric - numericscaler
+		- else - passthrough
 (kiv) target is categorical - encode
 
 w steps
