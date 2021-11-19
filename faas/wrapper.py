@@ -13,7 +13,7 @@ from faas.utils.dataframe import JoinableByRowID
 logger = logging.getLogger(__name__)
 
 
-class E2EPipline:
+class ETLWrapperForLGBM:
 
     def __init__(
         self,
@@ -54,7 +54,7 @@ class E2EPipline:
             validations.append(self.wtransformer.validate_input(df=df))
         return merge_validations(validations)
 
-    def fit(self, df: DataFrame) -> E2EPipline:
+    def fit(self, df: DataFrame) -> ETLWrapperForLGBM:
         X = self.xtransformer.fit(df).get_transformed_as_pdf(df)
         y = self.ytransformer.fit(df).get_transformed_as_pdf(df)
         p = {}
