@@ -55,6 +55,10 @@ class ETLWrapperForLGBM:
         return merge_validations(validations)
 
     def fit(self, df: DataFrame) -> ETLWrapperForLGBM:
+        ok, msgs = self.check_df_train(df)
+        if not ok:
+            raise ValueError(msgs)
+        # get the matrices
         X = self.xtransformer.fit(df).get_transformed_as_pdf(df)
         y = self.ytransformer.fit(df).get_transformed_as_pdf(df)
         p = {}
@@ -68,9 +72,16 @@ class ETLWrapperForLGBM:
         return self
 
     def predict(self, df: DataFrame) -> DataFrame:
+        ok, msgs = self.check_df_prediction(df)
+        if not ok:
+            raise ValueError(msgs)
+        # ensure rows are identifiable
         jb = JoinableByRowID(df)
+        # get the matrices
         Xpred = self.xtransformer.get_transformed_as_pdf(jb.df)
+        # predict
         ypred = self.m.predict(Xpred)
+        # join them back to df
         df_with_y = jb.join_by_row_id(ypred, column=self.ytransformer.feature_columns[0])
         df_pred = self.ytransformer.inverse_transform(df_with_y)
         return df_pred
