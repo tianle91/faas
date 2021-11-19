@@ -91,6 +91,14 @@ class XTransformer(PipelineTransformer):
             ]
         self.pipeline = Pipeline(steps=xsteps)
 
+    @property
+    def categorical_feature_columns(self) -> List[str]:
+        out = []
+        for step in self.pipeline.steps:
+            if isinstance(step, OrdinalEncoder):
+                out.append(step.feature_column)
+        return out
+
     def validate_input(self, df: DataFrame) -> Tuple[bool, List[str]]:
         validations = [
             validate_types(df=df, columns=self.numeric_features, allowable_types=[NumericType]),
