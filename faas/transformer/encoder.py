@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import List
+
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
 from pyspark.sql.types import LongType, NumericType
@@ -29,6 +31,10 @@ class OrdinalEncoder(BaseTransformer):
         self.categorical_column = categorical_column
         self.distincts: list = []
         self.column_type = None
+
+    @property
+    def input_columns(self) -> List[str]:
+        return [self.categorical_column]
 
     @property
     def feature_column(self) -> str:

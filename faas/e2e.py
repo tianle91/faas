@@ -58,6 +58,9 @@ class E2EPipline:
 
     def __init__(
         self,
+        # x_pipeline: Pipeline,
+        # y_pipeline: Pipeline,
+        # w_pipeline: Pipeline,
         df: DataFrame,
         target_column: str,
         target_group_column: Optional[str] = None,
@@ -66,7 +69,8 @@ class E2EPipline:
         numeric_features: Optional[List[str]] = None,
     ):
         self.target_column = target_column
-        self.target_is_numeric = isinstance(df.schema[self.target_column].dataType, NumericType)
+        if not isinstance(df.schema[self.target_column].dataType, NumericType):
+            raise TypeError(f'Currently only supporting numeric target: {target_column}')
         self.target_group_column = target_group_column
 
         self.date_column = date_column

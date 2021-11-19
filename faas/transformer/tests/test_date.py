@@ -23,8 +23,14 @@ def test_normalized_sine(x: float, period: float, phase: int, expected: float):
 def test_DayOfWeekFeatures(spark: SparkSession):
     dowf = DayOfWeekFeatures(date_column='dt')
     expected_feature_columns = [
-        f'Seasonality_{DayOfWeekFeatures.period[0]}_{i}'
-        for i in range(7)
+        'Seasonality_DayOfWeek_sin_0',
+        'Seasonality_DayOfWeek_cos_0',
+        'Seasonality_DayOfWeek_sin_1',
+        'Seasonality_DayOfWeek_cos_1',
+        'Seasonality_DayOfWeek_sin_2',
+        'Seasonality_DayOfWeek_cos_2',
+        'Seasonality_DayOfWeek_sin_3',
+        'Seasonality_DayOfWeek_cos_3',
     ]
     assert dowf.feature_columns == expected_feature_columns
     df = spark.createDataFrame(pd.DataFrame({

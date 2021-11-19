@@ -7,7 +7,11 @@ from pyspark.sql import DataFrame
 
 
 class BaseTransformer:
-    """A BaseTransformer adds a single column, i.e. feature_column"""
+    """A BaseTransformer expect input_columns and adds feature_columns."""
+
+    @property
+    def input_columns(self) -> List[str]:
+        raise NotImplementedError
 
     @property
     def feature_columns(self) -> List[str]:
@@ -32,6 +36,10 @@ class Passthrough(InvertibleTransformer):
         self.columns = columns
 
     @property
+    def input_columns(self) -> List[str]:
+        return self.columns
+
+    @property
     def feature_columns(self) -> List[str]:
         return self.columns
 
@@ -39,6 +47,15 @@ class Passthrough(InvertibleTransformer):
 class Pipeline(BaseTransformer):
     def __init__(self, steps: List[BaseTransformer]):
         self.steps = steps
+
+    @property
+    def input_columns(self) -> List[str]:
+        in_cols = []
+        out_cols = []
+        for transformer in self.steps:
+            in_cols += [c for c in transformer.input_columns if c in out_cols]
+            out_cols += transformer.feature_columns
+        return in_cols
 
     @property
     def feature_columns(self) -> List[str]:

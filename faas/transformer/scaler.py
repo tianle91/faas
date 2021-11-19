@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
@@ -49,6 +49,13 @@ class StandardScaler(InvertibleTransformer):
         self.column = column
         self.group_column = group_column
         self._mean_std = None
+
+    @property
+    def input_columns(self) -> List[str]:
+        out = [self.column]
+        if self.group_column is not None:
+            out.append(self.group_column)
+        return out
 
     @property
     def feature_column(self) -> str:
@@ -107,6 +114,10 @@ class NumericScaler(InvertibleTransformer):
         self.base_column = base_column
 
     @property
+    def input_columns(self) -> List[str]:
+        return [self.column, self.base_column]
+
+    @property
     def feature_column(self) -> str:
         return f'NumericScaler_{self.column}_by_{self.base_column}'
 
@@ -153,6 +164,10 @@ class LogTransform(InvertibleTransformer):
 
     def __init__(self, column: str) -> None:
         self.column = column
+
+    @property
+    def input_columns(self) -> List[str]:
+        return [self.column]
 
     @property
     def feature_column(self) -> str:

@@ -27,6 +27,10 @@ class SeasonalityFeature(BaseTransformer):
     def __init__(self, date_column: str) -> None:
         self.date_column = date_column
 
+    @property
+    def input_columns(self) -> List[str]:
+        return [self.date_column]
+
     def get_value(self, dt: date) -> float:
         raise NotImplementedError
 
@@ -73,7 +77,7 @@ class SeasonalityFeature(BaseTransformer):
 
 
 class DayOfWeekFeatures(SeasonalityFeature):
-    period = ('WeekOfDay', 6)
+    period = ('DayOfWeek', 6)
 
     def get_value(self, dt: date) -> float:
         return dt.weekday()

@@ -1,4 +1,5 @@
 from datetime import date
+from typing import List
 
 import numpy as np
 import pyspark.sql.functions as F
@@ -34,6 +35,10 @@ class HistoricalDecay(BaseTransformer):
         self.date_column = date_column
 
     @property
+    def input_columns(self) -> List[str]:
+        return [self.date_column]
+
+    @property
     def feature_column(self) -> str:
         return f'HistoricalDecay_{self.date_column}'
 
@@ -65,11 +70,12 @@ class Normalize(BaseTransformer):
     """Weights to ensure that for each group, sum of weights is 1. Use if multivariate ts.
     """
 
-    def __init__(
-        self,
-        group_column: str,
-    ):
+    def __init__(self, group_column: str):
         self.group_column = group_column
+
+    @property
+    def input_columns(self) -> List[str]:
+        return [self.group_column]
 
     @property
     def feature_column(self) -> str:
