@@ -46,6 +46,32 @@ class Passthrough(BaseTransformer):
         return df
 
 
+class AddTransformer(BaseTransformer):
+    def __init__(self, columns: List[str]) -> None:
+        self.columns = columns
+
+    @property
+    def input_columns(self) -> List[str]:
+        return self.columns
+
+    @property
+    def feature_column(self) -> List[str]:
+        return f'AddTransformer_{"+".join(self.columns)}'
+
+    @property
+    def feature_columns(self) -> List[str]:
+        return [self.feature_column]
+
+    def transform(self, df: DataFrame) -> DataFrame:
+        res_col = None
+        for c in self.columns:
+            if res_col is None:
+                res_col = F.col(c)
+            else:
+                res_col += F.col(c)
+        return df.withColumn(self.feature_column, res_col)
+
+
 class Pipeline(BaseTransformer):
     def __init__(self, steps: List[BaseTransformer]):
         self.steps = steps
