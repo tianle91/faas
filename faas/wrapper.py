@@ -117,13 +117,11 @@ def recommend(df: DataFrame, target_column: str) -> ETLConfig:
     date_column = None
     x_categorical_columns = []
     x_numeric_features = []
-    weight_group_columns = []
     for c in feature_cols:
         dtype = df.schema[c].dataType
         print(c, dtype)
         if isinstance(dtype, DateType):
             date_column = c
-            weight_group_columns.append(c)
         elif isinstance(dtype, NumericType):
             x_numeric_features.append(c)
         elif isinstance(dtype, StringType):
@@ -132,14 +130,16 @@ def recommend(df: DataFrame, target_column: str) -> ETLConfig:
             msgs.append(f'Ignoring column {c}')
 
     conf = ETLConfig(
-        target_column=target_column,
         x_categorical_columns=x_categorical_columns,
         x_numeric_features=x_numeric_features,
+        target_column=target_column,
     )
     msgs.append(f'Setting x_categorical_columns as {x_categorical_columns}')
     msgs.append(f'Setting x_numeric_features as {x_numeric_features}')
+    weight_group_columns = []
     if date_column is not None:
         conf.date_column = date_column
+        weight_group_columns.append(c)
         msgs.append(f'Setting date_column to {c} as it is a DateType')
     if len(weight_group_columns) > 0:
         conf.weight_group_columns = weight_group_columns
