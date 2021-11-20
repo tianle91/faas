@@ -14,6 +14,7 @@ from faas.wrapper import ETLConfig
 class ETLWrapperForLGBM:
 
     def __init__(self, config: ETLConfig):
+        self.config = config
         self.ytransformer = YTransformer(
             target_column=config.target_column,
             log_transform=config.target_log_transform,
