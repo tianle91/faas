@@ -11,7 +11,6 @@ from faas.storage import read_model
 from faas.utils.dataframe import JoinableByRowID
 from faas.utils.io import dump_file_to_location
 from faas.utils.types import DEFAULT_DATE_FORMAT
-from ui.checklist import run_features_checklist, run_target_checklist
 
 
 def highlight_target(s: pd.Series, target_column: str):
@@ -27,22 +26,19 @@ def run_predict():
 
     st.title('Predict')
 
-    e2e = st.session_state.get('trained_model', None)
+    e = st.session_state.get('model', None)
     key = st.text_input('Model key (obtain this from training)')
-    if key is not None and key != '':
+    if key != '':
         try:
-            e2e = read_model(key=key)
-            st.session_state['trained_model'] = e2e
+            e = read_model(key=key)
+            st.session_state['model'] = e
         except KeyError:
             st.error(f'Key {key} not found!')
 
-    if e2e is not None:
+    if e is not None:
         st.success('Model loaded!')
         with st.expander('Details on loaded model'):
-            st.pyplot(plot_feature_importances(m=e2e.m))
-            st.markdown(f'Target column: `{e2e.target_column}`')
-            formatted_feature_cols = ' '.join([f'`{c}`' for c in e2e.feature_columns])
-            st.markdown(f'Feature columns: {formatted_feature_cols}')
+            st.markdown(e.config.get_markdown())
 
     st.markdown('# Upload dataset')
     st.markdown(f'Ensure that dates are in the `{DEFAULT_DATE_FORMAT}` format.')
@@ -56,24 +52,28 @@ def run_predict():
             df = spark.read.options(header=True, inferSchema=True).csv(predict_path)
             df = JoinableByRowID(df).df
 
-            all_good_x = run_features_checklist(e2e, df=df)
-            if all_good_x:
+            ok, msgs = e.check_df_prediction(df=df)
+            if ok:
                 st.success('Uploaded dataset is valid!')
-            with st.expander('Details on uploaded dataset'):
-                st.dataframe(df.limit(10).toPandas())
+            else:
+                st.error('\n'.join(msgs))
 
-            if all_good_x:
+            if ok:
                 st.markdown('## Predict Now?')
                 if st.button('Yes'):
-                    df_predict = e2e.predict(df)
+                    df_predict = e.predict(df)
                     st.dataframe((
                         df_predict
-                        .select(*e2e.feature_columns, e2e.target_column)
+                        .select(
+                            *e.config.x_categorical_columns,
+                            *e.config.x_numeric_features,
+                            e.config.target_column
+                        )
                         .limit(10)
                         .toPandas()
                         .style
                         .apply(
-                            lambda s: highlight_target(s, target_column=e2e.target_column),
+                            lambda s: highlight_target(s, target_column=e.config.target_column),
                             axis=0
                         )
                     ))
@@ -82,22 +82,3 @@ def run_predict():
                         data=df_predict.toPandas().to_csv(),
                         file_name='prediction.csv'
                     )
-                    if e2e.target_column in df.columns:
-                        with st.expander(f'Found target: {e2e.target_column}. See evaluation?'):
-                            all_good_target = run_target_checklist(e2e, df=df)
-                            if all_good_target:
-                                st.pyplot(
-                                    plot_target_scatter(
-                                        df_prediction=(
-                                            df_predict
-                                            .select(e2e.target_column)
-                                            .toPandas()
-                                        ),
-                                        df_actual=(
-                                            df
-                                            .select(e2e.target_column)
-                                            .toPandas()
-                                        ),
-                                        target_column=e2e.target_column,
-                                    )
-                                )
