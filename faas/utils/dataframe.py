@@ -1,35 +1,8 @@
-from typing import List, Tuple
+from typing import List
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
-from pyspark.sql.types import (DataType, DateType, DoubleType, NumericType,
-                               StringType)
-
-
-def get_non_numeric_columns(df: DataFrame) -> List[str]:
-    return [c for c in df.columns if not isinstance(df.schema[c].dataType, NumericType)]
-
-
-def get_numeric_columns(df: DataFrame) -> List[str]:
-    return [c for c in df.columns if isinstance(df.schema[c].dataType, NumericType)]
-
-
-def get_date_columns(df: DataFrame) -> List[str]:
-    return [c for c in df.columns if isinstance(df.schema[c].dataType, DateType)]
-
-
-def check_columns_are_desired_type(
-    columns: List[str], dtype: DataType, df: DataFrame
-) -> Tuple[bool, List[str]]:
-    all_passed = True
-    messages = []
-    for c in columns:
-        actual = df.schema[c].dataType
-        if not isinstance(actual, dtype):
-            all_passed = False
-            messages.append(
-                f'Expected column: {c} to be {dtype} but received {actual} instead.')
-    return all_passed, messages
+from pyspark.sql.types import DateType, DoubleType, NumericType, StringType
 
 
 def validate_numeric_types(df: DataFrame, cols: List[str]):
