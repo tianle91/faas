@@ -12,3 +12,9 @@ class ETLConfig:
     target_normalize_by_numerical: Optional[str] = None
     date_column: Optional[str] = None
     weight_group_columns: Optional[List[str]] = None
+
+    def get_markdown(self) -> str:
+        l = ['ETLConfig:']
+        for k in self.__dict__.keys():
+            l.append(f'- {k}: `{getattr(self, k)}`')
+        return '\n'.join(l)
