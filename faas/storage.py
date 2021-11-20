@@ -5,7 +5,7 @@ from datetime import datetime
 
 from sqlitedict import SqliteDict
 
-from faas.e2e import E2EPipline
+from faas.wrapper.lightgbm import ETLWrapperForLGBM
 
 logger = logging.getLogger(__name__)
 
@@ -30,17 +30,13 @@ def list_models() -> dict:
     d_print = {}
     with SqliteDict(MODEL_STORE) as d:
         for k, v in d.items():
-            dt, e2e = v
-            e2e: E2EPipline = e2e
-            d_print[k] = {
-                'timestamp': dt,
-                'target_column': e2e.target_column,
-                'feature_columns': e2e.feature_columns,
-            }
+            dt, e = v
+            e: ETLWrapperForLGBM = e
+            d_print[k] = {'timestamp': dt, 'config': e.config}
     return d_print
 
 
-def write_model(model: E2EPipline) -> str:
+def write_model(model: ETLWrapperForLGBM) -> str:
     with SqliteDict(MODEL_STORE) as d:
         key = create_key()
         d[key] = (datetime.now(), model)
@@ -49,7 +45,7 @@ def write_model(model: E2EPipline) -> str:
     return key
 
 
-def read_model(key: str) -> E2EPipline:
+def read_model(key: str) -> ETLWrapperForLGBM:
     with SqliteDict(MODEL_STORE) as d:
         if key not in d:
             raise KeyError(f'Key: {key} not found!')
