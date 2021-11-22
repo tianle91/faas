@@ -5,9 +5,8 @@ from tempfile import TemporaryDirectory
 import streamlit as st
 from pyspark.sql import SparkSession
 
-from faas.e2e import ETLConfig
-from faas.e2e.lightgbm import ETLWrapperForLGBM
-from faas.e2e.recommend import recommend
+from faas.config import ETLConfig, recommend
+from faas.lightgbm import ETLWrapperForLGBM
 from faas.storage import write_model
 from faas.utils.io import dump_file_to_location
 from faas.utils.types import DEFAULT_DATE_FORMAT, load_csv

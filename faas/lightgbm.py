@@ -5,7 +5,7 @@ from typing import List, Tuple
 from lightgbm import LGBMModel
 from pyspark.sql import DataFrame
 
-from faas.e2e import ETLConfig
+from faas.config import ETLConfig
 from faas.etl import (WTransformer, XTransformer, YTransformer,
                       merge_validations)
 from faas.utils.dataframe import JoinableByRowID

@@ -1,4 +1,3 @@
-
 from pyspark.sql import DataFrame, SparkSession
 
 DEFAULT_DATE_FORMAT = 'yyyy-MM-dd'

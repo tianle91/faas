@@ -5,7 +5,7 @@ from datetime import datetime
 
 from sqlitedict import SqliteDict
 
-from faas.e2e.lightgbm import ETLWrapperForLGBM
+from faas.lightgbm import ETLWrapperForLGBM
 
 logger = logging.getLogger(__name__)
 

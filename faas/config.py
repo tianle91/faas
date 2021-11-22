@@ -1,11 +1,29 @@
-from typing import Optional, Tuple
+from dataclasses import dataclass
+from typing import List, Optional, Tuple
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
 from pyspark.sql.types import DateType, NumericType, StringType
 
-from faas.e2e import ETLConfig
 from faas.eda.iid import correlation
+
+
+@dataclass
+class ETLConfig:
+    x_categorical_columns: List[str]
+    x_numeric_features: List[str]
+    target_column: str
+    target_log_transform: bool = False
+    target_normalize_by_categorical: Optional[str] = None
+    target_normalize_by_numerical: Optional[str] = None
+    date_column: Optional[str] = None
+    weight_group_columns: Optional[List[str]] = None
+
+    def get_markdown(self) -> str:
+        l = ['ETLConfig:']
+        for k in self.__dict__.keys():
+            l.append(f'- {k}: `{getattr(self, k)}`')
+        return '\n'.join(l)
 
 
 def min_val(df: DataFrame, c: str) -> bool:

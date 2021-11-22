@@ -6,7 +6,7 @@ import pandas as pd
 import streamlit as st
 from pyspark.sql import SparkSession
 
-from faas.e2e.lightgbm import ETLWrapperForLGBM
+from faas.lightgbm import ETLWrapperForLGBM
 from faas.storage import read_model
 from faas.utils.dataframe import JoinableByRowID
 from faas.utils.io import dump_file_to_location

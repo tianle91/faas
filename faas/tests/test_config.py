@@ -1,8 +1,7 @@
 from pyspark.sql import SparkSession
 
+from faas.config import ETLConfig, recommend
 from faas.generate import GenerateSynthetic, convert_dict_to_list
-from faas.wrapper import ETLConfig
-from faas.wrapper.recommend import recommend
 
 
 def test_recommend(spark: SparkSession):

@@ -1,8 +1,8 @@
 from pyspark.sql import SparkSession
 
+from faas.config import ETLConfig
 from faas.generate import GenerateSynthetic, convert_dict_to_list
-from faas.wrapper import ETLConfig
-from faas.wrapper.lightgbm import ETLWrapperForLGBM
+from faas.lightgbm import ETLWrapperForLGBM
 
 
 def test_ETLWrapperForLGBM(spark: SparkSession):
