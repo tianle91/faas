@@ -1,4 +1,5 @@
 import os
+import pprint as pp
 from tempfile import TemporaryDirectory
 from typing import Optional
 
@@ -25,20 +26,19 @@ def run_predict():
     spark = SparkSession.builder.getOrCreate()
 
     st.title('Predict')
-
-    e: Optional[LGBMWrapper] = st.session_state.get('model', None)
-    key = st.text_input('Model key (obtain this from training)')
-    if key != '':
-        try:
-            e: LGBMWrapper = read_model(key=key)
-            st.session_state['model'] = e
-        except KeyError:
-            st.error(f'Key {key} not found!')
-
-    if e is not None:
+    m: Optional[LGBMWrapper] = st.session_state.get('model', None)
+    if m is None:
+        key = st.text_input('Model key (obtain this from training)')
+        if key != '':
+            try:
+                m: LGBMWrapper = read_model(key=key)
+                st.session_state['model'] = m
+            except KeyError:
+                st.error(f'Key {key} not found!')
+    if m is not None:
         st.success('Model loaded!')
         with st.expander('Details on loaded model'):
-            st.markdown(e.config.get_markdown())
+            st.code(pp.pformat(m.config.to_dict()))
 
     st.markdown('# Upload dataset')
     st.markdown(f'Ensure that dates are in the `{DEFAULT_DATE_FORMAT}` format.')
@@ -52,7 +52,7 @@ def run_predict():
             df = spark.read.options(header=True, inferSchema=True).csv(predict_path)
             df = JoinableByRowID(df).df
 
-            ok, msgs = e.check_df_prediction(df=df)
+            ok, msgs = m.check_df_prediction(df=df)
             if ok:
                 st.success('Uploaded dataset is valid!')
             else:
@@ -61,21 +61,20 @@ def run_predict():
             if ok:
                 st.markdown('## Predict Now?')
                 if st.button('Yes'):
-                    df_predict = e.predict(df)
-                    st.dataframe((
+                    df_predict = m.predict(df)
+                    df_predict_preview: pd.DataFrame = (
                         df_predict
                         .select(
-                            *e.config.x_categorical_columns,
-                            *e.config.x_numeric_features,
-                            e.config.target_column
+                            *m.config.feature.categorical_columns,
+                            *m.config.feature.numeric_columns,
+                            m.config.target.column
                         )
                         .limit(10)
                         .toPandas()
-                        .style
-                        .apply(
-                            lambda s: highlight_target(s, target_column=e.config.target_column),
-                            axis=0
-                        )
+                    )
+                    st.dataframe(df_predict_preview.style.apply(
+                        lambda s: highlight_target(s, target_column=m.config.target.column),
+                        axis=0
                     ))
                     st.download_button(
                         'Download prediction',
