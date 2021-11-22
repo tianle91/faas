@@ -63,8 +63,15 @@ def get_top_correlated(df: DataFrame, c: str) -> Tuple[Optional[str], Optional[f
     return top_corr_col, top_corr_val
 
 
-def recommend(df: DataFrame, target_column: str) -> Config:
+def recommend_config(df: DataFrame, target_column: str) -> Config:
+    """Recommend Config to use.
 
+    TODO: split into iid, ts, multi_ts
+
+    Args:
+        df (DataFrame): dataframe to run analysis on
+        target_column (str): target column
+    """
     # infer from column types
     date_column = None
     categorical_columns = []

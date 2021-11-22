@@ -6,7 +6,7 @@ from tempfile import TemporaryDirectory
 import streamlit as st
 from pyspark.sql import SparkSession
 
-from faas.config import Config, recommend
+from faas.config import Config, recommend_config
 from faas.lightgbm import LGBMWrapper
 from faas.storage import write_model
 from faas.utils.io import dump_file_to_location
@@ -35,7 +35,7 @@ def run_training():
 
             target_column = st.selectbox('target column', options=df.columns)
             if st.button('Get configuration'):
-                config = recommend(df=df, target_column=target_column)
+                config = recommend_config(df=df, target_column=target_column)
                 st.session_state['config'] = config
 
             st.header('Current configuration')
