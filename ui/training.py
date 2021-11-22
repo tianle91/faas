@@ -6,7 +6,7 @@ import streamlit as st
 from pyspark.sql import SparkSession
 
 from faas.config import ETLConfig, recommend
-from faas.lightgbm import ETLWrapperForLGBM
+from faas.lightgbm import LGBMWrapper
 from faas.storage import write_model
 from faas.utils.io import dump_file_to_location
 from faas.utils.types import DEFAULT_DATE_FORMAT, load_csv
@@ -44,7 +44,7 @@ def run_training():
                 config: ETLConfig = config
                 st.write(config.get_markdown())
                 if st.button('Train now!'):
-                    e = ETLWrapperForLGBM(config=config).fit(df)
+                    e = LGBMWrapper(config=config).fit(df)
                     st.session_state['model'] = e
                     key = write_model(e)
                     st.success(f'Model key (save this for prediction): `{key}`')

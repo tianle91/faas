@@ -11,7 +11,7 @@ from faas.etl import (WTransformer, XTransformer, YTransformer,
 from faas.utils.dataframe import JoinableByRowID
 
 
-class ETLWrapperForLGBM:
+class LGBMWrapper:
 
     def __init__(self, config: ETLConfig):
         self.config = config
@@ -43,7 +43,7 @@ class ETLWrapperForLGBM:
             validations.append(self.wtransformer.validate_input(df=df))
         return merge_validations(validations)
 
-    def fit(self, df: DataFrame) -> ETLWrapperForLGBM:
+    def fit(self, df: DataFrame) -> LGBMWrapper:
         ok, msgs = self.check_df_train(df)
         if not ok:
             raise ValueError(msgs)
