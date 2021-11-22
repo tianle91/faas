@@ -85,9 +85,13 @@ class PipelineTransformer(BaseTransformer):
 class XTransformer(PipelineTransformer):
     def __init__(self, conf: FeatureConfig):
         self.conf = conf
+        self.encoded_categorical_feature_columns = []
         # create pipeline
         xsteps = [Passthrough(columns=conf.numeric_columns)]
-        xsteps += [OrdinalEncoder(c) for c in conf.categorical_columns]
+        for c in conf.categorical_columns:
+            enc = OrdinalEncoder(c)
+            self.encoded_categorical_feature_columns.append(enc.feature_column)
+            xsteps.append(enc)
         if conf.date_column is not None:
             xsteps += [
                 DayOfMonthFeatures(date_column=conf.date_column),
@@ -96,10 +100,6 @@ class XTransformer(PipelineTransformer):
                 WeekOfYearFeatures(date_column=conf.date_column),
             ]
         self.pipeline = Pipeline(steps=xsteps)
-
-    @property
-    def categorical_feature_columns(self) -> List[str]:
-        return self.conf.categorical_columns
 
     def validate_input(self, df: DataFrame) -> Tuple[bool, List[str]]:
         conf = self.conf
