@@ -1,3 +1,5 @@
+import logging
+import pprint as pp
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
@@ -7,23 +9,35 @@ from pyspark.sql.types import DateType, NumericType, StringType
 
 from faas.eda.iid import correlation
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass
-class ETLConfig:
-    x_categorical_columns: List[str]
-    x_numeric_features: List[str]
-    target_column: str
-    target_log_transform: bool = False
-    target_normalize_by_categorical: Optional[str] = None
-    target_normalize_by_numerical: Optional[str] = None
+class FeatureConfig:
+    categorical_columns: List[str]
+    numeric_features: List[str]
     date_column: Optional[str] = None
-    weight_group_columns: Optional[List[str]] = None
 
-    def get_markdown(self) -> str:
-        l = ['ETLConfig:']
-        for k in self.__dict__.keys():
-            l.append(f'- {k}: `{getattr(self, k)}`')
-        return '\n'.join(l)
+
+@dataclass
+class TargetConfig:
+    column: str
+    log_transform: bool = False
+    date_column: Optional[str] = None
+    categorical_normalization: Optional[str] = None
+    numerical_normalization: Optional[str] = None
+
+
+@dataclass
+class WeightConfig:
+    group_columns: Optional[List[str]] = None
+
+
+@dataclass
+class Config:
+    feature: FeatureConfig
+    target: TargetConfig
+    weight: WeightConfig = WeightConfig()
 
 
 def min_val(df: DataFrame, c: str) -> bool:
@@ -46,56 +60,49 @@ def get_top_correlated(df: DataFrame, c: str) -> Tuple[Optional[str], Optional[f
     return top_corr_col, top_corr_val
 
 
-def recommend(df: DataFrame, target_column: str) -> ETLConfig:
-    msgs = []
+def recommend(df: DataFrame, target_column: str) -> Config:
 
-    feature_cols = [c for c in df.columns if c != target_column]
+    # infer from column types
     date_column = None
-    x_categorical_columns = []
-    x_numeric_features = []
-    for c in feature_cols:
-        dtype = df.schema[c].dataType
-        print(c, dtype)
-        if isinstance(dtype, DateType):
-            date_column = c
-        elif isinstance(dtype, NumericType):
-            x_numeric_features.append(c)
-        elif isinstance(dtype, StringType):
-            x_categorical_columns.append(c)
-        else:
-            msgs.append(f'Ignoring column {c}')
+    categorical_columns = []
+    numeric_features = []
+    for c in df.columns:
+        if c != target_column:
+            dtype = df.schema[c].dataType
+            print(c, dtype)
+            if isinstance(dtype, DateType):
+                date_column = c
+            elif isinstance(dtype, NumericType):
+                numeric_features.append(c)
+            elif isinstance(dtype, StringType):
+                categorical_columns.append(c)
 
-    conf = ETLConfig(
-        x_categorical_columns=x_categorical_columns,
-        x_numeric_features=x_numeric_features,
-        target_column=target_column,
+    # FeatureConfig
+    feature = FeatureConfig(
+        categorical_columns=categorical_columns,
+        numeric_features=numeric_features,
+        date_column=date_column
     )
-    msgs.append(f'Setting x_categorical_columns as {x_categorical_columns}')
-    msgs.append(f'Setting x_numeric_features as {x_numeric_features}')
-    weight_group_columns = []
-    if date_column is not None:
-        conf.date_column = date_column
-        weight_group_columns.append(c)
-        msgs.append(f'Setting date_column to {c} as it is a DateType')
-    if len(weight_group_columns) > 0:
-        conf.weight_group_columns = weight_group_columns
-        msgs.append(f'Setting weight_group_columns as {weight_group_columns}')
+    logger.info(f'Setting FeatureConfig: {pp.pformat(feature.__dict__)}')
 
-    # target_log_transform
+    # TargetConfig
+    target_p = {'column': target_column}
+    if date_column is not None:
+        target_p['date_column'] = date_column
+    # log_transform
     min_target_val = min_val(df=df, c=target_column)
     if min_target_val >= 0.:
-        conf.target_log_transform = True
-        msgs.append(
-            'Setting target_log_transform to True '
-            f'since min_target_val = {min_target_val}'
-        )
-    # TODO target_normalize_by_categorical
-    # target_normalize_by_numerical
+        logger.info(f'Setting log_transform as True since min_target_val {min_target_val} >= 0.')
+        target_p['log_transform'] = True
+    # numerical_normalization
     top_corr_col, top_corr_val = get_top_correlated(df=df, c=target_column)
     if top_corr_col is not None and top_corr_val > 0.5:
-        conf.target_normalize_by_numerical = top_corr_col
-        msgs.append(
-            f'Setting target_normalize_by_numerical to {top_corr_col} '
-            f'since correlation with target {target_column} is {top_corr_val} (> 0.5)'
+        target_p['numerical_normalization'] = top_corr_col
+        logger.info(
+            f'Setting numerical_normalization to {top_corr_col} '
+            f'due to top_corr_val {top_corr_val} > 0.5.'
         )
-    return conf, msgs
+    target = TargetConfig(**target_p)
+    logger.info(f'Setting TargetConfig: {pp.pformat(target.__dict__)}')
+
+    return Config(feature=feature, target=target)
