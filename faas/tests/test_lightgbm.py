@@ -1,3 +1,4 @@
+import pytest
 from pyspark.sql import SparkSession
 
 from faas.config import Config, FeatureConfig, TargetConfig
@@ -5,16 +6,24 @@ from faas.generate import GenerateSynthetic, convert_dict_to_list
 from faas.lightgbm import LGBMWrapper
 
 
-def test_ETLWrapperForLGBM(spark: SparkSession):
+@pytest.mark.parametrize(
+    ('num_categorical'),
+    [
+        pytest.param(2, id='some categorical'),
+        pytest.param(0, id='no categorical'),
+    ]
+)
+def test_ETLWrapperForLGBM(spark: SparkSession, num_categorical: int):
+    d = GenerateSynthetic(num_categorical=num_categorical, num_numeric=2)
+    dict_of_lists = d.generate_iid()
     conf = Config(
-        target=TargetConfig(column='numeric_0'),
+        target=TargetConfig(column=d.numeric_names[0]),
         feature=FeatureConfig(
-            categorical_columns=['categorical_0'],
-            numeric_columns=['numeric_1']
+            categorical_columns=d.categorical_names,
+            numeric_columns=d.numeric_names[1:],
         )
     )
     ewlgbm = LGBMWrapper(conf)
-    d = GenerateSynthetic(num_categorical=2, num_numeric=2)
-    df = spark.createDataFrame(data=convert_dict_to_list(d.generate_iid()))
+    df = spark.createDataFrame(data=convert_dict_to_list(dict_of_lists))
     ewlgbm.fit(df)
     ewlgbm.predict(df)
