@@ -44,7 +44,7 @@ class LGBMWrapper:
             p['sample_weight'] = self.wtransformer.fit(df).get_transformed_as_pdf(df)
         # fit
         feature_name = self.xtransformer.feature_columns
-        categorical_feature = self.xtransformer.categorical_feature_columns
+        categorical_feature = self.xtransformer.encoded_categorical_feature_columns
         self.m.fit(X=X, y=y, feature_name=feature_name,
                    categorical_feature=categorical_feature, **p)
         return self
