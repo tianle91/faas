@@ -4,8 +4,8 @@ import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
 from pyspark.sql.types import DateType, NumericType, StringType
 
+from faas.e2e import ETLConfig
 from faas.eda.iid import correlation
-from faas.wrapper import ETLConfig
 
 
 def min_val(df: DataFrame, c: str) -> bool:
