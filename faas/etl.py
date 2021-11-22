@@ -7,8 +7,9 @@ import pandas as pd
 from pyspark.sql import DataFrame
 from pyspark.sql.types import DataType, DateType, NumericType, StringType
 
+from faas.config import FeatureConfig, TargetConfig, WeightConfig
 from faas.transformer.base import (AddTransformer, BaseTransformer,
-                                   Passthrough, Pipeline)
+                                   ConstantTransformer, Passthrough, Pipeline)
 from faas.transformer.date import (DayOfMonthFeatures, DayOfWeekFeatures,
                                    DayOfYearFeatures, WeekOfYearFeatures)
 from faas.transformer.encoder import OrdinalEncoder
@@ -70,24 +71,17 @@ class PipelineTransformer(BaseTransformer):
 
 
 class XTransformer(PipelineTransformer):
-    def __init__(
-        self,
-        numeric_features: List[str],
-        categorical_features: List[str],
-        date_column: Optional[str] = None
-    ):
-        self.numeric_features = numeric_features
-        self.categorical_features = categorical_features
-        self.date_column = date_column
+    def __init__(self, conf: FeatureConfig):
+        self.conf = conf
         # create pipeline
-        xsteps = [Passthrough(columns=numeric_features)]
-        xsteps += [OrdinalEncoder(c) for c in categorical_features]
-        if self.date_column is not None:
+        xsteps = [Passthrough(columns=conf.numeric_columns)]
+        xsteps += [OrdinalEncoder(c) for c in conf.categorical_columns]
+        if conf.date_column is not None:
             xsteps += [
-                DayOfMonthFeatures(date_column=date_column),
-                DayOfWeekFeatures(date_column=date_column),
-                DayOfYearFeatures(date_column=date_column),
-                WeekOfYearFeatures(date_column=date_column),
+                DayOfMonthFeatures(date_column=conf.date_column),
+                DayOfWeekFeatures(date_column=conf.date_column),
+                DayOfYearFeatures(date_column=conf.date_column),
+                WeekOfYearFeatures(date_column=conf.date_column),
             ]
         self.pipeline = Pipeline(steps=xsteps)
 
@@ -100,50 +94,50 @@ class XTransformer(PipelineTransformer):
         return out
 
     def validate_input(self, df: DataFrame) -> Tuple[bool, List[str]]:
+        conf = self.conf
         validations = [
-            validate_types(df=df, columns=self.numeric_features, allowable_types=[NumericType]),
-            validate_types(df=df, columns=self.categorical_features, allowable_types=[StringType]),
+            validate_types(
+                df=df,
+                columns=conf.numeric_columns,
+                allowable_types=[NumericType]
+            ),
+            validate_types(
+                df=df,
+                columns=conf.categorical_columns,
+                allowable_types=[StringType]
+            ),
         ]
-        if self.date_column is not None:
-            validations.append(
-                validate_types(df=df, columns=self.date_column, allowable_types=[DateType]))
+        if conf.date_column is not None:
+            validations.append(validate_types(
+                df=df,
+                columns=conf.date_column,
+                allowable_types=[DateType]
+            ))
         return merge_validations(validations)
 
 
 class YTransformer(PipelineTransformer):
-    def __init__(
-        self,
-        target_column: str,
-        log_transform: bool,
-        normalize_by_categorical: Optional[str] = None,
-        normalize_by_numerical: Optional[str] = None,
-    ):
-        self.target_column = target_column
-        self.log_transform = log_transform
-        if normalize_by_categorical is not None and normalize_by_numerical is not None:
-            raise ValueError('Cannot normalize by both categorical and numerical.')
-        self.normalize_by_categorical = normalize_by_categorical
-        self.normalize_by_numerical = normalize_by_numerical
+    def __init__(self, conf: TargetConfig):
+        self.conf = conf
         # create pipeline
         steps = []
-        target_column = self.target_column
-        if self.log_transform:
-            step = LogTransform(column=target_column)
+        # sequential transformations require updating current column
+        c = conf.column
+        if conf.log_transform:
+            step = LogTransform(column=c)
             steps.append(step)
-            target_column = step.feature_column
-
-        if normalize_by_categorical is not None:
+            c = step.feature_column
+        if conf.categorical_normalization_column is not None and conf.numerical_normalization_column is not None:
+            raise ValueError('Cannot normalize by both categorical and numerical.')
+        elif conf.categorical_normalization_column is not None:
             steps.append(StandardScaler(
-                column=target_column,
-                group_column=normalize_by_categorical
-            ))
-        elif normalize_by_numerical is not None:
+                column=c, group_column=conf.categorical_normalization_column))
+        elif conf.numerical_normalization_column is not None:
             steps.append(NumericScaler(
-                column=target_column,
-                group_column=normalize_by_numerical
-            ))
+                column=c, group_column=conf.numerical_normalization_column))
         else:
-            steps.append(Passthrough(columns=[target_column]))
+            # both are nones
+            steps.append(Passthrough(columns=[c]))
         self.pipeline = Pipeline(steps)
 
     @property
@@ -151,28 +145,31 @@ class YTransformer(PipelineTransformer):
         return [self.pipeline.feature_columns[-1]]
 
     def validate_input(self, df: DataFrame) -> Tuple[bool, List[str]]:
+        conf = self.conf
         validations = [
-            validate_types(df=df, columns=[self.target_column], allowable_types=[NumericType]),
+            validate_types(df=df, columns=[conf.column], allowable_types=[NumericType]),
         ]
-        if self.normalize_by_categorical is not None:
+        if conf.categorical_normalization_column is not None:
             validations.append(validate_types(
-                df=df, columns=self.normalize_by_categorical, allowable_types=[StringType]))
-        elif self.normalize_by_numerical is not None:
+                df=df, columns=conf.categorical_normalization_column, allowable_types=[StringType]))
+        elif conf.numerical_normalization_column is not None:
             validations.append(validate_types(
-                df=df, columns=self.normalize_by_numerical, allowable_types=[NumericType]))
+                df=df, columns=conf.numerical_normalization_column, allowable_types=[NumericType]))
         return merge_validations(validations)
 
 
 class WTransformer(PipelineTransformer):
-    def __init__(self, group_columns: str):
-        self.group_columns = group_columns
-        steps = [Normalize(group_column=c) for c in group_columns]
-        if len(steps) > 1:
-            wgt_cols = []
-            for step in steps:
-                wgt_cols += step.feature_columns
+    def __init__(self, conf: WeightConfig):
+        self.conf = conf
+        # create pipeline
+        steps = []
+        if conf.group_columns is not None:
+            weight_steps = [Normalize(group_column=c) for c in conf.group_columns]
+            steps += weight_steps
             # adding preserves group summation equality
-            steps += AddTransformer(columns=wgt_cols)
+            steps += AddTransformer(columns=[step.feature_column for step in weight_steps])
+        else:
+            steps.append(ConstantTransformer())
         self.pipeline = Pipeline(steps)
 
     @property
@@ -180,4 +177,7 @@ class WTransformer(PipelineTransformer):
         return [self.pipeline.feature_columns[-1]]
 
     def validate_input(self, df: DataFrame) -> Tuple[bool, List[str]]:
-        return validate_types(df=df, columns=self.group_columns, allowable_types=[NumericType])
+        if self.conf.group_columns is not None:
+            return validate_types(
+                df=df, columns=self.conf.group_columns, allowable_types=[StringType])
+        return True, []

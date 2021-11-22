@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class FeatureConfig:
     categorical_columns: List[str]
-    numeric_features: List[str]
+    numeric_columns: List[str]
     date_column: Optional[str] = None
 
 
@@ -24,8 +24,8 @@ class TargetConfig:
     column: str
     log_transform: bool = False
     date_column: Optional[str] = None
-    categorical_normalization: Optional[str] = None
-    numerical_normalization: Optional[str] = None
+    categorical_normalization_column: Optional[str] = None
+    numerical_normalization_column: Optional[str] = None
 
 
 @dataclass
@@ -80,7 +80,7 @@ def recommend(df: DataFrame, target_column: str) -> Config:
     # FeatureConfig
     feature = FeatureConfig(
         categorical_columns=categorical_columns,
-        numeric_features=numeric_features,
+        numeric_columns=numeric_features,
         date_column=date_column
     )
     logger.info(f'Setting FeatureConfig: {pp.pformat(feature.__dict__)}')

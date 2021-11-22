@@ -5,7 +5,7 @@ from typing import List, Tuple
 from lightgbm import LGBMModel
 from pyspark.sql import DataFrame
 
-from faas.config import ETLConfig
+from faas.config import Config
 from faas.etl import (WTransformer, XTransformer, YTransformer,
                       merge_validations)
 from faas.utils.dataframe import JoinableByRowID
@@ -13,22 +13,11 @@ from faas.utils.dataframe import JoinableByRowID
 
 class LGBMWrapper:
 
-    def __init__(self, config: ETLConfig):
+    def __init__(self, config: Config):
         self.config = config
-        self.ytransformer = YTransformer(
-            target_column=config.target_column,
-            log_transform=config.target_log_transform,
-            normalize_by_categorical=config.target_normalize_by_categorical,
-            normalize_by_numerical=config.target_normalize_by_numerical,
-        )
-        self.xtransformer = XTransformer(
-            numeric_features=config.x_numeric_features,
-            categorical_features=config.x_categorical_columns,
-            date_column=config.date_column
-        )
-        self.wtransformer = None
-        if config.weight_group_columns is not None:
-            self.wtransformer = WTransformer(group_columns=config.weight_group_columns)
+        self.ytransformer = YTransformer(config.target)
+        self.xtransformer = XTransformer(config.feature)
+        self.wtransformer = WTransformer(config.weight)
         self.m = LGBMModel(objective='regression', deterministic=True)
 
     def check_df_prediction(self, df: DataFrame) -> Tuple[bool, List[str]]:

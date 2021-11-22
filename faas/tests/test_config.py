@@ -11,7 +11,7 @@ def test_recommend(spark: SparkSession):
     expected = Config(
         feature=FeatureConfig(
             categorical_columns=['categorical_0', 'categorical_1'],
-            numeric_features=['numeric_1']
+            numeric_columns=['numeric_1']
         ),
         target=TargetConfig(column='numeric_0')
     )
