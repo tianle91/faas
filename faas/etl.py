@@ -10,8 +10,7 @@ from pyspark.sql.types import DataType, DateType, NumericType, StringType
 from faas.config import FeatureConfig, TargetConfig, WeightConfig
 from faas.transformer.base import (AddTransformer, BaseTransformer,
                                    ConstantTransformer, Passthrough, Pipeline)
-from faas.transformer.date import (DayOfMonthFeatures, DayOfWeekFeatures,
-                                   DayOfYearFeatures, WeekOfYearFeatures)
+from faas.transformer.date import SeasonalityFeature
 from faas.transformer.encoder import OrdinalEncoder
 from faas.transformer.scaler import LogTransform, NumericScaler, StandardScaler
 from faas.transformer.weight import Normalize
@@ -93,12 +92,7 @@ class XTransformer(PipelineTransformer):
             self.encoded_categorical_feature_columns.append(enc.feature_column)
             xsteps.append(enc)
         if conf.date_column is not None:
-            xsteps += [
-                DayOfMonthFeatures(date_column=conf.date_column),
-                DayOfWeekFeatures(date_column=conf.date_column),
-                DayOfYearFeatures(date_column=conf.date_column),
-                WeekOfYearFeatures(date_column=conf.date_column),
-            ]
+            xsteps.append(SeasonalityFeature(date_column=conf.date_column))
         self.pipeline = Pipeline(steps=xsteps)
 
     def validate_input(self, df: DataFrame) -> Tuple[bool, List[str]]:
