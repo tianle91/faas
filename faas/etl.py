@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 import pandas as pd
 from pyspark.sql import DataFrame
@@ -127,7 +127,10 @@ class YTransformer(PipelineTransformer):
             step = LogTransform(column=c)
             steps.append(step)
             c = step.feature_column
-        if conf.categorical_normalization_column is not None and conf.numerical_normalization_column is not None:
+        if (
+            conf.categorical_normalization_column is not None
+            and conf.numerical_normalization_column is not None
+        ):
             raise ValueError('Cannot normalize by both categorical and numerical.')
         elif conf.categorical_normalization_column is not None:
             steps.append(StandardScaler(
