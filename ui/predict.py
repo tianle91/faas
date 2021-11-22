@@ -1,10 +1,12 @@
 import os
 from tempfile import TemporaryDirectory
+from typing import Optional
 
 import pandas as pd
 import streamlit as st
 from pyspark.sql import SparkSession
 
+from faas.e2e.lightgbm import ETLWrapperForLGBM
 from faas.storage import read_model
 from faas.utils.dataframe import JoinableByRowID
 from faas.utils.io import dump_file_to_location
@@ -24,11 +26,11 @@ def run_predict():
 
     st.title('Predict')
 
-    e = st.session_state.get('model', None)
+    e: Optional[ETLWrapperForLGBM] = st.session_state.get('model', None)
     key = st.text_input('Model key (obtain this from training)')
     if key != '':
         try:
-            e = read_model(key=key)
+            e: ETLWrapperForLGBM = read_model(key=key)
             st.session_state['model'] = e
         except KeyError:
             st.error(f'Key {key} not found!')
