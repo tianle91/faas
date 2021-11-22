@@ -39,6 +39,9 @@ class Config:
     target: TargetConfig
     weight: WeightConfig = WeightConfig()
 
+    def to_dict(self):
+        return {k: getattr(self, k).__dict__ for k in self.__dict__}
+
 
 def min_val(df: DataFrame, c: str) -> bool:
     return df.agg(F.min(c).alias('min')).collect()[0]['min']
