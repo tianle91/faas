@@ -1,6 +1,6 @@
 import math
 from datetime import date
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
@@ -21,12 +21,27 @@ def normalized_cosine(x: float, period: float, phase: int):
     return math.cos(x)
 
 
+SEASONALITY_FEATURE_MAPPING = {
+    'day_of_week': (lambda dt: dt.weekday(), 6, 1),
+    'day_of_month': (lambda dt: dt.day, 31, 3),
+    'week_of_year': (lambda dt: dt.isocalendar()[1], 52.1429, 7),
+    'day_of_year': (lambda dt: (dt - date(dt.year, 1, 1)).days, 365.25, 13),
+}
+
+
 class SeasonalityFeature(BaseTransformer):
     """Use when there are date columns.
     """
 
-    def __init__(self, date_column: str) -> None:
+    def __init__(
+        self,
+        date_column: str,
+        seasonality_features: Union[str, List[str]] = 'all',
+    ) -> None:
         self.date_column = date_column
+        self.seasonality_features = seasonality_features
+        if seasonality_features == 'all':
+            self.seasonality_features = list(SEASONALITY_FEATURE_MAPPING.keys())
 
     @property
     def input_columns(self) -> List[str]:
@@ -42,26 +57,19 @@ class SeasonalityFeature(BaseTransformer):
     @property
     def feature_to_udf_mapping(self) -> Dict[str, callable]:
         out = {}
-        period_name, period_value = self.period
-        i = 0
-        while i <= (period_value / 2.):
-            out[f'Seasonality_{period_name}_sin_{i}'] = F.udf(
-                lambda dt: normalized_sine(
-                    self.get_value(dt),
-                    period=period_value,
-                    phase=i
-                ),
-                FloatType()
-            )
-            out[f'Seasonality_{period_name}_cos_{i}'] = F.udf(
-                lambda dt: normalized_cosine(
-                    self.get_value(dt),
-                    period=period_value,
-                    phase=i
-                ),
-                FloatType()
-            )
-            i += 1
+        for k in self.seasonality_features:
+            period_fn, period_value, period_skip = SEASONALITY_FEATURE_MAPPING[k]
+            i = 0
+            while i <= (period_value / 2.):
+                out[f'Seasonality_{k}_sin_{i}'] = F.udf(
+                    lambda dt: normalized_sine(period_fn(dt), period=period_value, phase=i),
+                    FloatType()
+                )
+                out[f'Seasonality_{k}_cos_{i}'] = F.udf(
+                    lambda dt: normalized_cosine(period_fn(dt), period=period_value, phase=i),
+                    FloatType()
+                )
+                i += period_skip
         return out
 
     @ property
@@ -75,31 +83,3 @@ class SeasonalityFeature(BaseTransformer):
             distincts = distincts.withColumn(feature_column, udf(F.col(self.date_column)))
         df = df.join(distincts, on=self.date_column, how='left')
         return df
-
-
-class DayOfWeekFeatures(SeasonalityFeature):
-    period = ('DayOfWeek', 6)
-
-    def get_value(self, dt: date) -> float:
-        return dt.weekday()
-
-
-class DayOfMonthFeatures(SeasonalityFeature):
-    period = ('DayOfMonth', 31)
-
-    def get_value(self, dt: date) -> float:
-        return dt.day
-
-
-class DayOfYearFeatures(SeasonalityFeature):
-    period = ('DayOfyear', 365.25)
-
-    def get_value(self, dt: date) -> float:
-        return (dt - date(dt.year, 1, 1)).days
-
-
-class WeekOfYearFeatures(SeasonalityFeature):
-    period = ('WeekOfYear', 52.1429)
-
-    def get_value(self, dt: date) -> float:
-        return dt.isocalendar()[1]
