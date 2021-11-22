@@ -7,8 +7,8 @@ from pyspark.sql import DataFrame
 from pyspark.sql.types import DoubleType
 
 from faas.transformer.base import BaseTransformer
-from faas.utils.dataframe import (validate_categorical_types,
-                                  validate_numeric_types)
+
+from .utils import validate_categorical_types, validate_numeric_types
 
 
 def get_mean_std(

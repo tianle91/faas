@@ -7,7 +7,8 @@ from pyspark.sql import DataFrame
 from pyspark.sql.types import LongType, NumericType
 
 from faas.transformer.base import BaseTransformer
-from faas.utils.dataframe import validate_categorical_types
+
+from .utils import validate_categorical_types
 
 
 def get_distinct_values(df: DataFrame, column: str) -> set:

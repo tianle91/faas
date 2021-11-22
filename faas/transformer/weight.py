@@ -7,7 +7,8 @@ from pyspark.sql import DataFrame
 from pyspark.sql.types import DateType, DoubleType, StringType
 
 from faas.transformer.base import BaseTransformer
-from faas.utils.dataframe import validate_date_types
+
+from .utils import validate_date_types
 
 
 def historical_decay(annual_rate: float, today_dt: date, dt: date) -> float:
