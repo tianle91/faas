@@ -19,7 +19,7 @@ from faas.transformer.weight import Normalize
 logger = logging.getLogger(__name__)
 
 
-def validate_types(
+def validate_types_with_msgs(
     df: DataFrame, columns: List[str], allowable_types: List[DataType],
 ) -> Tuple[bool, List[str]]:
     ok, msgs = True, []
@@ -96,19 +96,19 @@ class XTransformer(PipelineTransformer):
     def validate_input(self, df: DataFrame) -> Tuple[bool, List[str]]:
         conf = self.conf
         validations = [
-            validate_types(
+            validate_types_with_msgs(
                 df=df,
                 columns=conf.numeric_columns,
                 allowable_types=[NumericType]
             ),
-            validate_types(
+            validate_types_with_msgs(
                 df=df,
                 columns=conf.categorical_columns,
                 allowable_types=[StringType]
             ),
         ]
         if conf.date_column is not None:
-            validations.append(validate_types(
+            validations.append(validate_types_with_msgs(
                 df=df,
                 columns=conf.date_column,
                 allowable_types=[DateType]
@@ -147,13 +147,13 @@ class YTransformer(PipelineTransformer):
     def validate_input(self, df: DataFrame) -> Tuple[bool, List[str]]:
         conf = self.conf
         validations = [
-            validate_types(df=df, columns=[conf.column], allowable_types=[NumericType]),
+            validate_types_with_msgs(df=df, columns=[conf.column], allowable_types=[NumericType]),
         ]
         if conf.categorical_normalization_column is not None:
-            validations.append(validate_types(
+            validations.append(validate_types_with_msgs(
                 df=df, columns=conf.categorical_normalization_column, allowable_types=[StringType]))
         elif conf.numerical_normalization_column is not None:
-            validations.append(validate_types(
+            validations.append(validate_types_with_msgs(
                 df=df, columns=conf.numerical_normalization_column, allowable_types=[NumericType]))
         return merge_validations(validations)
 
@@ -178,6 +178,6 @@ class WTransformer(PipelineTransformer):
 
     def validate_input(self, df: DataFrame) -> Tuple[bool, List[str]]:
         if self.conf.group_columns is not None:
-            return validate_types(
+            return validate_types_with_msgs(
                 df=df, columns=self.conf.group_columns, allowable_types=[StringType])
         return True, []
