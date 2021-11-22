@@ -27,7 +27,37 @@ class BaseTransformer:
         raise NotImplementedError
 
 
+class ConstantTransformer:
+    """Adds a column with a constant value."""
+
+    def __init__(self, value=1) -> None:
+        self.value = value
+
+    @property
+    def input_columns(self) -> List[str]:
+        return []
+
+    @property
+    def feature_column(self) -> List[str]:
+        cleaned_value = ''.join([c if c.isalnum() else '_' for c in str(self.value)])
+        return f'ConstantTransformer_{cleaned_value}'
+
+    @property
+    def feature_columns(self) -> List[str]:
+        return [self.feature_column]
+
+    def fit(self, df: DataFrame) -> BaseTransformer:
+        return self
+
+    def transform(self, df: DataFrame) -> DataFrame:
+        return df.withColumn(self.feature_column, F.lit(self.value))
+
+    def inverse_transform(self, df: DataFrame) -> DataFrame:
+        return df
+
+
 class Passthrough(BaseTransformer):
+    """Expect columns to exist and pass through."""
 
     def __init__(self, columns: List[str]) -> None:
         self.columns = columns
@@ -48,6 +78,8 @@ class Passthrough(BaseTransformer):
 
 
 class AddTransformer(BaseTransformer):
+    """Adds all specified columns."""
+
     def __init__(self, columns: List[str]) -> None:
         self.columns = columns
 
@@ -74,6 +106,8 @@ class AddTransformer(BaseTransformer):
 
 
 class Pipeline(BaseTransformer):
+    """Applies each transformer in sequence."""
+
     def __init__(self, steps: List[BaseTransformer]):
         self.steps = steps
 
