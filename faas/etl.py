@@ -86,14 +86,14 @@ class XTransformer(PipelineTransformer):
         self.conf = conf
         self.encoded_categorical_feature_columns = []
         # create pipeline
-        xsteps = [Passthrough(columns=conf.numeric_columns)]
+        steps: List[BaseTransformer] = [Passthrough(columns=conf.numeric_columns)]
         for c in conf.categorical_columns:
             enc = OrdinalEncoder(c)
             self.encoded_categorical_feature_columns.append(enc.feature_column)
-            xsteps.append(enc)
+            steps.append(enc)
         if conf.date_column is not None:
-            xsteps.append(SeasonalityFeature(date_column=conf.date_column))
-        self.pipeline = Pipeline(steps=xsteps)
+            steps.append(SeasonalityFeature(date_column=conf.date_column))
+        self.pipeline = Pipeline(steps=steps)
 
     def validate_input(self, df: DataFrame) -> Tuple[bool, List[str]]:
         conf = self.conf
@@ -110,7 +110,7 @@ class YTransformer(PipelineTransformer):
     def __init__(self, conf: TargetConfig):
         self.conf = conf
         # create pipeline
-        steps = []
+        steps: List[BaseTransformer] = []
         # sequential transformations require updating current column
         c = conf.column
         if conf.log_transform:
@@ -153,12 +153,16 @@ class WTransformer(PipelineTransformer):
     def __init__(self, conf: WeightConfig):
         self.conf = conf
         # create pipeline
-        steps = []
+        steps: List[BaseTransformer] = []
+        if conf.date_column is not None:
+            steps.append(Normalize(group_column=conf.date_column))
         if conf.group_columns is not None:
-            weight_steps = [Normalize(group_column=c) for c in conf.group_columns]
-            steps += weight_steps
+            for c in conf.group_columns:
+                steps.append(Normalize(group_column=c))
+        # get the final combined weight
+        if len(steps) > 0:
             # adding preserves group summation equality
-            steps += AddTransformer(columns=[step.feature_column for step in weight_steps])
+            steps += AddTransformer(columns=[step.feature_columns[-1] for step in steps])
         else:
             steps.append(ConstantTransformer())
         self.pipeline = Pipeline(steps)
@@ -168,6 +172,10 @@ class WTransformer(PipelineTransformer):
         return [self.pipeline.feature_columns[-1]]
 
     def validate_input(self, df: DataFrame) -> Tuple[bool, List[str]]:
-        if self.conf.group_columns is not None:
-            return validate_categorical_with_msgs(df=df, columns=self.conf.group_columns)
-        return True, []
+        conf = self.conf
+        validations = []
+        if conf.date_column is not None:
+            validations.append(validate_date_with_msgs(df=df, columns=[conf.date_column]))
+        if conf.group_columns is not None:
+            validations.append(validate_categorical_with_msgs(df=df, columns=conf.group_columns))
+        return merge_validations(validations)

@@ -29,6 +29,7 @@ class TargetConfig:
 
 @dataclass
 class WeightConfig:
+    date_column: Optional[str] = None
     group_columns: Optional[List[str]] = None
 
 
@@ -96,8 +97,6 @@ def recommend_config(df: DataFrame, target_column: str) -> Config:
 
     # TargetConfig
     target_p = {'column': target_column}
-    if date_column is not None:
-        target_p['date_column'] = date_column
     # log_transform
     min_target_val = min_val(df=df, c=target_column)
     if min_target_val >= 0.:
@@ -114,4 +113,7 @@ def recommend_config(df: DataFrame, target_column: str) -> Config:
     target = TargetConfig(**target_p)
     logger.info(f'Setting TargetConfig: {pp.pformat(target.__dict__)}')
 
-    return Config(feature=feature, target=target)
+    # WeightConfig
+    weight = WeightConfig(date_column=date_column)
+
+    return Config(feature=feature, target=target, weight=weight)
