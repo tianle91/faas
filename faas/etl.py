@@ -154,21 +154,18 @@ class WTransformer(PipelineTransformer):
         self.conf = conf
         # create pipeline
         steps: List[BaseTransformer] = []
-        # normalizers
         if conf.date_column is not None:
-            steps.append(Normalize(group_column=conf.date_column))
+            date_steps = [
+                Normalize(group_column=conf.date_column),
+                HistoricalDecay(annual_rate=conf.annual_decay_rate, date_column=conf.date_column)
+            ]
+            steps += date_steps
         if conf.group_columns is not None:
             for c in conf.group_columns:
                 steps.append(Normalize(group_column=c))
-        # historical decay
-        if conf.date_column is not None:
-            steps.append(HistoricalDecay(
-                annual_rate=conf.annual_decay_rate, date_column=conf.date_column))
-        # get the final combined weight
         if len(steps) > 0:
-            # adding preserves group summation equality
-            steps += AddTransformer(
-                columns=[step.feature_columns[-1] for step in steps])
+            # get the final combined weight by adding up the individual weight columns
+            steps += AddTransformer(columns=[step.feature_columns[-1] for step in steps])
         else:
             steps.append(ConstantTransformer())
         self.pipeline = Pipeline(steps)
