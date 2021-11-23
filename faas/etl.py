@@ -13,7 +13,7 @@ from faas.transformer.base import (AddTransformer, BaseTransformer,
 from faas.transformer.date import SeasonalityFeature
 from faas.transformer.encoder import OrdinalEncoder
 from faas.transformer.scaler import LogTransform, NumericScaler, StandardScaler
-from faas.transformer.weight import Normalize
+from faas.transformer.weight import HistoricalDecay, Normalize
 
 logger = logging.getLogger(__name__)
 
@@ -154,15 +154,21 @@ class WTransformer(PipelineTransformer):
         self.conf = conf
         # create pipeline
         steps: List[BaseTransformer] = []
+        # normalizers
         if conf.date_column is not None:
             steps.append(Normalize(group_column=conf.date_column))
         if conf.group_columns is not None:
             for c in conf.group_columns:
                 steps.append(Normalize(group_column=c))
+        # historical decay
+        if conf.date_column is not None:
+            steps.append(HistoricalDecay(
+                annual_rate=conf.annual_decay_rate, date_column=conf.date_column))
         # get the final combined weight
         if len(steps) > 0:
             # adding preserves group summation equality
-            steps += AddTransformer(columns=[step.feature_columns[-1] for step in steps])
+            steps += AddTransformer(
+                columns=[step.feature_columns[-1] for step in steps])
         else:
             steps.append(ConstantTransformer())
         self.pipeline = Pipeline(steps)

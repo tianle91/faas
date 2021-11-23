@@ -30,6 +30,7 @@ class TargetConfig:
 @dataclass
 class WeightConfig:
     date_column: Optional[str] = None
+    annual_decay_rate: float = .1
     group_columns: Optional[List[str]] = None
 
 
