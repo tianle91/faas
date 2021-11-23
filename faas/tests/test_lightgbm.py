@@ -33,7 +33,7 @@ def test_LGBMWrapper_ts(spark: SparkSession):
     d = GenerateSynthetic(num_categorical=2, num_numeric=2)
     dict_of_lists = d.generate_ts(date_column='dt')
     conf = Config(
-        target=TargetConfig(column=d.numeric_names[0], date_column='dt'),
+        target=TargetConfig(column=d.numeric_names[0]),
         feature=FeatureConfig(
             categorical_columns=d.categorical_names,
             numeric_columns=d.numeric_names[1:],

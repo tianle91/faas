@@ -23,7 +23,6 @@ class FeatureConfig:
 class TargetConfig:
     column: str
     log_transform: bool = False
-    date_column: Optional[str] = None
     categorical_normalization_column: Optional[str] = None
     numerical_normalization_column: Optional[str] = None
 
