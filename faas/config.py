@@ -1,11 +1,11 @@
 import logging
 import pprint as pp
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Type
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
-from pyspark.sql.types import DateType, NumericType, StringType
+from pyspark.sql.types import DataType, DateType, NumericType, StringType
 
 from faas.eda.iid import correlation
 
@@ -64,6 +64,14 @@ def get_top_correlated(df: DataFrame, c: str) -> Tuple[Optional[str], Optional[f
     return top_corr_col, top_corr_val
 
 
+def get_columns_by_type(df: DataFrame, dtype: DataType) -> List[str]:
+    out = []
+    for c in df.columns:
+        if isinstance(df.schema[c].dataType, dtype):
+            out.append(c)
+    return out
+
+
 def recommend_config(df: DataFrame, target_column: str) -> Config:
     """Recommend Config to use.
 
@@ -74,24 +82,23 @@ def recommend_config(df: DataFrame, target_column: str) -> Config:
         target_column (str): target column
     """
     # infer from column types
+    date_columns = get_columns_by_type(df=df, dtype=DateType)
+    categorical_columns = get_columns_by_type(df=df, dtype=StringType)
+    numeric_columns = get_columns_by_type(df=df, dtype=NumericType)
+    if target_column not in numeric_columns:
+        raise TypeError(f'target_column: {target_column} should be numeric')
     date_column = None
-    categorical_columns = []
-    numeric_features = []
-    for c in df.columns:
-        if c != target_column:
-            dtype = df.schema[c].dataType
-            print(c, dtype)
-            if isinstance(dtype, DateType):
-                date_column = c
-            elif isinstance(dtype, NumericType):
-                numeric_features.append(c)
-            elif isinstance(dtype, StringType):
-                categorical_columns.append(c)
+    if len(date_columns) > 1:
+        logger.info(
+            f'More than one date_columns: {date_columns}, '
+            f'recommending the first one {date_columns[0]}'
+        )
+        date_column = date_columns[0]
 
     # FeatureConfig
     feature = FeatureConfig(
         categorical_columns=categorical_columns,
-        numeric_columns=numeric_features,
+        numeric_columns=[c for c in numeric_columns if c != target_column],
         date_column=date_column
     )
     logger.info(f'Setting FeatureConfig: {pp.pformat(feature.__dict__)}')
