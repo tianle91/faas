@@ -26,11 +26,14 @@ class LGBMWrapper:
     def check_df_prediction(self, df: DataFrame) -> Tuple[bool, List[str]]:
         return merge_validations([
             self.xtransformer.validate_input(df=df),
-            self.ytransformer.validate_input(df=df),
+            self.ytransformer.validate_input(df=df, prediction=True),
         ])
 
     def check_df_train(self, df: DataFrame) -> Tuple[bool, List[str]]:
-        validations = [self.check_df_prediction(df)]
+        validations = [
+            self.xtransformer.validate_input(df=df),
+            self.ytransformer.validate_input(df=df, prediction=False),
+        ]
         if self.wtransformer is not None:
             validations.append(self.wtransformer.validate_input(df=df))
         return merge_validations(validations)
@@ -69,6 +72,6 @@ class LGBMWrapper:
         # predict
         ypred = self.m.predict(Xpred)
         # join them back to df
-        df_with_y = jb.join_by_row_id(ypred, column=self.ytransformer.feature_columns[0])
+        df_with_y = jb.join_by_row_id(ypred, column=self.ytransformer.conf.column)
         df_pred = self.ytransformer.inverse_transform(df_with_y)
         return df_pred
