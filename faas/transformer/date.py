@@ -78,7 +78,7 @@ class SeasonalityFeature(BaseTransformer):
 
     def transform(self, df: DataFrame) -> DataFrame:
         validate_date_types(df, cols=[self.date_column])
-        distincts = df.select(F.col(self.date_column))
+        distincts = df.select(F.col(self.date_column)).distinct()
         for feature_column, udf in self.feature_to_udf_mapping.items():
             distincts = distincts.withColumn(feature_column, udf(F.col(self.date_column)))
         df = df.join(distincts, on=self.date_column, how='left')
