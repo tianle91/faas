@@ -18,7 +18,7 @@ def highlight_target(s: pd.Series, target_column: str):
     if s.name == target_column:
         return ['background-color: #ff0000; color: white'] * len(s)
     else:
-        return ['background-color: #ffffff'] * len(s)
+        return [''] * len(s)
 
 
 def run_predict():
@@ -48,8 +48,13 @@ def run_predict():
                 predict_path = os.path.join(temp_dir, 'predict.csv')
                 dump_file_to_location(predict_file, p=predict_path)
 
-                # load the csv and send to api
+                # load the csv
                 pred_pdf = pd.read_csv(predict_path)
+
+                st.header('Uploaded dataset')
+                st.dataframe(pred_pdf.head())
+
+                # send to api
                 r = requests.post(
                     url=f'{API_URL}/predict/{model_key}',
                     data=json.dumps({'data': pred_pdf.to_dict(orient='records')})
@@ -57,6 +62,8 @@ def run_predict():
                 response_json = r.json()
 
                 if response_json['prediction'] is not None:
+                    st.header('Prediction')
+
                     pred_pdf_received = pd.DataFrame(response_json['prediction'])
                     pred_pdf_preview = pred_pdf_received[[
                         *m.config.feature.categorical_columns,
@@ -73,4 +80,7 @@ def run_predict():
                         file_name='prediction.csv'
                     )
                 else:
-                    st.error('\n'.join(response_json['messages']))
+                    st.error('Errors in uploaded dataset! Please check model details.')
+                    st.markdown('\n\n'.join([
+                        f'❌ {msg}' for msg in response_json['messages']
+                    ]))
