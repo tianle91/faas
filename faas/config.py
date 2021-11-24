@@ -1,11 +1,11 @@
 import logging
 import pprint as pp
 from dataclasses import dataclass
-from typing import List, Optional, Tuple, Type
+from typing import List, Optional, Tuple
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
-from pyspark.sql.types import DataType, DateType, NumericType, StringType
+from pyspark.sql.types import DataType, NumericType, StringType
 
 from faas.eda.iid import correlation
 
