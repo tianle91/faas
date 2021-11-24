@@ -72,28 +72,27 @@ def get_columns_by_type(df: DataFrame, dtype: DataType) -> List[str]:
     return out
 
 
-def recommend_config(df: DataFrame, target_column: str) -> Config:
+def recommend_config(
+    df: DataFrame,
+    target_column: str,
+    date_column: Optional[str] = None,
+    group_columns: Optional[List[str]] = None
+) -> Config:
     """Recommend Config to use.
 
     TODO: split into iid, ts, multi_ts
 
     Args:
-        df (DataFrame): dataframe to run analysis on
-        target_column (str): target column
+        df: dataframe to run analysis on
+        target_column: target column
+        date_column: date column, defaults to None.
+        group_columns: group columns if date column is specified, defaults to None.
     """
     # infer from column types
-    date_columns = get_columns_by_type(df=df, dtype=DateType)
     categorical_columns = get_columns_by_type(df=df, dtype=StringType)
     numeric_columns = get_columns_by_type(df=df, dtype=NumericType)
     if target_column not in numeric_columns:
         raise TypeError(f'target_column: {target_column} should be numeric')
-    date_column = None
-    if len(date_columns) > 1:
-        logger.info(
-            f'More than one date_columns: {date_columns}, '
-            f'recommending the first one {date_columns[0]}'
-        )
-        date_column = date_columns[0]
 
     # FeatureConfig
     feature = FeatureConfig(
@@ -122,6 +121,6 @@ def recommend_config(df: DataFrame, target_column: str) -> Config:
     logger.info(f'Setting TargetConfig: {pp.pformat(target.__dict__)}')
 
     # WeightConfig
-    weight = WeightConfig(date_column=date_column)
+    weight = WeightConfig(date_column=date_column, group_columns=group_columns)
 
     return Config(feature=feature, target=target, weight=weight)
