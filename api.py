@@ -48,7 +48,7 @@ async def predict(model_key: str, prediction_request: PredictionRequest) -> Pred
 
     # conversion to date
     date_column = m.config.weight.date_column
-    if date_column is not None:
+    if date_column is not None and date_column in df.columns:
         df = df.withColumn(date_column, F.to_date(date_column))
 
     # check input dataframe
