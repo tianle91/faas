@@ -137,9 +137,11 @@ class YTransformer(PipelineTransformer):
     def feature_columns(self) -> List[str]:
         return [self.pipeline.feature_columns[-1]]
 
-    def validate_input(self, df: DataFrame) -> Tuple[bool, List[str]]:
+    def validate_input(self, df: DataFrame, prediction: bool = False) -> Tuple[bool, List[str]]:
         conf = self.conf
-        validations = [validate_numeric_with_msgs(df=df, columns=[conf.column])]
+        validations = []
+        if not prediction:
+            validations.append(validate_numeric_with_msgs(df=df, columns=[conf.column]))
         if conf.categorical_normalization_column is not None:
             validations.append(validate_categorical_with_msgs(
                 df=df, columns=[conf.categorical_normalization_column]))
