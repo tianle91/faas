@@ -6,7 +6,6 @@ from tempfile import TemporaryDirectory
 import pandas as pd
 import requests
 import streamlit as st
-from pyspark.sql import SparkSession
 
 from faas.lightgbm import LGBMWrapper
 from faas.storage import read_model
@@ -23,8 +22,6 @@ def highlight_target(s: pd.Series, target_column: str):
 
 
 def run_predict():
-
-    spark = SparkSession.builder.getOrCreate()
 
     st.title('Predict')
     model_key = st.session_state.get('model_key', '')
