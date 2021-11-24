@@ -73,6 +73,10 @@ class LGBMWrapper:
         # predict
         ypred = self.m.predict(Xpred)
         # join them back to df
-        df_with_y = jb.join_by_row_id(ypred, column=self.ytransformer.conf.column)
+        df_with_y = jb.join_by_row_id(
+            ypred,
+            # ytransformer has a single feature_column
+            column=self.ytransformer.feature_columns[0]
+        )
         df_pred = self.ytransformer.inverse_transform(df_with_y)
         return df_pred
