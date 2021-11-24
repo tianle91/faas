@@ -17,9 +17,9 @@ API_URL = 'http://localhost:8000'
 
 def highlight_target(s: pd.Series, target_column: str):
     if s.name == target_column:
-        return ['background-color: #ff0000'] * len(s)
+        return ['background-color: #ff0000; color: white'] * len(s)
     else:
-        return ['background-color: #000000'] * len(s)
+        return ['background-color: #ffffff'] * len(s)
 
 
 def run_predict():
