@@ -10,7 +10,6 @@ from pyspark.sql import SparkSession
 
 from faas.lightgbm import LGBMWrapper
 from faas.storage import read_model
-from faas.utils.dataframe import JoinableByRowID
 from faas.utils.io import dump_file_to_location
 
 
