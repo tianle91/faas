@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import List, Tuple
 
 from lightgbm import LGBMModel
@@ -9,6 +10,8 @@ from faas.config import Config
 from faas.etl import (WTransformer, XTransformer, YTransformer,
                       merge_validations)
 from faas.utils.dataframe import JoinableByRowID
+
+logger = logging.getLogger(__name__)
 
 
 class LGBMWrapper:
@@ -38,10 +41,16 @@ class LGBMWrapper:
             raise ValueError(msgs)
         # get the matrices
         X = self.xtransformer.fit(df).get_transformed_as_pdf(df)
+        logger.info(f'X.shape: {X.shape}')
         y = self.ytransformer.fit(df).get_transformed_as_pdf(df)
+        logger.info(f'y.shape: {y.shape}')
         p = {}
         if self.wtransformer is not None:
-            p['sample_weight'] = self.wtransformer.fit(df).get_transformed_as_pdf(df)
+            w = self.wtransformer.fit(df).get_transformed_as_pdf(df)
+            logger.info(f'w.shape: {w.shape}')
+            if w.shape[1] != 1:
+                raise ValueError('There should be only a single column in w')
+            p['sample_weight'] = w.iloc[:, 0]
         # fit
         feature_name = self.xtransformer.feature_columns
         categorical_feature = self.xtransformer.encoded_categorical_feature_columns
