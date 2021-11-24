@@ -36,7 +36,7 @@ async def predict(model_key: str, prediction_request: PredictionRequest) -> Pred
     try:
         m: LGBMWrapper = read_model(model_key)
     except KeyError:
-        return PredictionResponse(prediction=[], messages=['Model not found'])
+        return PredictionResponse(prediction=None, messages=['Model not found'])
 
     spark = (
         SparkSession
@@ -54,7 +54,7 @@ async def predict(model_key: str, prediction_request: PredictionRequest) -> Pred
     # check input dataframe
     ok, msgs = m.check_df_prediction(df=df)
     if not ok:
-        return PredictionResponse(prediction=[], messages=msgs)
+        return PredictionResponse(prediction=None, messages=msgs)
     else:
         df_predict = m.predict(df).toPandas()
         return PredictionResponse(prediction=df_predict.to_dict(orient='records'), messages=msgs)
