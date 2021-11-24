@@ -1,16 +1,18 @@
+import json
 import os
 import pprint as pp
 from tempfile import TemporaryDirectory
-from typing import Optional
 
 import pandas as pd
-import pyspark.sql.functions as F
+import requests
 import streamlit as st
 from pyspark.sql import SparkSession
 
 from faas.lightgbm import LGBMWrapper
 from faas.storage import read_model
 from faas.utils.io import dump_file_to_location
+
+API_URL = 'http://localhost:8000'
 
 
 def highlight_target(s: pd.Series, target_column: str):
@@ -25,15 +27,16 @@ def run_predict():
     spark = SparkSession.builder.getOrCreate()
 
     st.title('Predict')
-    m: Optional[LGBMWrapper] = st.session_state.get('model', None)
-    if m is None:
-        key = st.text_input('Model key (obtain this from training)')
-        if key != '':
-            try:
-                m: LGBMWrapper = read_model(key=key)
-                st.session_state['model'] = m
-            except KeyError:
-                st.error(f'Key {key} not found!')
+    model_key = st.session_state.get('model_key', '')
+    model_key = st.text_input('Model key (obtain this from training)', value=model_key)
+
+    m = None
+    if model_key != '':
+        try:
+            m: LGBMWrapper = read_model(key=model_key)
+        except KeyError as e:
+            st.error(e)
+
     if m is not None:
         st.success('Model loaded!')
         with st.expander('Details on loaded model'):
@@ -48,39 +51,29 @@ def run_predict():
                 predict_path = os.path.join(temp_dir, 'predict.csv')
                 dump_file_to_location(predict_file, p=predict_path)
 
-                df = spark.read.options(header=True, inferSchema=True).csv(predict_path)
+                # load the csv and send to api
+                pred_pdf = pd.read_csv(predict_path)
+                r = requests.post(
+                    url=f'{API_URL}/predict/{model_key}',
+                    data=json.dumps({'data': pred_pdf.to_dict(orient='records')})
+                )
+                response_json = r.json()
 
-                # date
-                date_column = m.config.weight.date_column
-                if date_column is not None:
-                    df = df.withColumn(date_column, F.to_date(date_column))
-
-                ok, msgs = m.check_df_prediction(df=df)
-                if ok:
-                    st.success('Uploaded dataset is valid!')
+                if response_json['prediction'] is not None:
+                    pred_pdf_received = pd.DataFrame(response_json['prediction'])
+                    pred_pdf_preview = pred_pdf_received[[
+                        *m.config.feature.categorical_columns,
+                        *m.config.feature.numeric_columns,
+                        m.config.target.column
+                    ]].head(10)
+                    st.dataframe(pred_pdf_preview.style.apply(
+                        lambda s: highlight_target(s, target_column=m.config.target.column),
+                        axis=0
+                    ))
+                    st.download_button(
+                        'Download prediction',
+                        data=pred_pdf_received.to_csv(),
+                        file_name='prediction.csv'
+                    )
                 else:
-                    st.error('\n'.join(msgs))
-
-                if ok:
-                    st.markdown('## Predict Now?')
-                    if st.button('Yes'):
-                        df_predict = m.predict(df)
-                        df_predict_preview: pd.DataFrame = (
-                            df_predict
-                            .select(
-                                *m.config.feature.categorical_columns,
-                                *m.config.feature.numeric_columns,
-                                m.config.target.column
-                            )
-                            .limit(10)
-                            .toPandas()
-                        )
-                        st.dataframe(df_predict_preview.style.apply(
-                            lambda s: highlight_target(s, target_column=m.config.target.column),
-                            axis=0
-                        ))
-                        st.download_button(
-                            'Download prediction',
-                            data=df_predict.toPandas().to_csv(),
-                            file_name='prediction.csv'
-                        )
+                    st.error('\n'.join(response_json['messages']))

@@ -69,7 +69,7 @@ def run_training():
                 st.code(pp.pformat(config.to_dict()))
                 if st.button('Train now!'):
                     m = LGBMWrapper(config=config).fit(df)
-                    st.session_state['model'] = m
-                    key = write_model(m)
-                    st.success(f'Model key (save this for prediction): `{key}`')
-                    logger.info(f'wrote model key: {key}')
+                    model_key = write_model(m)
+                    st.session_state['model_key'] = model_key
+                    st.success(f'Model key (save this for prediction): `{model_key}`')
+                    logger.info(f'wrote model key: {model_key}')
