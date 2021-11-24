@@ -16,8 +16,11 @@ class JoinableByRowID:
             .withColumn(ROW_ID_COL, F.monotonically_increasing_id())
             .orderBy(ROW_ID_COL)
         )
+        self.ids = [row[ROW_ID_COL] for row in self.df.select(ROW_ID_COL).collect()]
 
     def join_by_row_id(self, x: List[float], column: str) -> DataFrame:
-        mapping = {i: float(val) for i, val in enumerate(x)}
+        if len(x) != len(self.ids):
+            raise ValueError(f'len(x) should be {len(self.ids)} but received {len(x)} instead.')
+        mapping = {self.ids[i]: float(val) for i, val in enumerate(x)}
         udf = F.udf(lambda i: mapping[i], DoubleType())
         return self.df.withColumn(column, udf(F.col(ROW_ID_COL)))
