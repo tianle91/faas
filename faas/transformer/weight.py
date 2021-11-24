@@ -43,6 +43,10 @@ class HistoricalDecay(BaseTransformer):
     def feature_column(self) -> str:
         return f'HistoricalDecay_{self.date_column}'
 
+    @property
+    def feature_columns(self) -> List[str]:
+        return [self.feature_column]
+
     def fit(self, df: DataFrame):
         validate_date_types(df=df, cols=[self.date_column])
         newest_df = df.agg(F.max(F.col(self.date_column)).alias('newest'))
