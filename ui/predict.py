@@ -56,8 +56,6 @@ def run_predict():
                 if date_column is not None:
                     df = df.withColumn(date_column, F.to_date(date_column))
 
-                df = JoinableByRowID(df).df
-
                 ok, msgs = m.check_df_prediction(df=df)
                 if ok:
                     st.success('Uploaded dataset is valid!')
