@@ -23,13 +23,17 @@ def validate_types_with_msgs(
 ) -> Tuple[bool, List[str]]:
     ok, msgs = True, []
     for c in columns:
-        actual_dtype = df.schema[c].dataType
-        ok_temp = any([isinstance(actual_dtype, dtype) for dtype in allowable_types])
-        if not ok_temp:
-            msgs.append(
-                f'Expected one of {allowable_types} for column: {c} '
-                f'but received {actual_dtype} instead.'
-            )
+        if c not in df.columns:
+            ok_temp = False
+            msgs.append(f'Unable to find column: {c}')
+        else:
+            actual_dtype = df.schema[c].dataType
+            ok_temp = any([isinstance(actual_dtype, dtype) for dtype in allowable_types])
+            if not ok_temp:
+                msgs.append(
+                    f'Expected one of {allowable_types} for column: {c} '
+                    f'but received {actual_dtype} instead.'
+                )
         ok = ok and ok_temp
     return ok, msgs
 
