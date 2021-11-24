@@ -4,6 +4,7 @@ from tempfile import TemporaryDirectory
 from typing import Optional
 
 import pandas as pd
+import pyspark.sql.functions as F
 import streamlit as st
 from pyspark.sql import SparkSession
 
@@ -40,44 +41,50 @@ def run_predict():
         with st.expander('Details on loaded model'):
             st.code(pp.pformat(m.config.to_dict()))
 
-    st.markdown('# Upload dataset')
-    st.markdown(f'Ensure that dates are in the `{DEFAULT_DATE_FORMAT}` format.')
-    predict_file = st.file_uploader('Predict data', type='csv')
+        st.markdown('# Upload dataset')
+        predict_file = st.file_uploader('Predict data', type='csv')
 
-    with TemporaryDirectory() as temp_dir:
         if predict_file is not None:
-            # get the file into a local path
-            predict_path = os.path.join(temp_dir, 'predict.csv')
-            dump_file_to_location(predict_file, p=predict_path)
-            df = spark.read.options(header=True, inferSchema=True).csv(predict_path)
-            df = JoinableByRowID(df).df
+            with TemporaryDirectory() as temp_dir:
+                # get the file into a local path
+                predict_path = os.path.join(temp_dir, 'predict.csv')
+                dump_file_to_location(predict_file, p=predict_path)
 
-            ok, msgs = m.check_df_prediction(df=df)
-            if ok:
-                st.success('Uploaded dataset is valid!')
-            else:
-                st.error('\n'.join(msgs))
+                df = spark.read.options(header=True, inferSchema=True).csv(predict_path)
 
-            if ok:
-                st.markdown('## Predict Now?')
-                if st.button('Yes'):
-                    df_predict = m.predict(df)
-                    df_predict_preview: pd.DataFrame = (
-                        df_predict
-                        .select(
-                            *m.config.feature.categorical_columns,
-                            *m.config.feature.numeric_columns,
-                            m.config.target.column
+                # date
+                date_column = m.config.weight.date_column
+                if date_column is not None:
+                    df = df.withColumn(date_column, F.to_date(date_column))
+
+                df = JoinableByRowID(df).df
+
+                ok, msgs = m.check_df_prediction(df=df)
+                if ok:
+                    st.success('Uploaded dataset is valid!')
+                else:
+                    st.error('\n'.join(msgs))
+
+                if ok:
+                    st.markdown('## Predict Now?')
+                    if st.button('Yes'):
+                        df_predict = m.predict(df)
+                        df_predict_preview: pd.DataFrame = (
+                            df_predict
+                            .select(
+                                *m.config.feature.categorical_columns,
+                                *m.config.feature.numeric_columns,
+                                m.config.target.column
+                            )
+                            .limit(10)
+                            .toPandas()
                         )
-                        .limit(10)
-                        .toPandas()
-                    )
-                    st.dataframe(df_predict_preview.style.apply(
-                        lambda s: highlight_target(s, target_column=m.config.target.column),
-                        axis=0
-                    ))
-                    st.download_button(
-                        'Download prediction',
-                        data=df_predict.toPandas().to_csv(),
-                        file_name='prediction.csv'
-                    )
+                        st.dataframe(df_predict_preview.style.apply(
+                            lambda s: highlight_target(s, target_column=m.config.target.column),
+                            axis=0
+                        ))
+                        st.download_button(
+                            'Download prediction',
+                            data=df_predict.toPandas().to_csv(),
+                            file_name='prediction.csv'
+                        )
