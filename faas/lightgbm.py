@@ -24,6 +24,7 @@ class LGBMWrapper:
         self.m = LGBMModel(objective='regression', deterministic=True)
 
     def check_df_prediction(self, df: DataFrame) -> Tuple[bool, List[str]]:
+        # TODO: check that all columns exist prior to validating
         return merge_validations([
             self.xtransformer.validate_input(df=df),
             self.ytransformer.validate_input(df=df, prediction=True),
