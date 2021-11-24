@@ -165,7 +165,7 @@ class WTransformer(PipelineTransformer):
                 steps.append(Normalize(group_column=c))
         if len(steps) > 0:
             # get the final combined weight by adding up the individual weight columns
-            steps += AddTransformer(columns=[step.feature_columns[-1] for step in steps])
+            steps.append(AddTransformer(columns=[step.feature_columns[-1] for step in steps]))
         else:
             steps.append(ConstantTransformer())
         self.pipeline = Pipeline(steps)
