@@ -13,11 +13,10 @@ from faas.utils.types import load_csv
 from ui.config import get_config
 from ui.vis_lightgbm import get_vis_lgbmwrapper
 
+spark = SparkSession.builder.appName('ui_training').getOrCreate()
+
 
 def run_training():
-
-    spark = SparkSession.builder.getOrCreate()
-
     st.title('Training')
     training_file = st.file_uploader('Training data', type='csv')
 
