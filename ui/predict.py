@@ -70,9 +70,14 @@ def run_predict():
                         })
                     )
                     prediction_response = PredictionResponse(**r.json())
-                    st.markdown(f'num_calls_remaining: `{prediction_response.num_calls_remaining}`')
 
-                    if prediction_response.prediction is not None:
+                    if prediction_response.num_calls_remaining is not None:
+                        st.markdown(
+                            f'num_calls_remaining: `{prediction_response.num_calls_remaining}`')
+
+                    if prediction_response.prediction is None:
+                        st.error('Errors encountered')
+                    else:
                         pred_pdf_received = pd.DataFrame(prediction_response.prediction)
 
                         # preview
@@ -94,7 +99,6 @@ def run_predict():
                             data=pred_pdf_received.to_csv(),
                             file_name='prediction.csv'
                         )
-                    else:
-                        st.error('Errors encountered!')
-                        st.markdown('\n\n'.join(
-                            [f'❌ {msg}' for msg in prediction_response.messages]))
+
+                    st.markdown('\n\n'.join(
+                        [f'❌ {msg}' for msg in prediction_response.messages]))
