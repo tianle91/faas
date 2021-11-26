@@ -1,6 +1,5 @@
 import json
 import os
-import pprint as pp
 from tempfile import TemporaryDirectory
 
 import pandas as pd
@@ -10,6 +9,7 @@ import streamlit as st
 from faas.lightgbm import LGBMWrapper
 from faas.storage import read_model
 from faas.utils.io import dump_file_to_location
+from ui.vis_lightgbm import get_vis_lgbmwrapper
 
 API_URL = 'http://localhost:8000'
 
@@ -36,8 +36,8 @@ def run_predict():
 
     if m is not None:
         st.success('Model loaded!')
-        with st.expander('Details on loaded model'):
-            st.code(pp.pformat(m.config.to_dict()))
+        with st.expander('Model visualization'):
+            get_vis_lgbmwrapper(m)
 
         st.markdown('# Upload dataset')
         predict_file = st.file_uploader('Predict data', type='csv')

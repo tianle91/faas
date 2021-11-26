@@ -13,6 +13,7 @@ from faas.lightgbm import LGBMWrapper
 from faas.storage import write_model
 from faas.utils.io import dump_file_to_location
 from faas.utils.types import DEFAULT_DATE_FORMAT, load_csv
+from ui.vis_lightgbm import get_vis_lgbmwrapper
 
 logger = logging.getLogger(__name__)
 
@@ -39,19 +40,24 @@ def run_training():
 
             categorical_columns = get_columns_by_type(df=df, dtype=StringType)
 
-            # date
-            st.markdown(f'Ensure that dates are in the `{DEFAULT_DATE_FORMAT}` format.')
-            date_column = st.selectbox('date column', options=[None, *categorical_columns])
-
-            # groups
-            group_columns = None
+            with st.expander('Is there a date column?'):
+                date_column = st.selectbox(
+                    f'Ensure that dates are in the {DEFAULT_DATE_FORMAT} format.',
+                    options=[None, *categorical_columns]
+                )
             if date_column is not None:
                 df = df.withColumn(date_column, F.to_date(date_column))
-                non_date_categorical_columns = [c for c in categorical_columns if c != date_column]
-                group_columns = st.multiselect(
-                    'group columns', options=non_date_categorical_columns, default=None)
 
             # TODO lon lat columns
+
+            group_columns = None
+            if date_column is not None:
+                with st.expander('Is there a group column?'):
+                    group_columns = st.multiselect(
+                        'group columns',
+                        options=[c for c in categorical_columns if c != date_column],
+                        default=None
+                    )
 
             if st.button('Get configuration'):
                 config = recommend_config(
@@ -69,6 +75,10 @@ def run_training():
                 st.code(pp.pformat(config.to_dict()))
                 if st.button('Train now!'):
                     m = LGBMWrapper(config=config).fit(df)
+                    with st.expander('Model visualization'):
+                        get_vis_lgbmwrapper(m)
+
+                    # write fitted model
                     model_key = write_model(m)
                     st.session_state['model_key'] = model_key
                     st.success(f'Model key (save this for prediction): `{model_key}`')
