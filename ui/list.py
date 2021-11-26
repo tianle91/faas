@@ -8,11 +8,11 @@ from ui.vis_lightgbm import get_vis_lgbmwrapper
 
 def run_list():
     all_models = list_models()
-    for k in all_models:
-        model_key, dt = k
-        with st.expander(f'Model: {model_key} created at: {dt}'):
-            st.code(model_key)
-            m, conf = all_models[k]
-            st.code(pp.pformat(conf.__dict__, compact=True))
-            st.code(pp.pformat(m.config.to_dict(), compact=True))
-            get_vis_lgbmwrapper(m)
+    for model_key, stored_model in all_models.items():
+        with st.expander(f'Model: {model_key} created at: {stored_model.dt}'):
+            st.markdown(
+                f'model_key: `{model_key}` '
+                f'num_calls_remaining: {stored_model.num_calls_remaining}'
+            )
+            st.code(pp.pformat(stored_model.config.__dict__, compact=True))
+            get_vis_lgbmwrapper(stored_model.m)
