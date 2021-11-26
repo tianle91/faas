@@ -1,4 +1,3 @@
-import logging
 import os
 import pprint as pp
 from tempfile import TemporaryDirectory
@@ -6,16 +5,13 @@ from tempfile import TemporaryDirectory
 import streamlit as st
 from pyspark.sql import SparkSession
 
-
+from faas.config.config import create_etl_config
 from faas.lightgbm import ETLWrapperForLGBM
 from faas.storage import write_model
 from faas.utils.io import dump_file_to_location
 from faas.utils.types import load_csv
 from ui.config import get_config
 from ui.vis_lightgbm import get_vis_lgbmwrapper
-
-from faas.config.config import create_etl_config
-
 
 
 def run_training():
@@ -34,18 +30,20 @@ def run_training():
 
             conf = get_config(df=df)
 
-            st.header('Current configuration')
-            st.code(pp.pprint(conf.__dict__))
+            if conf is not None:
+                st.header('Current configuration')
+                st.code(pp.pformat(conf.__dict__, compact=True))
 
-            if st.button('Train now!'):
-                lgbmw = ETLWrapperForLGBM(config=create_etl_config(conf=conf, df=df))
-                lgbmw.fit(df)
+                if st.button('Train'):
+                    lgbmw = ETLWrapperForLGBM(config=create_etl_config(conf=conf, df=df))
+                    lgbmw.fit(df)
 
-                with st.expander('Model visualization'):
-                    get_vis_lgbmwrapper(lgbmw)
+                    with st.expander('Model visualization'):
+                        get_vis_lgbmwrapper(lgbmw)
 
-                # write fitted model
-                model_key = write_model(lgbmw)
-                st.session_state['model_key'] = model_key
-                st.success(f'Model key (save this for prediction): `{model_key}`')
-                logger.info(f'wrote model key: {model_key}')
+                    # write fitted model
+                    model_key = write_model(model=lgbmw, conf=conf)
+                    st.success(f'Model key (save this for prediction): `{model_key}`')
+
+                    # store model key in user session
+                    st.session_state['model_key'] = model_key
