@@ -1,14 +1,16 @@
 version: '3'
 services:
   app:
-    build:
-      context: .
+    image: faas
+    volumes:
+      - .:/workdir
     ports:
       - "8501:8501"
     entrypoint: streamlit run ui.py
   api:
-    build:
-      context: .
+    image: faas
+    volumes:
+      - .:/workdir
     ports:
       - "8000:8000"
     entrypoint: uvicorn api:app --reload

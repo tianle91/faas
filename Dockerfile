@@ -10,11 +10,11 @@ ARG PYTHON_PATH=/usr/local/bin/python
 ENV PYSPARK_PYTHON=$PYTHON_PATH
 ENV PYSPARK_DRIVER_PYTHON=$PYTHON_PATH
 
-COPY ./requirements.txt ./
-RUN pip install -r requirements.txt
+COPY ./requirements.txt /requirements.txt
+RUN pip install -r /requirements.txt
 
-COPY ./requirements-dev.txt ./
-RUN pip install -r requirements-dev.txt
+COPY ./requirements-dev.txt /requirements-dev.txt
+RUN pip install -r /requirements-dev.txt
 
 WORKDIR /workdir
 COPY . .
