@@ -3,6 +3,7 @@ import pprint as pp
 from datetime import datetime
 from tempfile import TemporaryDirectory
 
+import pyspark.sql.functions as F
 import streamlit as st
 from pyspark.sql import SparkSession
 
@@ -33,6 +34,10 @@ def run_training():
             if conf is not None:
                 st.header('Current configuration')
                 st.code(pp.pformat(conf.__dict__, compact=True))
+
+                if conf.date_column is not None:
+                    df = df.withColumn(
+                        conf.date_column, F.to_date(conf.date_column, conf.date_column_format))
 
                 if st.button('Train'):
                     m = ETLWrapperForLGBM(config=create_etl_config(conf=conf, df=df))
