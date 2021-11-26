@@ -1,3 +1,4 @@
+import json
 from typing import List, Optional
 
 import pyspark.sql.functions as F
@@ -5,7 +6,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from pyspark.sql import DataFrame, SparkSession
 
-from faas.storage import read_model
+from faas.storage import list_models, read_model
 
 app = FastAPI()
 
@@ -15,6 +16,11 @@ spark = (
     .appName('api_predict')
     .getOrCreate()
 )
+
+
+@app.get('/')
+def root():
+    return json.dumps([str(k) for k in list_models()])
 
 
 class PredictionRequest(BaseModel):
