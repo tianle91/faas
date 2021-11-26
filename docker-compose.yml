@@ -1,18 +1,26 @@
-version: '3'
+version: '3.9'
+
+networks: 
+    faas-network:
+
 services:
   app:
     image: faas
-    volumes:
-      - .:/workdir
     ports:
-      - "8501:8501"
+      - 8501:8501
+    networks:
+      - faas-network
     environment:
       - APIURL=http://api:8000
+    volumes:
+      - .:/workdir
     entrypoint: streamlit run ui.py
   api:
     image: faas
+    ports:
+      - 8000:8000
+    networks:
+      - faas-network
     volumes:
       - .:/workdir
-    ports:
-      - "8000:8000"
     entrypoint: uvicorn api:app --reload
