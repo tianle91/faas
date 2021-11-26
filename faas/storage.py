@@ -21,7 +21,7 @@ class StoredModel:
     dt: datetime
     m: ETLWrapperForLGBM
     config: Config
-    num_calls_remaining: int = 100
+    num_calls_remaining: int = 10
 
 
 def id_gen():
