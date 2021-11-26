@@ -57,8 +57,11 @@ def run_predict():
 
                 # send to api
                 r = requests.post(
-                    url=f'{APIURL}/predict/{model_key}',
-                    data=json.dumps({'data': pred_pdf.to_dict(orient='records')})
+                    url=f'{APIURL}/predict',
+                    data=json.dumps({
+                        'model_key': model_key,
+                        'data': pred_pdf.to_dict(orient='records')
+                    })
                 )
                 response_json = r.json()
 
