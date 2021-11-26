@@ -69,21 +69,19 @@ def run_predict():
                             'data': pred_pdf.to_dict(orient='records')
                         })
                     )
-                    response_json = PredictionResponse(**r.json())
-                    st.markdown(f'num_calls_remaining: `{response_json.num_calls_remaining}`')
+                    prediction_response = PredictionResponse(**r.json())
+                    st.markdown(f'num_calls_remaining: `{prediction_response.num_calls_remaining}`')
 
-                    if response_json.prediction is not None:
-                        pred_pdf_received = pd.DataFrame(response_json.prediction)
+                    if prediction_response.prediction is not None:
+                        pred_pdf_received = pd.DataFrame(prediction_response.prediction)
 
                         # preview
-                        preview_columns = [
-                            stored_model.config.target,
-                            *stored_model.config.feature_columns
-                        ]
                         st.markdown(
                             f'Preview for first {preview_n} rows '
                             f'out of {len(pred_pdf_received)} predictions.'
                         )
+                        preview_columns = [
+                            stored_model.config.target, *stored_model.config.feature_columns]
                         pred_pdf_preview = pred_pdf_received[preview_columns].head(preview_n)
                         st.dataframe(pred_pdf_preview.style.apply(
                             lambda s: highlight_target(s, target_column=stored_model.config.target),
@@ -97,6 +95,6 @@ def run_predict():
                             file_name='prediction.csv'
                         )
                     else:
-                        st.error('Errors in uploaded dataset! Please check model details.')
-                        st.markdown('\n\n'.join([
-                            f'❌ {msg}' for msg in response_json.messages]))
+                        st.error('Errors encountered!')
+                        st.markdown('\n\n'.join(
+                            [f'❌ {msg}' for msg in prediction_response.messages]))
