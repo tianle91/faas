@@ -15,3 +15,16 @@ class Config:
     def validate(self):
         if self.target_is_categorical:
             raise ValueError('Categorical column not yet supported')
+        if self.feature_columns is None:
+            raise ValueError('Feature columns cannot be None')
+
+    @property
+    def used_columns_prediction(self) -> List[str]:
+        out = self.feature_columns
+        if self.date_column is not None:
+            out.append(self.date_column)
+        if self.space_columns is not None:
+            out += list(self.space_columns)
+        if self.group_columns is not None:
+            out += self.group_columns
+        return out
