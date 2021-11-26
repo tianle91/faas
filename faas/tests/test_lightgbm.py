@@ -1,9 +1,9 @@
 import pytest
 from pyspark.sql import SparkSession
 
-from faas.config import ETLConfig, FeatureConfig, TargetConfig
 from faas.generate import GenerateSynthetic, convert_dict_to_list
 from faas.lightgbm import LGBMWrapper
+from faas.transformer.etl import ETLConfig, FeatureConfig, TargetConfig
 
 
 @pytest.mark.parametrize(

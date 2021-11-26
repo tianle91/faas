@@ -2,9 +2,8 @@ from pyspark.sql import DataFrame
 from pyspark.sql.types import NumericType, StringType
 
 from faas.config import Config
-
-from faas.transformer.etl import FeatureConfig
 from faas.config.utils import get_columns_by_type
+from faas.transformer.etl import FeatureConfig
 
 
 def create_feature_config(conf: Config, df: DataFrame) -> FeatureConfig:
