@@ -8,7 +8,11 @@ from faas.config.utils import get_columns_by_type
 
 def get_config(df: DataFrame) -> Config:
     st.header('Create a configuration')
-    st.dataframe(df.limit(10).toPandas())
+
+    preview_n = 100
+    prewview_pdf = df.limit(preview_n).toPandas()
+    st.markdown(f'Preview for first {preview_n} rows out of {df.count()} loaded.')
+    st.dataframe(prewview_pdf)
 
     numeric_columns = get_columns_by_type(df=df, dtype=NumericType)
     categorical_columns = get_columns_by_type(df=df, dtype=StringType)
