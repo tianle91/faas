@@ -7,7 +7,7 @@ services:
   app:
     image: faas
     ports:
-      - 8501:80
+      - 8501:8501
     networks:
       - faas-network
     environment:
