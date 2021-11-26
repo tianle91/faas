@@ -4,48 +4,44 @@ import pandas as pd
 import pyspark.sql.functions as F
 import requests
 from pyspark.sql import SparkSession
-
+import os
 from faas.lightgbm import ETLWrapperForLGBM
 from faas.storage import write_model
-from faas.transformer.etl import (ETLConfig, FeatureConfig, TargetConfig,
-                                  WeightConfig)
+from faas.config import Config
+from faas.config.config import create_etl_config
 
-API_URL = 'http://localhost:8000'
+APIURL = os.getenv('APIURL', default='http://localhost:8000')
+spark = SparkSession.builder.appName('api_test.py').getOrCreate()
 p = 'data/sample_multi_ts.csv'
 
 # load training data
-spark = SparkSession.builder.getOrCreate()
 df = spark.read.options(header=True, inferSchema=True).csv(p)
 df = df.withColumn('date', F.to_date('date'))
 
 # do some training
-config = ETLConfig(
-    feature=FeatureConfig(
-        categorical_columns=['categorical_0'],
-        numeric_columns=['numeric_0'],
-        date_column='date'
-    ),
-    target=TargetConfig(
-        column='numeric_1',
-    ),
-    weight=WeightConfig(
-        date_column='date',
-        group_columns=['ts_type'],
-    )
+conf = Config(
+    target='numeric_1',
+    date_column='date',
+    group_columns=['ts_type'],
+    feature_columns=['categorical_0', 'numeric_0'],
 )
-model_key = write_model(ETLWrapperForLGBM(config=config).fit(df))
-
+m = ETLWrapperForLGBM(config=create_etl_config(conf=conf, df=df)).fit(df)
+model_key = write_model(m, conf=conf)
 
 # get prediction
 pred_pdf = pd.read_csv(p).head().drop(columns=['numeric_1'])
 r = requests.post(
-    url=f'{API_URL}/predict/{model_key}',
-    data=json.dumps({'data': pred_pdf.to_dict(orient='records')})
+    url=f'{APIURL}/predict',
+    data=json.dumps({
+        'model_key': model_key,
+        'data': pred_pdf.to_dict(orient='records'),
+    })
 )
 response_json = r.json()
 pred_pdf_received = pd.DataFrame(response_json['prediction'])
 
-
-# test prediction df
-assert len(pred_pdf) == len(pred_pdf_received)
-assert 'numeric_1' in pred_pdf_received.columns
+# tests
+if len(pred_pdf) != len(pred_pdf_received):
+    raise ValueError(f'{len(pred_pdf):} != {len(pred_pdf_received):}')
+if 'numeric_1' not in pred_pdf_received.columns:
+    raise KeyError(f'numeric_1 not in {pred_pdf_received.columns:}')

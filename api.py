@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from pyspark.sql import DataFrame, SparkSession
 
-from faas.storage import list_models, read_model
+from faas.storage import read_model
 
 app = FastAPI()
 
@@ -17,17 +17,8 @@ spark = (
 )
 
 
-@app.get('/')
-def read_root():
-    return list_models()
-
-
-@app.get('/models/{model_key}')
-def read_item(model_key: str):
-    return read_model(model_key)
-
-
 class PredictionRequest(BaseModel):
+    model_key: str
     data: List[dict]
 
 
@@ -36,11 +27,11 @@ class PredictionResponse(BaseModel):
     messages: Optional[List[str]] = None
 
 
-@app.post('/predict/{model_key}', response_model=PredictionResponse)
-async def predict(model_key: str, prediction_request: PredictionRequest) -> PredictionResponse:
+@app.post('/predict', response_model=PredictionResponse)
+async def predict(prediction_request: PredictionRequest) -> PredictionResponse:
     # try to load model
     try:
-        m, conf = read_model(model_key)
+        m, conf = read_model(prediction_request.model_key)
     except KeyError:
         return PredictionResponse(prediction=None, messages=['Model not found'])
 
