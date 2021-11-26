@@ -1,6 +1,5 @@
 import logging
 import pprint as pp
-from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
 import pyspark.sql.functions as F
@@ -8,40 +7,9 @@ from pyspark.sql import DataFrame
 from pyspark.sql.types import DataType, NumericType, StringType
 
 from faas.eda.iid import correlation
+from faas.etl import Config, FeatureConfig, TargetConfig, WeightConfig
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class FeatureConfig:
-    categorical_columns: List[str]
-    numeric_columns: List[str]
-    date_column: Optional[str] = None
-
-
-@dataclass
-class TargetConfig:
-    column: str
-    log_transform: bool = False
-    categorical_normalization_column: Optional[str] = None
-    numerical_normalization_column: Optional[str] = None
-
-
-@dataclass
-class WeightConfig:
-    date_column: Optional[str] = None
-    annual_decay_rate: float = .1
-    group_columns: Optional[List[str]] = None
-
-
-@dataclass
-class Config:
-    feature: FeatureConfig
-    target: TargetConfig
-    weight: WeightConfig = WeightConfig()
-
-    def to_dict(self):
-        return {k: getattr(self, k).__dict__ for k in self.__dict__}
 
 
 def min_val(df: DataFrame, c: str) -> bool:

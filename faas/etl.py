@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Tuple
+from dataclasses import dataclass
+from typing import List, Optional, Tuple
 
 import pandas as pd
 from pyspark.sql import DataFrame
 from pyspark.sql.types import DataType, DateType, NumericType, StringType
 
-from faas.config import FeatureConfig, TargetConfig, WeightConfig
 from faas.transformer.base import (AddTransformer, BaseTransformer,
                                    ConstantTransformer, Passthrough, Pipeline)
 from faas.transformer.date import SeasonalityFeature
@@ -16,6 +16,38 @@ from faas.transformer.scaler import LogTransform, NumericScaler, StandardScaler
 from faas.transformer.weight import HistoricalDecay, Normalize
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class FeatureConfig:
+    categorical_columns: List[str]
+    numeric_columns: List[str]
+    date_column: Optional[str] = None
+
+
+@dataclass
+class TargetConfig:
+    column: str
+    log_transform: bool = False
+    categorical_normalization_column: Optional[str] = None
+    numerical_normalization_column: Optional[str] = None
+
+
+@dataclass
+class WeightConfig:
+    date_column: Optional[str] = None
+    annual_decay_rate: float = .1
+    group_columns: Optional[List[str]] = None
+
+
+@dataclass
+class Config:
+    feature: FeatureConfig
+    target: TargetConfig
+    weight: WeightConfig = WeightConfig()
+
+    def to_dict(self):
+        return {k: getattr(self, k).__dict__ for k in self.__dict__}
 
 
 def validate_types_with_msgs(
