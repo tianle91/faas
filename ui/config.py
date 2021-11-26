@@ -30,7 +30,7 @@ def get_config(df: DataFrame) -> Config:
     if date_column is not None:
         with st.expander('Is there a group column?'):
             group_columns = st.multiselect(
-                'group columns',
+                'Group Columns',
                 options=[c for c in categorical_columns if c != date_column],
                 default=None
             )
@@ -40,7 +40,7 @@ def get_config(df: DataFrame) -> Config:
         if c not in [target_column, date_column]
     ]
     feature_columns = st.multiselect(
-        label='Feature columns',
+        label='Feature Columns',
         options=non_target_non_date_columns,
         default=non_target_non_date_columns,
         help='Including all available features is helpful for model training.'
@@ -48,7 +48,7 @@ def get_config(df: DataFrame) -> Config:
 
     conf = Config(
         target=target_column,
-        target_is_categorical=~isinstance(df.schema[target_column].dataType, NumericType),
+        target_is_categorical=not isinstance(df.schema[target_column].dataType, NumericType),
         date_column=date_column,
         date_column_format=date_column_format,
         group_columns=group_columns,
