@@ -7,6 +7,7 @@ import pandas as pd
 import requests
 import streamlit as st
 
+from api import PredictionResponse
 from faas.storage import read_model
 from faas.utils.io import dump_file_to_location
 from ui.vis_lightgbm import get_vis_lgbmwrapper
@@ -27,18 +28,18 @@ def run_predict():
     model_key = st.session_state.get('model_key', '')
     model_key = st.text_input('Model key (obtain this from training)', value=model_key)
 
-    m = None
+    stored_model = None
     if model_key != '':
         try:
-            m, conf = read_model(key=model_key)
+            stored_model = read_model(key=model_key)
         except KeyError as e:
             st.error(e)
 
-    if m is not None:
+    if stored_model is not None:
         st.success('Model loaded!')
         with st.expander('Model visualization'):
-            st.code(pp.pformat(conf.__dict__))
-            get_vis_lgbmwrapper(m)
+            st.code(pp.pformat(stored_model.config.__dict__))
+            get_vis_lgbmwrapper(stored_model.m)
 
         st.markdown('# Upload dataset')
         predict_file = st.file_uploader('Predict data', type='csv')
@@ -53,38 +54,49 @@ def run_predict():
                 pred_pdf = pd.read_csv(predict_path)
 
                 st.header('Uploaded dataset')
-                st.dataframe(pred_pdf.head())
+                preview_n = 100
+                st.markdown(f'Preview for first {preview_n} rows out of {len(pred_pdf)} loaded.')
+                st.dataframe(pred_pdf.head(preview_n))
 
-                # send to api
-                r = requests.post(
-                    url=f'{APIURL}/predict',
-                    data=json.dumps({
-                        'model_key': model_key,
-                        'data': pred_pdf.to_dict(orient='records')
-                    })
-                )
-                response_json = r.json()
-
-                if response_json['prediction'] is not None:
+                if st.button('Predict'):
                     st.header('Prediction')
 
-                    pred_pdf_received = pd.DataFrame(response_json['prediction'])
-                    pred_pdf_preview = pred_pdf_received[[
-                        *m.config.feature.categorical_columns,
-                        *m.config.feature.numeric_columns,
-                        m.config.target.column
-                    ]].head(10)
-                    st.dataframe(pred_pdf_preview.style.apply(
-                        lambda s: highlight_target(s, target_column=m.config.target.column),
-                        axis=0
-                    ))
-                    st.download_button(
-                        'Download prediction',
-                        data=pred_pdf_received.to_csv(),
-                        file_name='prediction.csv'
+                    # send to api
+                    r = requests.post(
+                        url=f'{APIURL}/predict',
+                        data=json.dumps({
+                            'model_key': model_key,
+                            'data': pred_pdf.to_dict(orient='records')
+                        })
                     )
-                else:
-                    st.error('Errors in uploaded dataset! Please check model details.')
-                    st.markdown('\n\n'.join([
-                        f'❌ {msg}' for msg in response_json['messages']
-                    ]))
+                    response_json = PredictionResponse(**r.json())
+                    st.markdown(f'num_calls_remaining: `{response_json.num_calls_remaining}`')
+
+                    if response_json.prediction is not None:
+                        pred_pdf_received = pd.DataFrame(response_json.prediction)
+
+                        # preview
+                        preview_columns = [
+                            stored_model.config.target,
+                            *stored_model.config.feature_columns
+                        ]
+                        st.markdown(
+                            f'Preview for first {preview_n} rows '
+                            f'out of {len(pred_pdf_received)} predictions.'
+                        )
+                        pred_pdf_preview = pred_pdf_received[preview_columns].head(preview_n)
+                        st.dataframe(pred_pdf_preview.style.apply(
+                            lambda s: highlight_target(s, target_column=stored_model.config.target),
+                            axis=0
+                        ))
+
+                        # download
+                        st.download_button(
+                            f'Download all {len(pred_pdf_received)} predictions.',
+                            data=pred_pdf_received.to_csv(),
+                            file_name='prediction.csv'
+                        )
+                    else:
+                        st.error('Errors in uploaded dataset! Please check model details.')
+                        st.markdown('\n\n'.join([
+                            f'❌ {msg}' for msg in response_json.messages]))
