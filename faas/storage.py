@@ -3,7 +3,7 @@ import pprint as pp
 import random
 import string
 from datetime import datetime
-from typing import Tuple
+from typing import Dict, Tuple
 
 from sqlitedict import SqliteDict
 
@@ -50,11 +50,10 @@ def read_model(key: str) -> Tuple[ETLWrapperForLGBM, Config]:
             return model, conf
 
 
-def list_models() -> dict:
-    l = []
+def list_models() -> Dict[Tuple[str, datetime], Tuple[ETLWrapperForLGBM, Config]]:
+    out = {}
     with SqliteDict(MODEL_STORE) as d:
         for key in d:
-            dt, _, conf = d[key]
-            l.append(f'dt: {dt} key: {key}\n{pp.pformat(conf.__dict)}')
-    sep = '\n' + '-' * 1000 + '\n'
-    return sep.join(l)
+            dt, model, conf = d[key]
+            out[(key, dt)] = (model, conf)
+    return out
