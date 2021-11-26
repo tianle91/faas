@@ -41,7 +41,7 @@ class WeightConfig:
 
 
 @dataclass
-class Config:
+class ETLConfig:
     feature: FeatureConfig
     target: TargetConfig
     weight: WeightConfig = WeightConfig()

@@ -5,7 +5,7 @@ import pyspark.sql.functions as F
 import requests
 from pyspark.sql import SparkSession
 
-from faas.config import Config, FeatureConfig, TargetConfig, WeightConfig
+from faas.config import ETLConfig, FeatureConfig, TargetConfig, WeightConfig
 from faas.lightgbm import LGBMWrapper
 from faas.storage import write_model
 
@@ -18,7 +18,7 @@ df = spark.read.options(header=True, inferSchema=True).csv(p)
 df = df.withColumn('date', F.to_date('date'))
 
 # do some training
-config = Config(
+config = ETLConfig(
     feature=FeatureConfig(
         categorical_columns=['categorical_0'],
         numeric_columns=['numeric_0'],

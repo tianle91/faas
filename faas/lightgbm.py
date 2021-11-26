@@ -6,7 +6,7 @@ from typing import List, Tuple
 from lightgbm import LGBMModel
 from pyspark.sql import DataFrame
 
-from faas.config import Config
+from faas.config import ETLConfig
 from faas.etl import (WTransformer, XTransformer, YTransformer,
                       merge_validations)
 from faas.utils.dataframe import JoinableByRowID
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 class LGBMWrapper:
 
-    def __init__(self, config: Config):
+    def __init__(self, config: ETLConfig):
         self.config = config
         self.ytransformer = YTransformer(config.target)
         self.xtransformer = XTransformer(config.feature)

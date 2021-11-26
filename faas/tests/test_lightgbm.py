@@ -1,7 +1,7 @@
 import pytest
 from pyspark.sql import SparkSession
 
-from faas.config import Config, FeatureConfig, TargetConfig
+from faas.config import ETLConfig, FeatureConfig, TargetConfig
 from faas.generate import GenerateSynthetic, convert_dict_to_list
 from faas.lightgbm import LGBMWrapper
 
@@ -16,7 +16,7 @@ from faas.lightgbm import LGBMWrapper
 def test_LGBMWrapper_iid(spark: SparkSession, num_categorical: int):
     d = GenerateSynthetic(num_categorical=num_categorical, num_numeric=2)
     dict_of_lists = d.generate_iid()
-    conf = Config(
+    conf = ETLConfig(
         target=TargetConfig(column=d.numeric_names[0]),
         feature=FeatureConfig(
             categorical_columns=d.categorical_names,
@@ -32,7 +32,7 @@ def test_LGBMWrapper_iid(spark: SparkSession, num_categorical: int):
 def test_LGBMWrapper_ts(spark: SparkSession):
     d = GenerateSynthetic(num_categorical=2, num_numeric=2)
     dict_of_lists = d.generate_ts(date_column='dt')
-    conf = Config(
+    conf = ETLConfig(
         target=TargetConfig(column=d.numeric_names[0]),
         feature=FeatureConfig(
             categorical_columns=d.categorical_names,

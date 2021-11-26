@@ -7,9 +7,19 @@ from pyspark.sql import DataFrame
 from pyspark.sql.types import DataType, NumericType, StringType
 
 from faas.eda.iid import correlation
-from faas.etl import Config, FeatureConfig, TargetConfig, WeightConfig
+from faas.etl import ETLConfig, FeatureConfig, TargetConfig, WeightConfig
 
 logger = logging.getLogger(__name__)
+
+
+from dataclasses import dataclass
+
+# @dataclass
+# class Config:
+#     pass
+
+
+
 
 
 def min_val(df: DataFrame, c: str) -> bool:
@@ -45,7 +55,7 @@ def recommend_config(
     target_column: str,
     date_column: Optional[str] = None,
     group_columns: Optional[List[str]] = None
-) -> Config:
+) -> ETLConfig:
     """Recommend Config to use.
 
     TODO: split into iid, ts, multi_ts
@@ -91,4 +101,4 @@ def recommend_config(
     # WeightConfig
     weight = WeightConfig(date_column=date_column, group_columns=group_columns)
 
-    return Config(feature=feature, target=target, weight=weight)
+    return ETLConfig(feature=feature, target=target, weight=weight)

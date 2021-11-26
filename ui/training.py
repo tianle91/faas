@@ -8,7 +8,7 @@ import streamlit as st
 from pyspark.sql import SparkSession
 from pyspark.sql.types import NumericType, StringType
 
-from faas.config import Config, get_columns_by_type, recommend_config
+from faas.config import ETLConfig, get_columns_by_type, recommend_config
 from faas.lightgbm import LGBMWrapper
 from faas.storage import write_model
 from faas.utils.io import dump_file_to_location
@@ -71,7 +71,7 @@ def run_training():
             st.header('Current configuration')
             config = st.session_state.get('config', None)
             if config is not None:
-                config: Config = config
+                config: ETLConfig = config
                 st.code(pp.pformat(config.to_dict()))
                 if st.button('Train now!'):
                     m = LGBMWrapper(config=config).fit(df)
