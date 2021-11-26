@@ -1,9 +1,9 @@
 import logging
-import pprint as pp
 import random
 import string
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, Tuple
+from typing import Dict
 
 from sqlitedict import SqliteDict
 
@@ -14,6 +14,14 @@ logger = logging.getLogger(__name__)
 
 MODEL_STORE = 'model_store.db'
 KEY_LENGTH = 24
+
+
+@dataclass
+class StoredModel:
+    dt: datetime
+    m: ETLWrapperForLGBM
+    config: Config
+    num_calls_remaining: int = 100
 
 
 def id_gen():
@@ -29,31 +37,39 @@ def create_key() -> str:
         return k
 
 
-def write_model(model: ETLWrapperForLGBM, conf: Config) -> str:
+def write_model(stored_model: StoredModel) -> str:
     with SqliteDict(MODEL_STORE) as d:
         key = create_key()
-        dt = datetime.now()
-        d[key] = (dt, model, conf)
+        d[key] = stored_model
         d.commit()
-        logger.info(f'Wrote model with key: {key} at {dt}')
+        logger.info(f'Wrote model with key: {key}')
         logger.info(f'Model store at: {MODEL_STORE} is now {len(d)}')
     return key
 
 
-def read_model(key: str) -> Tuple[ETLWrapperForLGBM, Config]:
+def read_model(key: str) -> StoredModel:
     with SqliteDict(MODEL_STORE) as d:
         if key not in d:
             raise KeyError(f'Key: {key} not found!')
         else:
-            dt, model, conf = d[key]
-            logger.info(f'Read model with key: {key} created at {dt}')
-            return model, conf
+            logger.info(f'Read model with key: {key}')
+            return d[key]
 
 
-def list_models() -> Dict[Tuple[str, datetime], Tuple[ETLWrapperForLGBM, Config]]:
-    out = {}
+def set_num_calls_remaining(key: str, n: int):
     with SqliteDict(MODEL_STORE) as d:
-        for key in d:
-            dt, model, conf = d[key]
-            out[(key, dt)] = (model, conf)
-    return out
+        if key not in d:
+            raise KeyError(f'Key: {key} not found!')
+        else:
+            stored_model: StoredModel = d[key]
+            n_prev = stored_model.num_calls_remaining
+            stored_model.num_calls_remaining = n
+            d[key] = stored_model
+            d.commit()
+            logger.info(f'Updated num_calls_remaining for {key}: {n_prev} -> {n}')
+            return d[key]
+
+
+def list_models() -> Dict[str, StoredModel]:
+    with SqliteDict(MODEL_STORE) as d:
+        return {k: v for k, v in d.items()}
