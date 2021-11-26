@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from pyspark.sql import DataFrame, SparkSession
 
-from faas.lightgbm import LGBMWrapper
+from faas.lightgbm import ETLWrapperForLGBM
 from faas.storage import list_models, read_model
 from ui.training import DEFAULT_DATE_FORMAT
 
@@ -42,7 +42,7 @@ class PredictionResponse(BaseModel):
 async def predict(model_key: str, prediction_request: PredictionRequest) -> PredictionResponse:
     # try to load model
     try:
-        m: LGBMWrapper = read_model(model_key)
+        m: ETLWrapperForLGBM = read_model(model_key)
     except KeyError:
         return PredictionResponse(prediction=None, messages=['Model not found'])
 

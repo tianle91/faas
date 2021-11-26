@@ -2,7 +2,7 @@ import pytest
 from pyspark.sql import SparkSession
 
 from faas.generate import GenerateSynthetic, convert_dict_to_list
-from faas.lightgbm import LGBMWrapper
+from faas.lightgbm import ETLWrapperForLGBM
 from faas.transformer.etl import ETLConfig, FeatureConfig, TargetConfig
 
 
@@ -23,7 +23,7 @@ def test_LGBMWrapper_iid(spark: SparkSession, num_categorical: int):
             numeric_columns=d.numeric_names[1:],
         )
     )
-    ewlgbm = LGBMWrapper(conf)
+    ewlgbm = ETLWrapperForLGBM(conf)
     df = spark.createDataFrame(data=convert_dict_to_list(dict_of_lists))
     ewlgbm.fit(df)
     ewlgbm.predict(df)
@@ -40,7 +40,7 @@ def test_LGBMWrapper_ts(spark: SparkSession):
             date_column='dt',
         )
     )
-    ewlgbm = LGBMWrapper(conf)
+    ewlgbm = ETLWrapperForLGBM(conf)
     df = spark.createDataFrame(data=convert_dict_to_list(dict_of_lists))
     ewlgbm.fit(df)
     ewlgbm.predict(df)

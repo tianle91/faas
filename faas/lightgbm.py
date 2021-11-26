@@ -13,7 +13,7 @@ from faas.utils.dataframe import JoinableByRowID
 logger = logging.getLogger(__name__)
 
 
-class LGBMWrapper:
+class ETLWrapperForLGBM:
 
     def __init__(self, config: ETLConfig):
         self.config = config
@@ -38,7 +38,7 @@ class LGBMWrapper:
             validations.append(self.wtransformer.validate_input(df=df))
         return merge_validations(validations)
 
-    def fit(self, df: DataFrame) -> LGBMWrapper:
+    def fit(self, df: DataFrame) -> ETLWrapperForLGBM:
         ok, msgs = self.check_df_train(df)
         if not ok:
             raise ValueError(msgs)

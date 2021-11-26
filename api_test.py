@@ -5,7 +5,7 @@ import pyspark.sql.functions as F
 import requests
 from pyspark.sql import SparkSession
 
-from faas.lightgbm import LGBMWrapper
+from faas.lightgbm import ETLWrapperForLGBM
 from faas.storage import write_model
 from faas.transformer.etl import (ETLConfig, FeatureConfig, TargetConfig,
                                   WeightConfig)
@@ -33,7 +33,7 @@ config = ETLConfig(
         group_columns=['ts_type'],
     )
 )
-model_key = write_model(LGBMWrapper(config=config).fit(df))
+model_key = write_model(ETLWrapperForLGBM(config=config).fit(df))
 
 
 # get prediction

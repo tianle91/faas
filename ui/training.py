@@ -6,15 +6,16 @@ from tempfile import TemporaryDirectory
 import streamlit as st
 from pyspark.sql import SparkSession
 
-from faas.config.config import create_etl_config
-from faas.lightgbm import LGBMWrapper
+
+from faas.lightgbm import ETLWrapperForLGBM
 from faas.storage import write_model
 from faas.utils.io import dump_file_to_location
 from faas.utils.types import load_csv
 from ui.config import get_config
 from ui.vis_lightgbm import get_vis_lgbmwrapper
 
-logger = logging.getLogger(__name__)
+from faas.config.config import create_etl_config
+
 
 
 def run_training():
@@ -37,15 +38,14 @@ def run_training():
             st.code(pp.pprint(conf.__dict__))
 
             if st.button('Train now!'):
-                etl_conf = create_etl_config(conf=conf, df=df)
-                m = LGBMWrapper(config=etl_conf)
-                m.fit(df)
+                lgbmw = ETLWrapperForLGBM(config=create_etl_config(conf=conf, df=df))
+                lgbmw.fit(df)
 
                 with st.expander('Model visualization'):
-                    get_vis_lgbmwrapper(m)
+                    get_vis_lgbmwrapper(lgbmw)
 
                 # write fitted model
-                model_key = write_model(m)
+                model_key = write_model(lgbmw)
                 st.session_state['model_key'] = model_key
                 st.success(f'Model key (save this for prediction): `{model_key}`')
                 logger.info(f'wrote model key: {model_key}')

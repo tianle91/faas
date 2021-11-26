@@ -6,7 +6,7 @@ import pandas as pd
 import requests
 import streamlit as st
 
-from faas.lightgbm import LGBMWrapper
+from faas.lightgbm import ETLWrapperForLGBM
 from faas.storage import read_model
 from faas.utils.io import dump_file_to_location
 from ui.vis_lightgbm import get_vis_lgbmwrapper
@@ -30,7 +30,7 @@ def run_predict():
     m = None
     if model_key != '':
         try:
-            m: LGBMWrapper = read_model(key=model_key)
+            m: ETLWrapperForLGBM = read_model(key=model_key)
         except KeyError as e:
             st.error(e)
 
