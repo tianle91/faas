@@ -21,5 +21,5 @@ def vis_importance(m: LGBMModel) -> Figure:
 
 
 def get_vis_lgbmwrapper(m: ETLWrapperForLGBM):
-    st.code(pp.pformat(m.config.to_dict()))
+    st.code(pp.pformat(m.config.to_dict(), compact=True))
     st.plotly_chart(vis_importance(m.m))
