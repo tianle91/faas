@@ -1,7 +1,12 @@
 FROM python:3.9
 
-RUN apt-get update -y
-RUN apt-get install --no-install-recommends -y openjdk-11-jdk-headless
+RUN apt-get update -y \
+    && apt-get install --no-install-recommends -y \
+    libgomp1 \
+    openjdk-11-jre-headless \
+    git \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN pip install -U pip
 RUN pip install pyspark==3.2.0
