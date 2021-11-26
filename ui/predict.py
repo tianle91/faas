@@ -1,17 +1,17 @@
 import json
 import os
+import pprint as pp
 from tempfile import TemporaryDirectory
 
 import pandas as pd
 import requests
 import streamlit as st
 
-from faas.lightgbm import ETLWrapperForLGBM
 from faas.storage import read_model
 from faas.utils.io import dump_file_to_location
 from ui.vis_lightgbm import get_vis_lgbmwrapper
 
-API_URL = 'http://localhost:8000'
+APIURL = os.getenv('APIURL', default='http://localhost:8000')
 
 
 def highlight_target(s: pd.Series, target_column: str):
@@ -30,13 +30,14 @@ def run_predict():
     m = None
     if model_key != '':
         try:
-            m: ETLWrapperForLGBM = read_model(key=model_key)
+            m, conf = read_model(key=model_key)
         except KeyError as e:
             st.error(e)
 
     if m is not None:
         st.success('Model loaded!')
         with st.expander('Model visualization'):
+            st.code(pp.pformat(conf.__dict__))
             get_vis_lgbmwrapper(m)
 
         st.markdown('# Upload dataset')
@@ -56,7 +57,7 @@ def run_predict():
 
                 # send to api
                 r = requests.post(
-                    url=f'{API_URL}/predict/{model_key}',
+                    url=f'{APIURL}/predict/{model_key}',
                     data=json.dumps({'data': pred_pdf.to_dict(orient='records')})
                 )
                 response_json = r.json()
