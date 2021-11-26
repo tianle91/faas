@@ -1,14 +1,15 @@
 import json
+import os
 
 import pandas as pd
 import pyspark.sql.functions as F
 import requests
 from pyspark.sql import SparkSession
-import os
-from faas.lightgbm import ETLWrapperForLGBM
-from faas.storage import write_model
+
 from faas.config import Config
 from faas.config.config import create_etl_config
+from faas.lightgbm import ETLWrapperForLGBM
+from faas.storage import write_model
 
 APIURL = os.getenv('APIURL', default='http://localhost:8000')
 spark = SparkSession.builder.appName('api_test.py').getOrCreate()
