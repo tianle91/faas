@@ -12,8 +12,12 @@ from faas.config import ETLConfig, get_columns_by_type, recommend_config
 from faas.lightgbm import LGBMWrapper
 from faas.storage import write_model
 from faas.utils.io import dump_file_to_location
-from faas.utils.types import DEFAULT_DATE_FORMAT, load_csv
+from faas.utils.types import load_csv
 from ui.vis_lightgbm import get_vis_lgbmwrapper
+
+
+DEFAULT_DATE_FORMAT = 'yyyy-MM-dd'
+
 
 logger = logging.getLogger(__name__)
 
