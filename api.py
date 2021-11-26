@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from pyspark.sql import DataFrame, SparkSession
 
+from faas.config import Config
 from faas.storage import list_models, read_model, set_num_calls_remaining
 
 app = FastAPI()
@@ -49,7 +50,7 @@ async def predict(prediction_request: PredictionRequest) -> PredictionResponse:
 
     # load the requested dataframe
     df: DataFrame = spark.createDataFrame(data=prediction_request.data)
-    conf = stored_model.config
+    conf: Config = stored_model.config
 
     if conf.date_column is not None:
         df = df.withColumn(
@@ -59,6 +60,10 @@ async def predict(prediction_request: PredictionRequest) -> PredictionResponse:
 
     m = stored_model.m
     ok, msgs = m.check_df_prediction(df=df)
+
+    unused_columns = [c for c in df.columns if c not in conf.used_columns_prediction]
+    if len(unused_columns) > 0:
+        msgs.append(f'Unused columns: {unused_columns}')
 
     if not ok:
         return PredictionResponse(messages=msgs)
