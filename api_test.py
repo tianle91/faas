@@ -5,9 +5,10 @@ import pyspark.sql.functions as F
 import requests
 from pyspark.sql import SparkSession
 
-from faas.config import ETLConfig, FeatureConfig, TargetConfig, WeightConfig
 from faas.lightgbm import LGBMWrapper
 from faas.storage import write_model
+from faas.transformer.etl import (ETLConfig, FeatureConfig, TargetConfig,
+                                  WeightConfig)
 
 API_URL = 'http://localhost:8000'
 p = 'data/sample_multi_ts.csv'
