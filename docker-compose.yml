@@ -6,6 +6,8 @@ services:
       - .:/workdir
     ports:
       - "8501:8501"
+    environment:
+      - APIURL=http://api:8000
     entrypoint: streamlit run ui.py
   api:
     image: faas
