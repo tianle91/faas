@@ -7,8 +7,16 @@ from pyspark.sql import DataFrame, SparkSession
 
 from faas.lightgbm import LGBMWrapper
 from faas.storage import list_models, read_model
+from ui.training import DEFAULT_DATE_FORMAT
 
 app = FastAPI()
+
+spark = (
+    SparkSession
+    .builder
+    .appName('api_predict')
+    .getOrCreate()
+)
 
 
 @app.get('/')
@@ -38,18 +46,12 @@ async def predict(model_key: str, prediction_request: PredictionRequest) -> Pred
     except KeyError:
         return PredictionResponse(prediction=None, messages=['Model not found'])
 
-    spark = (
-        SparkSession
-        .builder
-        .appName(f'model_key_{model_key}')
-        .getOrCreate()
-    )
     df: DataFrame = spark.createDataFrame(data=prediction_request.data)
 
     # conversion to date
     date_column = m.config.weight.date_column
     if date_column is not None and date_column in df.columns:
-        df = df.withColumn(date_column, F.to_date(date_column))
+        df = df.withColumn(date_column, F.to_date(date_column, DEFAULT_DATE_FORMAT))
 
     # check input dataframe
     ok, msgs = m.check_df_prediction(df=df)
