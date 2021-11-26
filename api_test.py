@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import datetime
 
 import pandas as pd
 import pyspark.sql.functions as F
@@ -9,7 +10,7 @@ from pyspark.sql import SparkSession
 from faas.config import Config
 from faas.config.config import create_etl_config
 from faas.lightgbm import ETLWrapperForLGBM
-from faas.storage import write_model
+from faas.storage import StoredModel, write_model
 
 APIURL = os.getenv('APIURL', default='http://localhost:8000')
 spark = SparkSession.builder.appName('api_test.py').getOrCreate()
@@ -27,7 +28,14 @@ conf = Config(
     feature_columns=['categorical_0', 'numeric_0'],
 )
 m = ETLWrapperForLGBM(config=create_etl_config(conf=conf, df=df)).fit(df)
-model_key = write_model(m, conf=conf)
+
+# write to storage
+stored_model = StoredModel(
+    dt=datetime.now(),
+    m=m,
+    config=conf
+)
+model_key = write_model(stored_model)
 
 # get prediction
 pred_pdf = pd.read_csv(p).head().drop(columns=['numeric_1'])
