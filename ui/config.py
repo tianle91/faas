@@ -17,7 +17,7 @@ def get_config(df: DataFrame) -> Config:
 
     with st.expander('Is there a date column?'):
         date_column = st.selectbox(
-            f'Date column',
+            'Date column',
             options=[None, *categorical_columns],
         )
         date_column_format = st.selectbox(
