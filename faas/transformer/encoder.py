@@ -8,7 +8,7 @@ from pyspark.sql.types import LongType, NumericType
 
 from faas.transformer.base import BaseTransformer
 
-from .utils import validate_categorical_types
+from .utils import validate_categorical_types, validate_numeric_types
 
 
 def get_distinct_values(df: DataFrame, column: str) -> set:
@@ -45,8 +45,11 @@ class OrdinalEncoder(BaseTransformer):
     def feature_columns(self) -> str:
         return [self.feature_column]
 
-    def validate(self, df: DataFrame):
-        validate_categorical_types(df, cols=[self.categorical_column])
+    def validate(self, df: DataFrame, is_inverse=False):
+        if is_inverse:
+            validate_numeric_types(df, cols=[self.feature_column])
+        else:
+            validate_categorical_types(df, cols=[self.categorical_column])
 
     def fit(self, df: DataFrame) -> OrdinalEncoder:
         self.validate(df)
@@ -64,3 +67,7 @@ class OrdinalEncoder(BaseTransformer):
             self.feature_column,
             udf(F.col(self.categorical_column))
         )
+
+    def inverse_transform(self, df: DataFrame) -> DataFrame:
+        self.validate(df, is_inverse=True)
+        return super().inverse_transform(df)
