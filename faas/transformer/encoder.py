@@ -4,11 +4,11 @@ from typing import List
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
-from pyspark.sql.types import LongType, NumericType
+from pyspark.sql.types import LongType, NumericType, StringType
 
 from faas.transformer.base import BaseTransformer
 
-from .utils import validate_categorical_types, validate_numeric_types
+from .utils import validate_categorical_types, validate_numeric_types, clean_string
 
 
 def get_distinct_values(df: DataFrame, column: str) -> set:
@@ -46,7 +46,7 @@ class OrdinalEncoder(BaseTransformer):
 
     def validate(self, df: DataFrame, is_inverse=False):
         if is_inverse:
-            validate_numeric_types(df, cols=[self.feature_column])
+            validate_numeric_types(df, cols=self.feature_columns)
         else:
             validate_categorical_types(df, cols=[self.categorical_column])
 
@@ -69,4 +69,10 @@ class OrdinalEncoder(BaseTransformer):
 
     def inverse_transform(self, df: DataFrame) -> DataFrame:
         self.validate(df, is_inverse=True)
-        return super().inverse_transform(df)
+        # create udf to do the mapping because joining requires access to a spark session
+        mapping = {i: k for i, k in enumerate(self.distincts)}
+        udf = F.udf(lambda i: mapping.get(i, None), StringType())
+        return df.withColumn(
+            self.categorical_column,
+            udf(F.col(self.feature_column))
+        )
