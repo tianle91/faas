@@ -31,7 +31,6 @@ class OrdinalEncoder(BaseTransformer):
     def __init__(self, categorical_column: str) -> None:
         self.categorical_column = categorical_column
         self.distincts: list = []
-        self.column_type = None
 
     @property
     def input_columns(self) -> List[str]:
