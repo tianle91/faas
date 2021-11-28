@@ -28,6 +28,7 @@ class FeatureConfig:
 @dataclass
 class TargetConfig:
     column: str
+    is_categorical: bool = False
     log_transform: bool = False
     categorical_normalization_column: Optional[str] = None
     numerical_normalization_column: Optional[str] = None
@@ -147,26 +148,31 @@ class YTransformer(PipelineTransformer):
         self.conf = conf
         # create pipeline
         steps: List[BaseTransformer] = []
-        # sequential transformations require updating current column
-        c = conf.column
-        if conf.log_transform:
-            step = LogTransform(column=c)
-            steps.append(step)
-            c = step.feature_column
-        if (
-            conf.categorical_normalization_column is not None
-            and conf.numerical_normalization_column is not None
-        ):
-            raise ValueError('Cannot normalize by both categorical and numerical.')
-        elif conf.categorical_normalization_column is not None:
-            steps.append(StandardScaler(
-                column=c, group_column=conf.categorical_normalization_column))
-        elif conf.numerical_normalization_column is not None:
-            steps.append(NumericScaler(
-                column=c, group_column=conf.numerical_normalization_column))
+        if conf.is_categorical:
+            steps.append(OrdinalEncoder(categorical_column=conf.column))
         else:
-            # both are nones
-            steps.append(Passthrough(columns=[c]))
+            # sequential transformations require updating current column
+            c = conf.column
+            if conf.log_transform:
+                step = LogTransform(column=c)
+                steps.append(step)
+                c = step.feature_column
+            # normalizations
+            if (
+                conf.categorical_normalization_column is not None
+                and conf.numerical_normalization_column is not None
+            ):
+                raise ValueError('Cannot normalize by both categorical and numerical.')
+            elif conf.categorical_normalization_column is not None:
+                steps.append(StandardScaler(
+                    column=c, group_column=conf.categorical_normalization_column))
+            elif conf.numerical_normalization_column is not None:
+                steps.append(NumericScaler(
+                    column=c, group_column=conf.numerical_normalization_column))
+            else:
+                # both are nones
+                steps.append(Passthrough(columns=[c]))
+
         self.pipeline = Pipeline(steps)
 
     @property
