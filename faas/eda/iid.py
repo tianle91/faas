@@ -17,7 +17,7 @@ def get_arg_max_abs(seq: List[float]) -> float:
     return reduce(lambda a, b: a if abs(a) > abs(b) else b, seq)
 
 
-def correlation(df: DataFrame, columns: List[str]) -> pd.DataFrame:
+def correlation(df: DataFrame, columns: List[str], collapse_categorical=True) -> pd.DataFrame:
     """Return correlation matrix between columns."""
 
     numeric_columns = get_columns_by_type(df=df, dtype=NumericType)
@@ -46,19 +46,21 @@ def correlation(df: DataFrame, columns: List[str]) -> pd.DataFrame:
     m = correlation.collect()[0][correlation.columns[0]].toArray()
     corr_pdf = pd.DataFrame(m, index=raw_columns, columns=raw_columns, dtype=float)
 
-    # merge the one hot encoded columns
-    for c, v in categorical_column_mapping.items():
-        # merge the rows
-        corr_pdf.loc[c, :] = pd.concat([
-            corr_pdf.loc[[v_c], :] for v_c in v
-        ], axis=0).apply(get_arg_max_abs, axis=0)
-        corr_pdf = corr_pdf.drop(labels=v)
-        # merge the columns
-        corr_pdf.loc[:, c] = pd.concat([
-            corr_pdf.loc[:, [v_c]] for v_c in v
-        ], axis=1).apply(get_arg_max_abs, axis=1)
-        corr_pdf = corr_pdf.drop(columns=v)
+    if collapse_categorical:
+        for c, v in categorical_column_mapping.items():
+            # merge the rows
+            corr_pdf.loc[c, :] = pd.concat([
+                corr_pdf.loc[[v_c], :] for v_c in v
+            ], axis=0).apply(get_arg_max_abs, axis=0)
+            corr_pdf = corr_pdf.drop(labels=v)
 
-    # retain order
-    corr_pdf = corr_pdf.loc[columns, columns]
+            # merge the columns
+            corr_pdf.loc[:, c] = pd.concat([
+                corr_pdf.loc[:, [v_c]] for v_c in v
+            ], axis=1).apply(get_arg_max_abs, axis=1)
+            corr_pdf = corr_pdf.drop(columns=v)
+
+            # retain order
+            corr_pdf = corr_pdf.loc[columns, columns]
+
     return corr_pdf
