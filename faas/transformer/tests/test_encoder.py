@@ -18,5 +18,10 @@ def test_OrdinalEncoder(spark):
     enc = OrdinalEncoder('p').fit(df)
     encoded_rows = enc.transform(df).distinct().collect()
 
-    encoded_values = {row.OrdinalEncoder_p for row in encoded_rows}
+    encoded_values = {row['OrdinalEncoder_p'] for row in encoded_rows}
     assert encoded_values == {i for i in range(26)}
+
+    # check that inverse recovers original
+    pdf = df.toPandas()
+    pdf_identity = enc.inverse_transform(enc.transform(df).drop('p')).select(*df.columns).toPandas()
+    pd.testing.assert_frame_equal(pdf, pdf_identity)
