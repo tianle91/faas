@@ -194,6 +194,7 @@ class YCategoricalTransformer(PipelineTransformer):
         self.conf = conf
         if not conf.is_categorical:
             raise ValueError(f'YCategoricalTransformer must have is_categorical==True')
+        # pipeline attribute required to be set by PipelineTransformer
         self.pipeline = OrdinalEncoder(categorical_column=conf.column)
 
     @property
