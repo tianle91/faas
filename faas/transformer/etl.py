@@ -11,7 +11,7 @@ from pyspark.sql.types import DataType, DateType, NumericType, StringType
 from faas.transformer.base import (AddTransformer, BaseTransformer,
                                    ConstantTransformer, Passthrough, Pipeline)
 from faas.transformer.date import SeasonalityFeature
-from faas.transformer.encoder import OneHotEncoder, OrdinalEncoder
+from faas.transformer.encoder import OrdinalEncoder
 from faas.transformer.scaler import LogTransform, NumericScaler, StandardScaler
 from faas.transformer.weight import HistoricalDecay, Normalize
 
