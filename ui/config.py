@@ -3,7 +3,6 @@ import logging
 import streamlit as st
 from pyspark.sql import DataFrame
 from pyspark.sql.types import NumericType, StringType
-from streamlit import logger
 
 from faas.config import Config
 from faas.config.utils import get_columns_by_type

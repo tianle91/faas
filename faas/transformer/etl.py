@@ -147,7 +147,7 @@ class YNumericTransformer(PipelineTransformer):
     def __init__(self, conf: TargetConfig):
         self.conf = conf
         if conf.is_categorical:
-            raise ValueError(f'YNumericTransformer must have is_categorical==False')
+            raise ValueError('YNumericTransformer must have is_categorical==False')
         # create pipeline
         steps: List[BaseTransformer] = []
         # sequential transformations require updating current column
@@ -193,7 +193,7 @@ class YCategoricalTransformer(PipelineTransformer):
     def __init__(self, conf: TargetConfig):
         self.conf = conf
         if not conf.is_categorical:
-            raise ValueError(f'YCategoricalTransformer must have is_categorical==True')
+            raise ValueError('YCategoricalTransformer must have is_categorical==True')
         # pipeline attribute required to be set by PipelineTransformer
         self.pipeline = OrdinalEncoder(categorical_column=conf.column)
 
