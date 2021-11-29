@@ -28,6 +28,7 @@ class FeatureConfig:
 @dataclass
 class TargetConfig:
     column: str
+    is_categorical: bool = False
     log_transform: bool = False
     categorical_normalization_column: Optional[str] = None
     numerical_normalization_column: Optional[str] = None
@@ -142,9 +143,11 @@ class XTransformer(PipelineTransformer):
         return merge_validations(validations)
 
 
-class YTransformer(PipelineTransformer):
+class YNumericTransformer(PipelineTransformer):
     def __init__(self, conf: TargetConfig):
         self.conf = conf
+        if conf.is_categorical:
+            raise ValueError('YNumericTransformer must have is_categorical==False')
         # create pipeline
         steps: List[BaseTransformer] = []
         # sequential transformations require updating current column
@@ -153,19 +156,18 @@ class YTransformer(PipelineTransformer):
             step = LogTransform(column=c)
             steps.append(step)
             c = step.feature_column
-        if (
-            conf.categorical_normalization_column is not None
-            and conf.numerical_normalization_column is not None
-        ):
+        # normalizations
+        do_cat_norm = conf.categorical_normalization_column is not None
+        do_num_norm = conf.numerical_normalization_column is not None
+        if do_cat_norm and do_num_norm:
             raise ValueError('Cannot normalize by both categorical and numerical.')
-        elif conf.categorical_normalization_column is not None:
+        elif do_cat_norm:
             steps.append(StandardScaler(
                 column=c, group_column=conf.categorical_normalization_column))
-        elif conf.numerical_normalization_column is not None:
+        elif do_num_norm:
             steps.append(NumericScaler(
                 column=c, group_column=conf.numerical_normalization_column))
         else:
-            # both are nones
             steps.append(Passthrough(columns=[c]))
         self.pipeline = Pipeline(steps)
 
@@ -178,12 +180,36 @@ class YTransformer(PipelineTransformer):
         validations = []
         if not prediction:
             validations.append(validate_numeric_with_msgs(df=df, columns=[conf.column]))
-        if conf.categorical_normalization_column is not None:
-            validations.append(validate_categorical_with_msgs(
-                df=df, columns=[conf.categorical_normalization_column]))
-        elif conf.numerical_normalization_column is not None:
-            validations.append(validate_numeric_with_msgs(
-                df=df, columns=[conf.numerical_normalization_column]))
+            if conf.categorical_normalization_column is not None:
+                validations.append(validate_categorical_with_msgs(
+                    df=df, columns=[conf.categorical_normalization_column]))
+            elif conf.numerical_normalization_column is not None:
+                validations.append(validate_numeric_with_msgs(
+                    df=df, columns=[conf.numerical_normalization_column]))
+        return merge_validations(validations)
+
+
+class YCategoricalTransformer(PipelineTransformer):
+    def __init__(self, conf: TargetConfig):
+        self.conf = conf
+        if not conf.is_categorical:
+            raise ValueError('YCategoricalTransformer must have is_categorical==True')
+        # pipeline attribute required to be set by PipelineTransformer
+        self.pipeline = OrdinalEncoder(categorical_column=conf.column)
+
+    @property
+    def num_classes(self):
+        return self.pipeline.num_classes
+
+    @property
+    def feature_columns(self) -> List[str]:
+        return [self.pipeline.feature_columns[-1]]
+
+    def validate_input(self, df: DataFrame, prediction: bool = False) -> Tuple[bool, List[str]]:
+        conf = self.conf
+        validations = []
+        if not prediction:
+            validations.append(validate_categorical_with_msgs(df=df, columns=[conf.column]))
         return merge_validations(validations)
 
 

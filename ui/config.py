@@ -1,3 +1,5 @@
+import logging
+
 import streamlit as st
 from pyspark.sql import DataFrame
 from pyspark.sql.types import NumericType, StringType
@@ -5,19 +7,18 @@ from pyspark.sql.types import NumericType, StringType
 from faas.config import Config
 from faas.config.utils import get_columns_by_type
 
+logger = logging.getLogger(__name__)
+
 
 def get_config(df: DataFrame) -> Config:
     st.header('Create a configuration')
-
-    preview_n = 100
-    prewview_pdf = df.limit(preview_n).toPandas()
-    st.markdown(f'Preview for first {preview_n} rows out of {df.count()} loaded.')
-    st.dataframe(prewview_pdf)
-
     numeric_columns = get_columns_by_type(df=df, dtype=NumericType)
     categorical_columns = get_columns_by_type(df=df, dtype=StringType)
+    logger.info(f'numeric_columns: {numeric_columns}')
+    logger.info(f'categorical_columns: {categorical_columns}')
 
-    target_column = st.selectbox('target column', options=numeric_columns)
+    target_column = st.selectbox('target column', options=numeric_columns + categorical_columns)
+    target_is_categorical = target_column in categorical_columns
 
     with st.expander('Is there a date column?'):
         date_column = st.selectbox(
@@ -52,7 +53,7 @@ def get_config(df: DataFrame) -> Config:
 
     conf = Config(
         target=target_column,
-        target_is_categorical=not isinstance(df.schema[target_column].dataType, NumericType),
+        target_is_categorical=target_is_categorical,
         date_column=date_column,
         date_column_format=date_column_format,
         group_columns=group_columns,

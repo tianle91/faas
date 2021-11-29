@@ -8,7 +8,7 @@ from typing import Dict
 from sqlitedict import SqliteDict
 
 from faas.config import Config
-from faas.lightgbm import ETLWrapperForLGBM
+from faas.transformer.lightgbm import ETLWrapperForLGBM
 
 logger = logging.getLogger(__name__)
 

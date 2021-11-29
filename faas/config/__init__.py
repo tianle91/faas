@@ -13,8 +13,6 @@ class Config:
     feature_columns: Optional[List[str]] = None
 
     def validate(self):
-        if self.target_is_categorical:
-            raise ValueError('Categorical column not yet supported')
         if self.feature_columns is None:
             raise ValueError('Feature columns cannot be None')
 

@@ -21,3 +21,7 @@ def validate_categorical_types(df: DataFrame, cols: List[str]):
 
 def validate_date_types(df: DataFrame, cols: List[str]):
     return validate_types(df=df, cols=cols, expected_dtype=DateType)
+
+
+def clean_string(s: str) -> str:
+    return ''.join([c if c.isalnum() else '_' for c in s])
