@@ -13,12 +13,6 @@ logger = logging.getLogger(__name__)
 
 def get_config(df: DataFrame) -> Config:
     st.header('Create a configuration')
-
-    preview_n = 100
-    prewview_pdf = df.limit(preview_n).toPandas()
-    st.markdown(f'Preview for first {preview_n} rows out of {df.count()} loaded.')
-    st.dataframe(prewview_pdf)
-
     numeric_columns = get_columns_by_type(df=df, dtype=NumericType)
     categorical_columns = get_columns_by_type(df=df, dtype=StringType)
     logger.info(f'numeric_columns: {numeric_columns}')
