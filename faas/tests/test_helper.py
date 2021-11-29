@@ -9,6 +9,45 @@ from faas.helper import get_trained, get_prediction
     ('p', 'conf'),
     [
         pytest.param(
+            'data/sample_iid.csv',
+            # categorical_0,categorical_1,numeric_0,numeric_1
+            Config(
+                target='numeric_0',
+                feature_columns=['categorical_0', 'categorical_1', 'numeric_1'],
+            ),
+            id='sample_iid:numeric'
+        ),
+        pytest.param(
+            'data/sample_iid.csv',
+            # categorical_0,categorical_1,numeric_0,numeric_1
+            Config(
+                target='categorical_0',
+                feature_columns=['categorical_1', 'numeric_0', 'numeric_1'],
+            ),
+            id='sample_iid:categorical'
+        ),
+        # TODO: binary categorical
+        pytest.param(
+            'data/sample_ts.csv',
+            # categorical_0,categorical_1,date,numeric_0,numeric_1
+            Config(
+                target='numeric_0',
+                date_column='date',
+                feature_columns=['categorical_0', 'categorical_1', 'numeric_1'],
+            ),
+            id='sample_ts:numeric'
+        ),
+        pytest.param(
+            'data/sample_ts.csv',
+            # categorical_0,categorical_1,date,numeric_0,numeric_1
+            Config(
+                target='categorical_0',
+                date_column='date',
+                feature_columns=['categorical_1', 'numeric_0', 'numeric_1'],
+            ),
+            id='sample_ts:categorical'
+        ),
+        pytest.param(
             'data/sample_multi_ts.csv',
             # categorical_0,categorical_1,date,numeric_0,numeric_1,ts_type
             Config(
