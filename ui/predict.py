@@ -1,22 +1,22 @@
-import json
 import logging
 import os
 import pprint as pp
 from tempfile import TemporaryDirectory
 
 import pandas as pd
-import requests
 import streamlit as st
+from pyspark.sql import SparkSession
 
-from api import PredictionResponse
-from faas.storage import read_model
+from faas.helper import get_prediction
+from faas.storage import read_model, set_num_calls_remaining
 from faas.utils.io import dump_file_to_location
+from faas.utils.types import load_csv
+from ui.vis_df import preview_df
 from ui.vis_lightgbm import get_vis_lgbmwrapper
 
 logger = logging.getLogger(__name__)
 
-APIURL = os.getenv('APIURL', default='http://localhost:8000')
-logger.info(f'APIURL: {APIURL}')
+spark = SparkSession.builder.appName('ui_predict').getOrCreate()
 
 
 def highlight_target(s: pd.Series, target_column: str):
@@ -53,60 +53,42 @@ def run_predict():
                 # get the file into a local path
                 predict_path = os.path.join(temp_dir, 'predict.csv')
                 dump_file_to_location(predict_file, p=predict_path)
-
-                # load the csv
-                pred_pdf = pd.read_csv(predict_path)
+                df = load_csv(spark=spark, p=predict_path)
 
                 st.header('Uploaded dataset')
-                preview_n = 100
-                st.markdown(f'Preview for first {preview_n} rows out of {len(pred_pdf)} loaded.')
-                st.dataframe(pred_pdf.head(preview_n))
+                preview_df(df=df)
 
-                if st.button('Predict'):
-                    st.header('Prediction')
+                if stored_model.num_calls_remaining <= 0:
+                    st.error(f'Num calls remaining: {stored_model.num_calls_remaining}')
+                else:
+                    if st.button('Predict'):
+                        st.header('Prediction')
+                        df_predict, msgs = get_prediction(
+                            conf=stored_model.config, df=df, m=stored_model.m)
+                        st.markdown('\n\n'.join([f'❌ {msg}' for msg in msgs]))
+                        if df_predict is not None:
+                            set_num_calls_remaining(
+                                key=model_key, n=stored_model.num_calls_remaining - 1)
+                            stored_model = read_model(key=model_key)
+                            st.info(f'Num calls remaining: {stored_model.num_calls_remaining}')
 
-                    # send to api
-                    r = requests.post(
-                        url=f'{APIURL}/predict',
-                        data=json.dumps({
-                            'model_key': model_key,
-                            'data': pred_pdf.to_dict(orient='records')
-                        })
-                    )
-                    try:
-                        prediction_response = PredictionResponse(**r.json())
-                    except Exception as e:
-                        st.code(r.content)
-                        raise e
+                            # preview
+                            pdf_predict = df_predict.toPandas()
+                            preview_n = 100
+                            st.markdown(
+                                f'Preview for first {preview_n}/{len(pdf_predict)} predictions.')
+                            preview_columns = [
+                                stored_model.config.target, *stored_model.config.feature_columns]
+                            pdf_predict = pdf_predict[preview_columns]
+                            st.dataframe(pdf_predict.style.apply(
+                                lambda s: highlight_target(
+                                    s, target_column=stored_model.config.target),
+                                axis=0
+                            ))
 
-                    if prediction_response.num_calls_remaining is not None:
-                        st.markdown(
-                            f'num_calls_remaining: `{prediction_response.num_calls_remaining}`')
-
-                    if prediction_response.prediction is None:
-                        st.error('Errors encountered')
-                    else:
-                        pred_pdf_received = pd.DataFrame(prediction_response.prediction)
-
-                        # preview
-                        st.markdown(
-                            f'Preview for first {preview_n} rows '
-                            f'out of {len(pred_pdf_received)} predictions.'
-                        )
-                        preview_columns = [
-                            stored_model.config.target, *stored_model.config.feature_columns]
-                        pred_pdf_preview = pred_pdf_received[preview_columns].head(preview_n)
-                        st.dataframe(pred_pdf_preview.style.apply(
-                            lambda s: highlight_target(s, target_column=stored_model.config.target),
-                            axis=0
-                        ))
-
-                        # download
-                        st.download_button(
-                            f'Download all {len(pred_pdf_received)} predictions.',
-                            data=pred_pdf_received.to_csv(),
-                            file_name='prediction.csv'
-                        )
-
-                    st.markdown('\n\n'.join(
-                        [f'❌ {msg}' for msg in prediction_response.messages]))
+                            # download
+                            st.download_button(
+                                f'Download all {len(pdf_predict)} predictions.',
+                                data=pdf_predict,
+                                file_name='prediction.csv'
+                            )

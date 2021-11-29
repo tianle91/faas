@@ -3,16 +3,15 @@ import pprint as pp
 from datetime import datetime
 from tempfile import TemporaryDirectory
 
-import pyspark.sql.functions as F
 import streamlit as st
 from pyspark.sql import SparkSession
 
-from faas.config.config import create_etl_config
-from faas.lightgbm import ETLWrapperForLGBM
+from faas.helper import get_trained
 from faas.storage import StoredModel, write_model
 from faas.utils.io import dump_file_to_location
 from faas.utils.types import load_csv
 from ui.config import get_config
+from ui.vis_df import preview_df
 from ui.vis_lightgbm import get_vis_lgbmwrapper
 
 spark = SparkSession.builder.appName('ui_training').getOrCreate()
@@ -27,7 +26,11 @@ def run_training():
             # get the file into a local path
             training_path = os.path.join(temp_dir, 'train.csv')
             dump_file_to_location(training_file, p=training_path)
+
             df = load_csv(spark=spark, p=training_path)
+
+            st.header('Uploaded dataset')
+            preview_df(df=df)
 
             conf = get_config(df=df)
 
@@ -35,18 +38,9 @@ def run_training():
                 st.header('Current configuration')
                 st.code(pp.pformat(conf.__dict__, compact=True))
 
-                if conf.date_column is not None:
-                    df = df.withColumn(
-                        conf.date_column, F.to_date(conf.date_column, conf.date_column_format))
-
                 if st.button('Train'):
-                    m = ETLWrapperForLGBM(config=create_etl_config(conf=conf, df=df))
-                    m.fit(df=df)
-                    stored_model = StoredModel(
-                        dt=datetime.now(),
-                        m=m,
-                        config=conf
-                    )
+                    m = get_trained(conf=conf, df=df)
+                    stored_model = StoredModel(dt=datetime.now(), m=m, config=conf)
                     with st.expander('Model visualization'):
                         get_vis_lgbmwrapper(m)
 
