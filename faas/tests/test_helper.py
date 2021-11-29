@@ -1,8 +1,8 @@
+import pytest
 from pyspark.sql import SparkSession
 
 from faas.config import Config
-import pytest
-from faas.helper import get_trained, get_prediction
+from faas.helper import get_prediction, get_trained
 
 
 @pytest.mark.parametrize(
