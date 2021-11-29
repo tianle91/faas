@@ -1,17 +1,11 @@
 version: '3.9'
 
-networks: 
-    faas-network:
-
 services:
   app:
-    image: faas
+    build:
+      context: .
     ports:
       - 8501:8501
-    networks:
-      - faas-network
-    environment:
-      - APIURL=http://api:8000
     volumes:
       - .:/workdir
-    entrypoint: streamlit run ui.py
+    entrypoint: streamlit run app.py
