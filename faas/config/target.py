@@ -6,6 +6,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql.types import NumericType, StringType
 
 from faas.config import Config
+from faas.config.utils import get_columns_by_type
 from faas.eda.iid import correlation
 from faas.transformer.etl import TargetConfig
 
@@ -17,13 +18,21 @@ def min_val(df: DataFrame, c: str) -> bool:
 
 
 def get_top_correlated(df: DataFrame, c: str) -> Tuple[Optional[str], Optional[float]]:
-    ABS_VAL_COL = '__ABS_VAL_COL__'
-    corr_df = correlation(df=df, columns=df.columns, collapse_categorical=True)[[c]]
+    numeric_columns = get_columns_by_type(df=df, dtype=NumericType)
+    categorical_columns = get_columns_by_type(df=df, dtype=StringType)
+    corr_df = correlation(
+        df=df,
+        columns=numeric_columns + categorical_columns,
+        collapse_categorical=True
+    ).drop(c)[[c]]
+
     top_corr_col, top_corr_val = None, None
     if len(corr_df) > 1:
+        ABS_VAL_COL = '__ABS_VAL_COL__'
         corr_df[ABS_VAL_COL] = corr_df[c].apply(lambda v: abs(v))
         corr_df = corr_df.sort_values(by=ABS_VAL_COL)
-        top_corr_col, top_corr_val = corr_df.index.values[0], corr_df.iloc[0]
+        top_corr_col = corr_df.index.values[0]
+        top_corr_val = corr_df[ABS_VAL_COL].iloc[0]
     return top_corr_col, top_corr_val
 
 
