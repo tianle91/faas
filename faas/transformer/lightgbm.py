@@ -60,7 +60,9 @@ class ETLWrapperForLGBM:
         # model params
         lgbm_params = {'deterministic': True}
         if self.config.target.is_categorical:
-            lgbm_params['num_class'] = self.ytransformer.num_classes
+            num_class = self.ytransformer.num_classes
+            # lightgbm.basic.LightGBMError: Number of classes must be 1 for non-multiclass training
+            lgbm_params['num_class'] = num_class if num_class > 2 else 1
             # LGBMModel.predict returns probabilities instead of label
             self.m = LGBMClassifier(**lgbm_params)
         else:
