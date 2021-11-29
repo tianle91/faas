@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import List, Tuple
 
-from lightgbm import LGBMModel
+from lightgbm import LGBMClassifier, LGBMRegressor
 from pyspark.sql import DataFrame
 
 from faas.transformer.etl import (ETLConfig, WTransformer, XTransformer,
@@ -60,11 +60,11 @@ class ETLWrapperForLGBM:
         # model params
         lgbm_params = {'deterministic': True}
         if self.config.target.is_categorical:
-            lgbm_params['objective'] = 'multiclass'
             lgbm_params['num_class'] = self.ytransformer.num_classes
+            # LGBMModel.predict returns probabilities instead of label
+            self.m = LGBMClassifier(**lgbm_params)
         else:
-            lgbm_params['objective'] = 'regression'
-        self.m = LGBMModel(**lgbm_params)
+            self.m = LGBMRegressor(**lgbm_params)
         # fit
         feature_name = self.xtransformer.feature_columns
         categorical_feature = self.xtransformer.encoded_categorical_feature_columns
