@@ -7,7 +7,8 @@ from lightgbm import LGBMModel
 from pyspark.sql import DataFrame
 
 from faas.transformer.etl import (ETLConfig, WTransformer, XTransformer,
-                                  YTransformer, merge_validations)
+                                  YCategoricalTransformer, YNumericTransformer,
+                                  merge_validations)
 from faas.utils.dataframe import JoinableByRowID
 
 logger = logging.getLogger(__name__)
@@ -17,10 +18,12 @@ class ETLWrapperForLGBM:
 
     def __init__(self, config: ETLConfig):
         self.config = config
-        self.ytransformer = YTransformer(config.target)
         self.xtransformer = XTransformer(config.feature)
         self.wtransformer = WTransformer(config.weight)
-        self.m = LGBMModel(objective='regression', deterministic=True)
+        if config.target.is_categorical:
+            self.ytransformer = YCategoricalTransformer(config.target)
+        else:
+            self.ytransformer = YNumericTransformer(config.target)
 
     def check_df_prediction(self, df: DataFrame) -> Tuple[bool, List[str]]:
         # TODO: check that all columns exist prior to validating
@@ -54,6 +57,14 @@ class ETLWrapperForLGBM:
             if w.shape[1] != 1:
                 raise ValueError('There should be only a single column in w')
             p['sample_weight'] = w.iloc[:, 0]
+        # model params
+        lgbm_params = {'deterministic': True}
+        if self.config.target.is_categorical:
+            lgbm_params['objective'] = 'multiclass'
+            lgbm_params['num_class'] = self.ytransformer.num_classes
+        else:
+            lgbm_params['objective'] = 'regression'
+        self.m = LGBMModel(**lgbm_params)
         # fit
         feature_name = self.xtransformer.feature_columns
         categorical_feature = self.xtransformer.encoded_categorical_feature_columns
