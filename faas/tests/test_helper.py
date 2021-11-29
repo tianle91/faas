@@ -4,6 +4,8 @@ from pyspark.sql import SparkSession
 from faas.config import Config
 from faas.helper import get_prediction, get_trained
 
+spark = SparkSession.builder.appName('test_helpers').getOrCreate()
+
 
 @pytest.mark.parametrize(
     ('p', 'conf'),
@@ -61,12 +63,22 @@ from faas.helper import get_prediction, get_trained
                 group_columns=['ts_type'],
                 feature_columns=['categorical_0', 'categorical_1', 'numeric_1'],
             ),
-            id='sample_multi_ts'
+            id='sample_multi_ts:numeric'
+        ),
+        pytest.param(
+            'data/sample_multi_ts.csv',
+            # categorical_0,categorical_1,date,numeric_0,numeric_1,ts_type
+            Config(
+                target='ts_type',
+                target_is_categorical=True,
+                date_column='date',
+                feature_columns=['categorical_0', 'categorical_1', 'numeric_0', 'numeric_1'],
+            ),
+            id='sample_multi_ts:binary'
         ),
     ]
 )
 def test_helpers(p: str, conf: Config):
-    spark = SparkSession.builder.appName('test_helpers').getOrCreate()
     df = spark.read.options(header=True, inferSchema=True).csv(p)
     m = get_trained(conf=conf, df=df)
     df_pred, msgs = get_prediction(conf=conf, df=df.drop(conf.target), m=m)
