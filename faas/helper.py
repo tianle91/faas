@@ -1,3 +1,5 @@
+from typing import Optional
+
 import pyspark.sql.functions as F
 from pyspark.sql.dataframe import DataFrame
 
@@ -6,11 +8,27 @@ from faas.config.config import create_etl_config
 from faas.transformer.lightgbm import ETLWrapperForLGBM
 
 
-def get_trained(conf: Config, df: DataFrame) -> ETLWrapperForLGBM:
+def get_trained(
+    conf: Config, df: DataFrame, m: Optional[ETLWrapperForLGBM] = None
+) -> ETLWrapperForLGBM:
+    """Get model trained on df.
+
+    Args:
+        conf (Config): configuration
+        df (DataFrame): dataframe
+        m (Optional[ETLWrapperForLGBM], optional): an existing ETLWrapperForLGBM. If None, then a
+            new one is created. Defaults to None.
+    """
     if conf.date_column is not None:
         df = df.withColumn(
             conf.date_column, F.to_date(conf.date_column, conf.date_column_format))
-    m = ETLWrapperForLGBM(config=create_etl_config(conf=conf, df=df))
+    if m is None:
+        m = ETLWrapperForLGBM(config=create_etl_config(conf=conf, df=df))
+
+    ok, msgs = m.check_df_train(df)
+    if not ok:
+        raise ValueError('\n'.join(msgs))
+
     m.fit(df=df)
     return m
 
