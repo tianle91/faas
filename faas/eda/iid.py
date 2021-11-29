@@ -53,14 +53,13 @@ def correlation(df: DataFrame, columns: List[str], collapse_categorical=True) ->
                 corr_pdf.loc[[v_c], :] for v_c in v
             ], axis=0).apply(get_arg_max_abs, axis=0)
             corr_pdf = corr_pdf.drop(labels=v)
-
             # merge the columns
             corr_pdf.loc[:, c] = pd.concat([
                 corr_pdf.loc[:, [v_c]] for v_c in v
             ], axis=1).apply(get_arg_max_abs, axis=1)
             corr_pdf = corr_pdf.drop(columns=v)
 
-            # retain order
-            corr_pdf = corr_pdf.loc[columns, columns]
+        # retain order
+        corr_pdf = corr_pdf.loc[columns, columns]
 
     return corr_pdf
