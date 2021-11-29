@@ -42,7 +42,7 @@ class OrdinalEncoder(BaseTransformer):
 
     @property
     def is_fitted(self):
-        return len(self.distincts) > 0
+        return len(self.distincts) >= 2
 
     def check_is_fitted(self):
         if not self.is_fitted:
@@ -112,22 +112,17 @@ def array_to_value_mapping(arr: Optional[List[int]], distincts: List[str]) -> Op
 
 
 class OneHotEncoder(OrdinalEncoder):
-    def __init__(self, categorical_column: str, collapse_binary: bool = True) -> None:
+    def __init__(self, categorical_column: str) -> None:
         self.categorical_column = categorical_column
-        self.collapse_binary = collapse_binary
         self.distincts: list = []
 
     @property
     def distinct_to_column_name_mapping(self) -> Dict[str, object]:
         self.check_is_fitted()
-        if len(self.distincts) == 2 and self.collapse_binary:
-            v = self.distincts[0]
-            return {v: f'OneHotEncoder_{self.categorical_column}_is_{clean_string(v)}'}
-        else:
-            return {
-                v: f'OneHotEncoder_{self.categorical_column}_is_{clean_string(v)}'
-                for v in self.distincts
-            }
+        return {
+            v: f'OneHotEncoder_{self.categorical_column}_is_{clean_string(v)}'
+            for v in self.distincts
+        }
 
     @property
     def feature_columns(self) -> str:
@@ -140,33 +135,19 @@ class OneHotEncoder(OrdinalEncoder):
     def transform(self, df: DataFrame) -> DataFrame:
         self.validate(df)
         self.check_is_fitted()
-        if len(self.distincts) == 2 and self.collapse_binary:
-            v = self.distincts[0]
+        for v in self.distincts:
             df = df.withColumn(
                 self.distinct_to_column_name_mapping[v],
                 F.when(F.col(self.categorical_column) == v, F.lit(1)).otherwise(0)
             )
-        else:
-            for v in self.distincts:
-                df = df.withColumn(
-                    self.distinct_to_column_name_mapping[v],
-                    F.when(F.col(self.categorical_column) == v, F.lit(1)).otherwise(0)
-                )
         return df
 
     def inverse_transform(self, df: DataFrame) -> DataFrame:
         self.validate(df, is_inverse=True)
-        if len(self.distincts) == 2 and self.collapse_binary:
-            v = self.distincts[0]
-            udf = F.udf(
-                lambda arr: v if arr[0] == 1 else self.distincts[1],
-                StringType()
-            )
-        else:
-            udf = F.udf(
-                lambda arr: array_to_value_mapping(arr, distincts=self.distincts),
-                StringType()
-            )
+        udf = F.udf(
+            lambda arr: array_to_value_mapping(arr, distincts=self.distincts),
+            StringType()
+        )
         ONE_HOT_ARRAY_COL = '__ONE_HOT_ARRAY__'
         return (
             df

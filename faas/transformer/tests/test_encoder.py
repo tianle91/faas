@@ -60,36 +60,3 @@ def test_OneHotEncoder(spark: SparkSession):
     # check that inverse recovers original
     pdf_identity = enc.inverse_transform(df_transformed).select(*df.columns).toPandas()
     pd.testing.assert_frame_equal(pdf, pdf_identity)
-
-
-def test_OneHotEncoder_binary(spark: SparkSession):
-    n = 100
-    c_l = ['a', 'b']
-    pdf = pd.DataFrame({
-        'p': [c_l[i % len(c_l)] for i in range(n)]
-    })
-    df = spark.createDataFrame(pdf)
-
-    enc = OneHotEncoder('p', collapse_binary=True).fit(df)
-    df_transformed = enc.transform(df).drop('p')
-
-    assert set(enc.distincts) == set(c_l)
-
-    first_val = enc.distincts[0]
-
-    # assert that encoded column is created
-    expected_columns = {f'OneHotEncoder_p_is_{first_val}'}
-    actual_columns = set(df_transformed.columns)
-    assert actual_columns == expected_columns, actual_columns
-
-    # assert that encoded values are as expected
-    encoded_values = {
-        (row[f'OneHotEncoder_p_is_{first_val}'],)
-        for row in df_transformed.distinct().collect()
-    }
-    expected_values = {(1,), (0,)}
-    assert encoded_values == expected_values, encoded_values
-
-    # check that inverse recovers original
-    pdf_identity = enc.inverse_transform(df_transformed).select(*df.columns).toPandas()
-    pd.testing.assert_frame_equal(pdf, pdf_identity)
