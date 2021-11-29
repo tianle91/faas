@@ -19,19 +19,26 @@ def get_distinct_values(df: DataFrame, column: str) -> set:
             f'dataType: {df.schema[column].dataType} is a NumericType, '
             'which cannot be used for encoding.'
         )
+    DISTINCT_VAL_COL = '__DISTINCT_VAL__'
     distinct_rows = (
         df
-        .select(F.col(column).alias('val'))
+        .select(F.col(column).alias(DISTINCT_VAL_COL))
         .distinct()
+        .orderBy(DISTINCT_VAL_COL)
         .collect()
     )
-    return {row.val for row in distinct_rows}
+    return {row[DISTINCT_VAL_COL] for row in distinct_rows}
 
 
 class OrdinalEncoder(BaseTransformer):
     def __init__(self, categorical_column: str) -> None:
         self.categorical_column = categorical_column
         self.distincts: list = []
+
+    @property
+    def num_classes(self):
+        self.check_is_fitted()
+        return len(self.distincts)
 
     @property
     def is_fitted(self):
@@ -105,14 +112,22 @@ def array_to_value_mapping(arr: Optional[List[int]], distincts: List[str]) -> Op
 
 
 class OneHotEncoder(OrdinalEncoder):
+    def __init__(self, categorical_column: str, collapse_binary: bool = True) -> None:
+        self.categorical_column = categorical_column
+        self.collapse_binary = collapse_binary
+        self.distincts: list = []
 
     @property
     def distinct_to_column_name_mapping(self) -> Dict[str, object]:
         self.check_is_fitted()
-        return {
-            v: f'OneHotEncoder_{self.categorical_column}_is_{clean_string(v)}'
-            for v in self.distincts
-        }
+        if len(self.distincts) == 2 and self.collapse_binary:
+            v = self.distincts[0]
+            return {v: f'OneHotEncoder_{self.categorical_column}_is_{clean_string(v)}'}
+        else:
+            return {
+                v: f'OneHotEncoder_{self.categorical_column}_is_{clean_string(v)}'
+                for v in self.distincts
+            }
 
     @property
     def feature_columns(self) -> str:
@@ -125,19 +140,33 @@ class OneHotEncoder(OrdinalEncoder):
     def transform(self, df: DataFrame) -> DataFrame:
         self.validate(df)
         self.check_is_fitted()
-        for v in self.distincts:
+        if len(self.distincts) == 2 and self.collapse_binary:
+            v = self.distincts[0]
             df = df.withColumn(
                 self.distinct_to_column_name_mapping[v],
                 F.when(F.col(self.categorical_column) == v, F.lit(1)).otherwise(0)
             )
+        else:
+            for v in self.distincts:
+                df = df.withColumn(
+                    self.distinct_to_column_name_mapping[v],
+                    F.when(F.col(self.categorical_column) == v, F.lit(1)).otherwise(0)
+                )
         return df
 
     def inverse_transform(self, df: DataFrame) -> DataFrame:
         self.validate(df, is_inverse=True)
-        udf = F.udf(
-            lambda arr: array_to_value_mapping(arr, distincts=self.distincts),
-            StringType()
-        )
+        if len(self.distincts) == 2 and self.collapse_binary:
+            v = self.distincts[0]
+            udf = F.udf(
+                lambda arr: v if arr[0] == 1 else self.distincts[1],
+                StringType()
+            )
+        else:
+            udf = F.udf(
+                lambda arr: array_to_value_mapping(arr, distincts=self.distincts),
+                StringType()
+            )
         ONE_HOT_ARRAY_COL = '__ONE_HOT_ARRAY__'
         return (
             df
