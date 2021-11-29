@@ -194,7 +194,7 @@ class YCategoricalTransformer(PipelineTransformer):
         self.conf = conf
         if not conf.is_categorical:
             raise ValueError(f'YCategoricalTransformer must have is_categorical==True')
-        self.pipeline = OneHotEncoder(categorical_column=conf.column)
+        self.pipeline = OrdinalEncoder(categorical_column=conf.column)
 
     @property
     def num_classes(self):
@@ -202,7 +202,7 @@ class YCategoricalTransformer(PipelineTransformer):
 
     @property
     def feature_columns(self) -> List[str]:
-        return self.pipeline.feature_columns
+        return [self.pipeline.feature_columns[-1]]
 
     def validate_input(self, df: DataFrame, prediction: bool = False) -> Tuple[bool, List[str]]:
         conf = self.conf
