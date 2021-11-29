@@ -65,22 +65,25 @@ def run_predict():
                         st.header('Prediction')
                         df_predict, msgs = get_prediction(
                             conf=stored_model.config, df=df, m=stored_model.m)
+
+                        # errors?
                         st.markdown('\n\n'.join([f'❌ {msg}' for msg in msgs]))
                         if df_predict is not None:
+                            pdf_predict = df_predict.toPandas()
+
+                            # update num_calls_remaining
                             set_num_calls_remaining(
                                 key=model_key, n=stored_model.num_calls_remaining - 1)
                             stored_model = read_model(key=model_key)
                             st.info(f'Num calls remaining: {stored_model.num_calls_remaining}')
 
                             # preview
-                            pdf_predict = df_predict.toPandas()
                             preview_n = 100
                             st.markdown(
                                 f'Preview for first {preview_n}/{len(pdf_predict)} predictions.')
                             preview_columns = [
                                 stored_model.config.target, *stored_model.config.feature_columns]
-                            pdf_predict = pdf_predict[preview_columns]
-                            st.dataframe(pdf_predict.style.apply(
+                            st.dataframe(pdf_predict[preview_columns].style.apply(
                                 lambda s: highlight_target(
                                     s, target_column=stored_model.config.target),
                                 axis=0
@@ -88,7 +91,7 @@ def run_predict():
 
                             # download
                             st.download_button(
-                                f'Download all {len(pdf_predict)} predictions.',
-                                data=pdf_predict,
+                                f'Download all {len(pdf_predict)} predictions',
+                                data=pdf_predict.to_csv(),
                                 file_name='prediction.csv'
                             )
