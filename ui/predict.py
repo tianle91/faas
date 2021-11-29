@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import pprint as pp
 from tempfile import TemporaryDirectory
@@ -12,7 +13,10 @@ from faas.storage import read_model
 from faas.utils.io import dump_file_to_location
 from ui.vis_lightgbm import get_vis_lgbmwrapper
 
+logger = logging.getLogger(__name__)
+
 APIURL = os.getenv('APIURL', default='http://localhost:8000')
+logger.info(f'APIURL: {APIURL}')
 
 
 def highlight_target(s: pd.Series, target_column: str):
@@ -69,7 +73,11 @@ def run_predict():
                             'data': pred_pdf.to_dict(orient='records')
                         })
                     )
-                    prediction_response = PredictionResponse(**r.json())
+                    try:
+                        prediction_response = PredictionResponse(**r.json())
+                    except Exception as e:
+                        st.code(r.content)
+                        raise e
 
                     if prediction_response.num_calls_remaining is not None:
                         st.markdown(
