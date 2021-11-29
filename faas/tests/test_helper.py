@@ -13,6 +13,7 @@ from faas.helper import get_trained, get_prediction
             # categorical_0,categorical_1,numeric_0,numeric_1
             Config(
                 target='numeric_0',
+                target_is_categorical=False,
                 feature_columns=['categorical_0', 'categorical_1', 'numeric_1'],
             ),
             id='sample_iid:numeric'
@@ -22,6 +23,7 @@ from faas.helper import get_trained, get_prediction
             # categorical_0,categorical_1,numeric_0,numeric_1
             Config(
                 target='categorical_0',
+                target_is_categorical=True,
                 feature_columns=['categorical_1', 'numeric_0', 'numeric_1'],
             ),
             id='sample_iid:categorical'
@@ -32,6 +34,7 @@ from faas.helper import get_trained, get_prediction
             # categorical_0,categorical_1,date,numeric_0,numeric_1
             Config(
                 target='numeric_0',
+                target_is_categorical=False,
                 date_column='date',
                 feature_columns=['categorical_0', 'categorical_1', 'numeric_1'],
             ),
@@ -42,6 +45,7 @@ from faas.helper import get_trained, get_prediction
             # categorical_0,categorical_1,date,numeric_0,numeric_1
             Config(
                 target='categorical_0',
+                target_is_categorical=True,
                 date_column='date',
                 feature_columns=['categorical_1', 'numeric_0', 'numeric_1'],
             ),
@@ -52,6 +56,7 @@ from faas.helper import get_trained, get_prediction
             # categorical_0,categorical_1,date,numeric_0,numeric_1,ts_type
             Config(
                 target='numeric_0',
+                target_is_categorical=False,
                 date_column='date',
                 group_columns=['ts_type'],
                 feature_columns=['categorical_0', 'categorical_1', 'numeric_1'],
