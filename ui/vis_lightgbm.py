@@ -6,7 +6,7 @@ import streamlit as st
 from lightgbm import LGBMModel
 from plotly.graph_objs._figure import Figure
 
-from faas.lightgbm import ETLWrapperForLGBM
+from faas.transformer.lightgbm import ETLWrapperForLGBM
 
 
 def vis_importance(m: LGBMModel) -> Figure:
