@@ -8,4 +8,6 @@ services:
       - 8501:8501
     volumes:
       - .:/workdir
+    environment:
+      - ORS_SECRET=${ORS_SECRET}
     entrypoint: streamlit run app.py
