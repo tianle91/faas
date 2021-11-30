@@ -15,7 +15,12 @@ dict_of_lists = gs.generate_ts()
 df: DataFrame = spark.createDataFrame(data=convert_dict_to_list(dict_of_lists))
 df.toPandas().to_csv('data/sample_ts.csv', index=False)
 
-# sample ts
+# sample multi ts
 dict_of_lists = gs.generate_multi_ts(ts_types=['ts_A', 'ts_B'])
 df: DataFrame = spark.createDataFrame(data=convert_dict_to_list(dict_of_lists))
 df.toPandas().to_csv('data/sample_multi_ts.csv', index=False)
+
+# sample spatial
+dict_of_lists = gs.generate_spatial()
+df: DataFrame = spark.createDataFrame(data=convert_dict_to_list(dict_of_lists))
+df.toPandas().to_csv('data/sample_spatial.csv', index=False)
