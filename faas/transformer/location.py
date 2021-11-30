@@ -1,13 +1,17 @@
+import logging
 import os
 from typing import List
 
 import openrouteservice
 import pyspark.sql.functions as F
 from geopy import Point
+from openrouteservice.exceptions import ApiError
 from pyspark.sql import DataFrame
 from pyspark.sql.types import DoubleType
 
 from faas.transformer.base import BaseTransformer
+
+logger = logging.getLogger(__name__)
 
 CLIENT = openrouteservice.Client(key=os.getenv('ORS_SECRET'))
 ISOCHRONE_SECONDS: List[float] = [60, 600, 1800, 3600]
@@ -56,17 +60,27 @@ class OpenRouteServiceFeatures(BaseTransformer):
             Point(latitude=lat, longitude=lon)  # validate lat lon
             latlon = (lat, lon)
             if latlon not in self.mapping:
-                res = CLIENT.isochrones(
-                    # OpenRouteService takes longitude, latitude
-                    locations=[(lon, lat), ],
-                    attributes=ISOCHRONE_ATTRIBUTES,
-                    range=ISOCHRONE_SECONDS,
-                )
-                self.mapping[latlon] = {
-                    k: get_value_from_isochrone_res(
-                        res=res, **GET_VALUE_FROM_ISOCHRONE_RES_PARAMS[k])
-                    for k in GET_VALUE_FROM_ISOCHRONE_RES_PARAMS
-                }
+                logger.info(f'Querying OpenRouteService with latitude={lat}, longitude={lon}')
+                try:
+                    res = CLIENT.isochrones(
+                        # OpenRouteService takes longitude, latitude
+                        locations=[(lon, lat), ],
+                        attributes=ISOCHRONE_ATTRIBUTES,
+                        range=ISOCHRONE_SECONDS,
+                    )
+                    location_features = {
+                        k: get_value_from_isochrone_res(
+                            res=res, **GET_VALUE_FROM_ISOCHRONE_RES_PARAMS[k])
+                        for k in GET_VALUE_FROM_ISOCHRONE_RES_PARAMS
+                    }
+                except ApiError as e:
+                    logger.warn(
+                        'Received ApiError from OpenRouteService when querying '
+                        f'latitude={lat}, longitude={lon} '
+                        f'ApiError: {e}'
+                    )
+                    location_features = {k: None for k in GET_VALUE_FROM_ISOCHRONE_RES_PARAMS}
+            self.mapping[latlon] = location_features
         return self
 
     def transform(self, df: DataFrame) -> DataFrame:
