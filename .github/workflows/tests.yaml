@@ -16,4 +16,6 @@ jobs:
           python -m pip install -r requirements.txt
           python -m pip install -r requirements-dev.txt
       - name: run tests
+        env:
+            ORS_SECRET: ${{ secrets.ORS_SECRET }}
         run: pytest faas
