@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 
 @dataclass
@@ -8,7 +8,8 @@ class Config:
     target_is_categorical: bool = False
     date_column: Optional[str] = None
     date_column_format: str = 'yyyy-MM-dd'
-    space_columns: Optional[Tuple[str, str]] = None
+    latitude_column: Optional[str] = None
+    longitude_column: Optional[str] = None
     group_columns: Optional[List[str]] = None
     feature_columns: Optional[List[str]] = None
 
@@ -21,8 +22,8 @@ class Config:
         out = self.feature_columns
         if self.date_column is not None:
             out.append(self.date_column)
-        if self.space_columns is not None:
-            out += list(self.space_columns)
+        if self.latitude_column is not None and self.longitude_column:
+            out += [self.latitude_column, self.longitude_column]
         if self.group_columns is not None:
             out += self.group_columns
         return out

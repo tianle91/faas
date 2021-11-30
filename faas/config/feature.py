@@ -13,6 +13,9 @@ def create_feature_config(conf: Config, df: DataFrame) -> FeatureConfig:
     p = {}
     if conf.date_column is not None:
         p['date_column'] = conf.date_column
+    if conf.latitude_column is not None and conf.longitude_column is not None:
+        p['latitude_column'] = conf.latitude_column
+        p['longitude_column'] = conf.longitude_column
     return FeatureConfig(
         categorical_columns=categorical_columns,
         numeric_columns=numeric_columns,
