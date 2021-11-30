@@ -15,7 +15,7 @@ def vis_importance(m: LGBMModel) -> Figure:
         'importance': m.feature_importances_,
     })
     lowest_decile = .1 * df['importance'].sum()
-    df.loc[df['importance'] < lowest_decile, 'name'] = 'other features'
+    df.loc[df['importance'] <= lowest_decile, 'name'] = 'other features'
     fig = px.pie(df, values='importance', names='name', title='Feature Importance')
     return fig
 
