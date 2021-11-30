@@ -31,6 +31,16 @@ def get_config(df: DataFrame) -> Config:
             help='https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.sql.functions.to_date.html'
         )
 
+    with st.expander('Are there spatial columns?'):
+        latitude_column = st.selectbox(
+            'Latitude Column (-90. to 90.)',
+            options=[None, *numeric_columns],
+        )
+        longitude_column = st.selectbox(
+            'Longitude Column (-180. to 180.)',
+            options=[None, *numeric_columns],
+        )
+
     group_columns = None
     if date_column is not None:
         with st.expander('Is there a group column?'):
@@ -42,7 +52,7 @@ def get_config(df: DataFrame) -> Config:
 
     non_target_non_date_columns = [
         c for c in numeric_columns + categorical_columns
-        if c not in [target_column, date_column]
+        if c not in [target_column, date_column, latitude_column, longitude_column]
     ]
     feature_columns = st.multiselect(
         label='Feature Columns',
@@ -56,6 +66,8 @@ def get_config(df: DataFrame) -> Config:
         target_is_categorical=target_is_categorical,
         date_column=date_column,
         date_column_format=date_column_format,
+        latitude_column=latitude_column,
+        longitude_column=longitude_column,
         group_columns=group_columns,
         feature_columns=feature_columns
     )
