@@ -1,6 +1,13 @@
 version: '3.9'
 
 services:
+  shell:
+    build:
+      context: .
+    volumes:
+      - .:/workdir
+    environment:
+      - ORS_SECRET=${ORS_SECRET}
   app:
     build:
       context: .
