@@ -14,12 +14,15 @@ def categorical(rng, n: int = 1) -> List[float]:
     return [str(v) for v in rng.choice(ALPHABETS, size=n)]
 
 
+DEFAULT_LAT, DEFAULT_LON = 43.651070, -79.347015
+
+
 def latitude(rng: Generator, n: int = 1) -> List[float]:
-    return [float(v) for v in rng.uniform(low=-90., high=90., size=n)]
+    return [float(v) for v in DEFAULT_LAT + rng.uniform(low=-1., high=1., size=n)]
 
 
 def longitude(rng: Generator, n: int = 1) -> List[float]:
-    return [float(v) for v in rng.uniform(low=-180., high=180., size=n)]
+    return [float(v) for v in DEFAULT_LON + rng.uniform(low=-1., high=1., size=n)]
 
 
 def convert_dict_to_list(d: Dict[str, list]) -> List[dict]:
@@ -86,7 +89,7 @@ class GenerateSynthetic:
 
     def generate_spatial(
         self,
-        num_locations: int = 1000,
+        num_locations: int = 5,
         latitude_column: str = 'lat',
         longitude_column: str = 'lon',
     ) -> Dict[str, list]:
