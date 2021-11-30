@@ -175,7 +175,7 @@ class YNumericTransformer(PipelineTransformer):
                 column=c, group_column=conf.categorical_normalization_column))
         elif do_num_norm:
             steps.append(NumericScaler(
-                column=c, group_column=conf.numerical_normalization_column))
+                column=c, base_column=conf.numerical_normalization_column))
         else:
             steps.append(Passthrough(columns=[c]))
         self.pipeline = Pipeline(steps)

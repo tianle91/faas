@@ -52,9 +52,9 @@ def create_target_config(conf: Config, df: DataFrame) -> TargetConfig:
         if top_corr_col is not None and top_corr_val > 0.5:
             top_corr_dtype = df.schema[top_corr_col].dataType
             if isinstance(top_corr_dtype, NumericType):
-                target_p['numerical_normalization'] = top_corr_col
+                target_p['numerical_normalization_column'] = top_corr_col
                 logger.info(
-                    f'Setting numerical_normalization to {top_corr_col} '
+                    f'Setting numerical_normalization_column to {top_corr_col} '
                     f'due to top_corr_val {top_corr_val} > 0.5.'
                 )
             elif isinstance(top_corr_dtype, StringType):
