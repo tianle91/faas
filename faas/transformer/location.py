@@ -9,7 +9,6 @@ from pyspark.sql.types import DoubleType
 
 from faas.transformer.base import BaseTransformer
 
-
 CLIENT = openrouteservice.Client(key=os.getenv('ORS_SECRET'))
 ISOCHRONE_SECONDS: List[float] = [60, 600, 1800, 3600]
 ISOCHRONE_ATTRIBUTES: List[str] = ['area', 'reachfactor', 'total_pop']
