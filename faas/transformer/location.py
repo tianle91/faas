@@ -41,9 +41,15 @@ GET_VALUE_FROM_ISOCHRONE_RES_PARAMS = {
 
 
 class OpenRouteServiceFeatures(BaseTransformer):
-    def __init__(self, longitude_column: str, latitude_column: str):
+    def __init__(
+        self,
+        longitude_column: str,
+        latitude_column: str,
+        skip_invalid_locations: bool = False
+    ):
         self.longitude_column = longitude_column
         self.latitude_column = latitude_column
+        self.skip_invalid_locations = skip_invalid_locations
         self.mapping = {}
 
     @property
@@ -80,6 +86,8 @@ class OpenRouteServiceFeatures(BaseTransformer):
                         f'ApiError: {e}'
                     )
                     location_features = {k: None for k in GET_VALUE_FROM_ISOCHRONE_RES_PARAMS}
+                    if not self.skip_invalid_locations:
+                        raise e
             self.mapping[latlon] = location_features
         return self
 
