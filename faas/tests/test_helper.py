@@ -76,6 +76,18 @@ spark = SparkSession.builder.appName('test_helpers').getOrCreate()
             ),
             id='sample_multi_ts:binary'
         ),
+        pytest.param(
+            'data/sample_spatial.csv',
+            # categorical_0,categorical_1,lat,lon,numeric_0,numeric_1
+            Config(
+                target='numeric_0',
+                target_is_categorical=False,
+                latitude_column='lat',
+                longitude_column='lon',
+                feature_columns=['categorical_0', 'categorical_1', 'numeric_1'],
+            ),
+            id='sample_spatial:numeric'
+        ),
     ]
 )
 def test_helpers(p: str, conf: Config):
