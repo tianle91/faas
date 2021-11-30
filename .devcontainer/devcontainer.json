@@ -16,14 +16,8 @@
 
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
-		"hediet.vscode-drawio",
-		"ms-python.python",
-		"ms-python.vscode-pylance",
 		"ms-azuretools.vscode-docker",
-		"p1c2u.docker-compose",
-		"grapecity.gc-excelviewer",
-		"visualstudioexptteam.vscodeintellicode",
-		"yzhang.markdown-all-in-one",
+		"ms-python.python",
 		"njpwerner.autodocstring"
 	]
 
