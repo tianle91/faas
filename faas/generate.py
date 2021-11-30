@@ -1,7 +1,8 @@
 from datetime import date, timedelta
 from typing import Dict, List
 
-from numpy.random import Generator, default_rng
+from geopy import Point
+from numpy.random import default_rng
 
 ALPHABETS = [c for c in 'ABCDEFGHIJLKMNOPQRSTUVWXYZ']
 
@@ -14,15 +15,15 @@ def categorical(rng, n: int = 1) -> List[float]:
     return [str(v) for v in rng.choice(ALPHABETS, size=n)]
 
 
-DEFAULT_LAT, DEFAULT_LON = 43.651070, -79.347015
+LOCATIONS = {
+    'Toronto': Point(latitude=43.653908, longitude=-79.384293),
+    'Tokyo': Point(latitude=35.652832, longitude=139.839478),
+    'Sydney': Point(latitude=-33.870453, longitude=151.208755),
+}
 
 
-def latitude(rng: Generator, n: int = 1) -> List[float]:
-    return [float(v) for v in DEFAULT_LAT + rng.uniform(low=-1., high=1., size=n)]
-
-
-def longitude(rng: Generator, n: int = 1) -> List[float]:
-    return [float(v) for v in DEFAULT_LON + rng.uniform(low=-1., high=1., size=n)]
+def location(rng, n: int = 1) -> List[Point]:
+    return [v for v in rng.choice(list(LOCATIONS.values()), size=n)]
 
 
 def convert_dict_to_list(d: Dict[str, list]) -> List[dict]:
@@ -94,6 +95,11 @@ class GenerateSynthetic:
         longitude_column: str = 'lon',
     ) -> Dict[str, list]:
         res = self.generate_iid(n=num_locations)
-        res[latitude_column] = latitude(rng=self.rng, n=num_locations)
-        res[longitude_column] = longitude(rng=self.rng, n=num_locations)
+        locations = location(rng=self.rng, n=num_locations)
+        lats, lons = [], []
+        for p in locations:
+            lats.append(p.latitude)
+            lons.append(p.longitude)
+        res[latitude_column] = lats
+        res[longitude_column] = lons
         return res
