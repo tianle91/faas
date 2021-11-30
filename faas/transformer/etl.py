@@ -12,6 +12,7 @@ from faas.transformer.base import (AddTransformer, BaseTransformer,
                                    ConstantTransformer, Passthrough, Pipeline)
 from faas.transformer.date import SeasonalityFeature
 from faas.transformer.encoder import OrdinalEncoder
+from faas.transformer.location import OpenRouteServiceFeatures
 from faas.transformer.scaler import LogTransform, NumericScaler, StandardScaler
 from faas.transformer.weight import HistoricalDecay, Normalize
 
@@ -23,6 +24,8 @@ class FeatureConfig:
     categorical_columns: List[str]
     numeric_columns: List[str]
     date_column: Optional[str] = None
+    latitude_column: Optional[str] = None
+    longitude_column: Optional[str] = None
 
 
 @dataclass
@@ -130,6 +133,9 @@ class XTransformer(PipelineTransformer):
             steps.append(enc)
         if conf.date_column is not None:
             steps.append(SeasonalityFeature(date_column=conf.date_column))
+        if conf.latitude_column is not None and conf.longitude_column is not None:
+            steps.append(OpenRouteServiceFeatures(
+                longitude_column=conf.longitude_column, latitude_column=conf.latitude_column))
         self.pipeline = Pipeline(steps=steps)
 
     def validate_input(self, df: DataFrame) -> Tuple[bool, List[str]]:
@@ -140,6 +146,9 @@ class XTransformer(PipelineTransformer):
         ]
         if conf.date_column is not None:
             validations.append(validate_date_with_msgs(df=df, columns=[conf.date_column]))
+        if conf.latitude_column is not None and conf.longitude_column is not None:
+            validations.append(validate_numeric_with_msgs(
+                df=df, columns=[conf.latitude_column, conf.longitude_column]))
         return merge_validations(validations)
 
 
