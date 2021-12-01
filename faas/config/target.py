@@ -7,7 +7,7 @@ from pyspark.sql.types import NumericType, StringType
 
 from faas.config import Config
 from faas.config.utils import get_columns_by_type
-from faas.eda.iid import correlation
+from faas.stats import correlation
 from faas.transformer.etl import TargetConfig
 
 logger = logging.getLogger(__name__)

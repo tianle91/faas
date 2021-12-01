@@ -1,7 +1,7 @@
 import pandas as pd
 from pyspark.sql import SparkSession
 
-from faas.eda.iid import correlation
+from faas.stats import correlation
 
 
 def test_correlation(spark: SparkSession):
