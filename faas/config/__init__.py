@@ -18,6 +18,10 @@ class Config:
             raise ValueError('Feature columns cannot be None')
 
     @property
+    def has_spatial_columns(self):
+        return self.latitude_column is not None and self.longitude_column is not None
+
+    @property
     def used_columns_prediction(self) -> List[str]:
         out = self.feature_columns
         if self.date_column is not None:
