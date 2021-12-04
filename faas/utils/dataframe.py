@@ -1,5 +1,6 @@
-from typing import List
+from typing import List, Union
 
+import pandas as pd
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
 from pyspark.sql.types import DoubleType
@@ -26,5 +27,8 @@ class JoinableByRowID:
         return self.df.withColumn(column, udf(F.col(ROW_ID_COL)))
 
 
-def has_duplicates(df: DataFrame) -> bool:
-    return df.distinct().count() > df.count()
+def has_duplicates(df: Union[DataFrame, pd.DataFrame]) -> bool:
+    if isinstance(df, DataFrame):
+        return df.distinct().count() > df.count()
+    elif isinstance(df, pd.DataFrame):
+        return len(df.drop_duplicates()) < len(df)
