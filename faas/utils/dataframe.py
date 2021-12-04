@@ -24,3 +24,7 @@ class JoinableByRowID:
         mapping = {self.ids[i]: float(val) for i, val in enumerate(x)}
         udf = F.udf(lambda i: mapping[i], DoubleType())
         return self.df.withColumn(column, udf(F.col(ROW_ID_COL)))
+
+
+def has_duplicates(df: DataFrame) -> bool:
+    return df.distinct().count() > df.count()
