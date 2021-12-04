@@ -94,7 +94,7 @@ class GenerateSynthetic:
 
     def generate_spatial(
         self,
-        num_locations: int = 5,
+        num_locations: int = 100,
         latitude_column: str = 'lat',
         longitude_column: str = 'lon',
         location_name_column: str = 'location_name'
