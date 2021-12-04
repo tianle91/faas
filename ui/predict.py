@@ -71,6 +71,7 @@ def run_predict():
                         st.markdown('\n\n'.join([f'❌ {msg}' for msg in msgs]))
 
                         # TODO: prevent from refreshing if visualization options change
+                        # TODO: streamlit reruns whenever input changes and buttons are one of them
                         if df_predict is not None:
                             pdf_predict = df_predict.toPandas()
 
