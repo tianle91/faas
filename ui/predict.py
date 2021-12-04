@@ -64,6 +64,7 @@ def run_predict():
                 else:
                     # TODO: prevent from refreshing if visualization options change
                     # TODO: streamlit reruns whenever input changes and buttons are one of them
+                    # TODO: keep prediction results in session for evaluation?
                     if st.button('Predict'):
                         st.header('Prediction')
                         df_predict, msgs = get_prediction(
