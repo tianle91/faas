@@ -32,8 +32,8 @@ def plot_spatial(
         color=config.target,
         hover_name=location_name_column,
         hover_data=[config.target, *config.feature_columns],
+        fitbounds='locations'
     )
-    fig.update_layout(height=400, margin={"r": 0, "t": 0, "l": 0, "b": 0})
     return fig
 
 
