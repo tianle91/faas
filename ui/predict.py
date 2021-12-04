@@ -11,8 +11,8 @@ from faas.helper import get_prediction
 from faas.storage import read_model, set_num_calls_remaining
 from faas.utils.io import dump_file_to_location
 from faas.utils.types import load_csv
+from ui.evaluate import get_evaluation
 from ui.visualization.vis_df import preview_df
-from ui.visualization.vis_iid import vis_evaluate_iid
 from ui.visualization.vis_lightgbm import get_vis_lgbmwrapper
 
 logger = logging.getLogger(__name__)
@@ -100,10 +100,8 @@ def run_predict():
                             )
 
                             if stored_model.config.target in df.columns:
-                                st.header('Evaluation')
-                                with st.expander('Visualization'):
-                                    vis_evaluate_iid(
-                                        df_predict=df_predict,
-                                        df_actual=df,
-                                        config=stored_model.config
-                                    )
+                                get_evaluation(
+                                    df_actual=df,
+                                    df_predict=df_predict,
+                                    config=stored_model.config
+                                )
