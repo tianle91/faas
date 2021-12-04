@@ -11,8 +11,8 @@ from faas.helper import get_prediction
 from faas.storage import read_model, set_num_calls_remaining
 from faas.utils.io import dump_file_to_location
 from faas.utils.types import load_csv
-from ui.vis_df import preview_df
-from ui.vis_lightgbm import get_vis_lgbmwrapper
+from ui.visualization.vis_df import preview_df
+from ui.visualization.vis_lightgbm import get_vis_lgbmwrapper
 
 logger = logging.getLogger(__name__)
 

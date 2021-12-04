@@ -11,8 +11,8 @@ from faas.storage import StoredModel, write_model
 from faas.utils.io import dump_file_to_location
 from faas.utils.types import load_csv
 from ui.config import get_config
-from ui.vis_df import preview_df
-from ui.vis_lightgbm import get_vis_lgbmwrapper
+from ui.visualization.vis_df import preview_df
+from ui.visualization.vis_lightgbm import get_vis_lgbmwrapper
 
 spark = SparkSession.builder.appName('ui_training').getOrCreate()
 

@@ -3,7 +3,7 @@ import pprint as pp
 import streamlit as st
 
 from faas.storage import list_models
-from ui.vis_lightgbm import get_vis_lgbmwrapper
+from ui.visualization.vis_lightgbm import get_vis_lgbmwrapper
 
 
 def run_list():
