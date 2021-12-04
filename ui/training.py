@@ -39,11 +39,12 @@ def run_training():
 
             if conf is not None:
                 with st.expander('Visualization'):
-                    if conf.date_column is not None:
+                    vis_ui_iid(df=df, config=conf)
+                if conf.date_column is not None:
+                    with st.expander('Time Series Visualization'):
                         vis_ui_ts(df=df, config=conf)
-                    if not conf.has_spatial_columns:
-                        vis_ui_iid(df=df, config=conf)
-                    if conf.has_spatial_columns:
+                if conf.has_spatial_columns:
+                    with st.expander('Spatial Visualization'):
                         vis_ui_spatial(df=df, config=conf)
 
                 st.header('Current configuration')
