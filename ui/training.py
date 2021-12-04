@@ -6,13 +6,13 @@ from tempfile import TemporaryDirectory
 import streamlit as st
 from pyspark.sql import SparkSession
 
-from faas import config
 from faas.helper import get_trained
 from faas.storage import StoredModel, write_model
 from faas.utils.io import dump_file_to_location
 from faas.utils.types import load_csv
 from ui.config import get_config
 from ui.visualization.vis_df import preview_df
+from ui.visualization.vis_iid import vis_ui_iid
 from ui.visualization.vis_lightgbm import get_vis_lgbmwrapper
 from ui.visualization.vis_ts import vis_ui_ts
 
@@ -40,6 +40,8 @@ def run_training():
                 with st.expander('Visualization'):
                     if conf.date_column is not None:
                         vis_ui_ts(df=df, config=conf)
+                    if not conf.has_spatial_columns:
+                        vis_ui_iid(df=df, config=conf)
 
                 st.header('Current configuration')
                 st.code(pp.pformat(conf.__dict__, compact=True))
