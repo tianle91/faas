@@ -31,16 +31,25 @@ def plot_ts(
             raise ValueError(
                 f'group: {group} specified but no group specified in config.group_columns')
 
-    pdf = df.orderBy(config.date_column).toPandas()
-    p = {}
+    # what do we need?
+    select_cols = [config.date_column, config.target]
+    plot_params = {}
     if color_feature is not None:
         if color_feature not in config.feature_columns:
             raise KeyError(
                 f'comparison_feature: {color_feature} not found in config.feature_columns')
         if color_feature not in df.columns:
             raise KeyError(f'comparison_feature: {color_feature} not found in df.columns')
-        p['color'] = color_feature
-    fig = px.scatter(pdf, x=config.date_column, y=config.target, marginal_y='histogram', **p)
+        select_cols.append(color_feature)
+        plot_params['color'] = color_feature
+    pdf = (
+        df
+        .select(*select_cols)
+        .orderBy(config.date_column)
+        .toPandas()
+    )
+    fig = px.scatter(
+        pdf, x=config.date_column, y=config.target, marginal_y='histogram', **plot_params)
     return fig
 
 
