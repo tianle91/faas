@@ -1,7 +1,6 @@
 from typing import Optional
 
 import plotly.express as px
-import pyspark.sql.functions as F
 import streamlit as st
 from plotly.graph_objs._figure import Figure
 from pyspark.sql import DataFrame
