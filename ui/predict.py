@@ -62,18 +62,15 @@ def run_predict():
                 if stored_model.num_calls_remaining <= 0:
                     st.error(f'Num calls remaining: {stored_model.num_calls_remaining}')
                 else:
+                    # TODO: prevent from refreshing if visualization options change
+                    # TODO: streamlit reruns whenever input changes and buttons are one of them
                     if st.button('Predict'):
                         st.header('Prediction')
                         df_predict, msgs = get_prediction(
                             conf=stored_model.config, df=df, m=stored_model.m)
-
-                        # errors?
                         st.markdown('\n\n'.join([f'❌ {msg}' for msg in msgs]))
 
-                        # TODO: prevent from refreshing if visualization options change
-                        # TODO: streamlit reruns whenever input changes and buttons are one of them
                         if df_predict is not None:
-                            pdf_predict = df_predict.toPandas()
 
                             # update num_calls_remaining
                             set_num_calls_remaining(
@@ -81,17 +78,22 @@ def run_predict():
                             stored_model = read_model(key=model_key)
                             st.info(f'Num calls remaining: {stored_model.num_calls_remaining}')
 
+                            pdf_predict = df_predict.toPandas()
+
                             # preview
-                            preview_n = 100
-                            st.markdown(
-                                f'Preview for first {preview_n}/{len(pdf_predict)} predictions.')
-                            preview_columns = [
-                                stored_model.config.target, *stored_model.config.feature_columns]
-                            st.dataframe(pdf_predict[preview_columns].style.apply(
-                                lambda s: highlight_target(
-                                    s, target_column=stored_model.config.target),
-                                axis=0
-                            ))
+                            with st.expander('Preview'):
+                                preview_n = 100
+                                st.markdown(
+                                    f'Preview for first {preview_n}/{len(pdf_predict)} predictions.')
+                                preview_columns = [
+                                    stored_model.config.target,
+                                    *stored_model.config.feature_columns
+                                ]
+                                st.dataframe(pdf_predict[preview_columns].style.apply(
+                                    lambda s: highlight_target(
+                                        s, target_column=stored_model.config.target),
+                                    axis=0
+                                ))
 
                             # download
                             st.download_button(
