@@ -12,6 +12,7 @@ from faas.storage import read_model, set_num_calls_remaining
 from faas.utils.io import dump_file_to_location
 from faas.utils.types import load_csv
 from ui.visualization.vis_df import preview_df
+from ui.visualization.vis_iid import vis_evaluate_iid
 from ui.visualization.vis_lightgbm import get_vis_lgbmwrapper
 
 logger = logging.getLogger(__name__)
@@ -68,6 +69,8 @@ def run_predict():
 
                         # errors?
                         st.markdown('\n\n'.join([f'❌ {msg}' for msg in msgs]))
+
+                        # TODO: prevent from refreshing if visualization options change
                         if df_predict is not None:
                             pdf_predict = df_predict.toPandas()
 
@@ -95,3 +98,12 @@ def run_predict():
                                 data=pdf_predict.to_csv(),
                                 file_name='prediction.csv'
                             )
+
+                            if stored_model.config.target in df.columns:
+                                st.header('Evaluation')
+                                with st.expander('Visualization'):
+                                    vis_evaluate_iid(
+                                        df_predict=df_predict,
+                                        df_actual=df,
+                                        config=stored_model.config
+                                    )
