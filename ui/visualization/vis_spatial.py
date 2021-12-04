@@ -22,7 +22,7 @@ def plot_spatial(
         config.target,
         *config.feature_columns
     ]
-    if location_name_column is not None:
+    if location_name_column is not None and location_name_column not in select_cols:
         select_cols.append(location_name_column)
     pdf = df.select(*select_cols).toPandas()
     fig = px.scatter_geo(
