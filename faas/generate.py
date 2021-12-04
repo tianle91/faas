@@ -1,5 +1,5 @@
 from datetime import date, timedelta
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from geopy import Point
 from numpy.random import default_rng
@@ -22,8 +22,12 @@ LOCATIONS = {
 }
 
 
-def location(rng, n: int = 1) -> List[Point]:
-    return [v for v in rng.choice(list(LOCATIONS.values()), size=n)]
+def location(rng, n: int = 1) -> List[Tuple[str, Point]]:
+    out = []
+    loc_names = list(LOCATIONS.keys())
+    for n in rng.choice(loc_names, size=n):
+        out.append((str(n), LOCATIONS[n]))
+    return out
 
 
 def convert_dict_to_list(d: Dict[str, list]) -> List[dict]:
@@ -93,13 +97,18 @@ class GenerateSynthetic:
         num_locations: int = 5,
         latitude_column: str = 'lat',
         longitude_column: str = 'lon',
+        location_name_column: str = 'location_name'
     ) -> Dict[str, list]:
         res = self.generate_iid(n=num_locations)
         locations = location(rng=self.rng, n=num_locations)
-        lats, lons = [], []
-        for p in locations:
+
+        location_names, lats, lons = [], [], []
+        for location_name, p in locations:
+            location_names.append(location_name)
             lats.append(p.latitude)
             lons.append(p.longitude)
+
+        res[location_name_column] = location_names
         res[latitude_column] = lats
         res[longitude_column] = lons
         return res
