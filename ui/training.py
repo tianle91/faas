@@ -14,6 +14,7 @@ from ui.config import get_config
 from ui.visualization.vis_df import preview_df
 from ui.visualization.vis_iid import vis_ui_iid
 from ui.visualization.vis_lightgbm import get_vis_lgbmwrapper
+from ui.visualization.vis_spatial import vis_ui_spatial
 from ui.visualization.vis_ts import vis_ui_ts
 
 spark = SparkSession.builder.appName('ui_training').getOrCreate()
@@ -42,6 +43,8 @@ def run_training():
                         vis_ui_ts(df=df, config=conf)
                     if not conf.has_spatial_columns:
                         vis_ui_iid(df=df, config=conf)
+                    if conf.has_spatial_columns:
+                        vis_ui_spatial(df=df, config=conf)
 
                 st.header('Current configuration')
                 st.code(pp.pformat(conf.__dict__, compact=True))
