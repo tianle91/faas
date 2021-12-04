@@ -13,7 +13,7 @@ def plot_ts(
     df: DataFrame,
     config: Config,
     group: Optional[dict] = None,
-    comparison_feature: Optional[str] = None,
+    color_feature: Optional[str] = None,
 ) -> Figure:
     if config.date_column is None:
         raise ValueError('Cannot plot time series if config.date_column is None.')
@@ -33,19 +33,18 @@ def plot_ts(
 
     pdf = df.orderBy(config.date_column).toPandas()
     p = {}
-    if comparison_feature is not None:
-        if comparison_feature not in config.feature_columns:
+    if color_feature is not None:
+        if color_feature not in config.feature_columns:
             raise KeyError(
-                f'comparison_feature: {comparison_feature} not found in config.feature_columns')
-        if comparison_feature not in df.columns:
-            raise KeyError(f'comparison_feature: {comparison_feature} not found in df.columns')
-        p['color'] = comparison_feature
+                f'comparison_feature: {color_feature} not found in config.feature_columns')
+        if color_feature not in df.columns:
+            raise KeyError(f'comparison_feature: {color_feature} not found in df.columns')
+        p['color'] = color_feature
     fig = px.scatter(pdf, x=config.date_column, y=config.target, marginal_y='histogram', **p)
     return fig
 
 
 def vis_ui_ts(df: DataFrame, config: Config):
-    st.header('Time Series Visualization')
     group = None
     if config.group_columns is not None:
         all_groups = [
@@ -54,5 +53,5 @@ def vis_ui_ts(df: DataFrame, config: Config):
         ]
         group = st.selectbox(label='Plot group', options=[None, ] + all_groups)
 
-    comparison_feature = st.selectbox(label='Comparison Feature', options=config.feature_columns)
-    st.plotly_chart(plot_ts(df, config=config, group=group, comparison_feature=comparison_feature))
+    color_feature = st.selectbox(label='Color Feature', options=config.feature_columns)
+    st.plotly_chart(plot_ts(df, config=config, group=group, color_feature=color_feature))
