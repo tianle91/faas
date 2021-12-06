@@ -38,9 +38,6 @@ def plot_iid(
     # what do we need?
     pdf = df.select(*select_cols).toPandas()
     fig = px.scatter(pdf, x=x_axis_feature, y=config.target, color=color_feature)
-
-    # TODO: confusion matrix if target is categorical
-
     return fig
 
 

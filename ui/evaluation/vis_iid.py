@@ -40,6 +40,9 @@ def plot_evaluate_iid(
         select_cols.append(color_feature)
     pdf = df_merged.select(*select_cols).toPandas()
     fig = px.scatter(pdf, x=ACTUAL_COL, y=PREDICTION_COL, color=color_feature)
+
+    # TODO: confusion matrix if target is categorical
+
     return fig
 
 
