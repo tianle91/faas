@@ -1,5 +1,7 @@
-from typing import List
+from functools import reduce
+from typing import Dict, List, Union
 
+import pandas as pd
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
 from pyspark.sql.types import DoubleType
@@ -23,4 +25,16 @@ class JoinableByRowID:
             raise ValueError(f'len(x) should be {len(self.ids)} but received {len(x)} instead.')
         mapping = {self.ids[i]: float(val) for i, val in enumerate(x)}
         udf = F.udf(lambda i: mapping[i], DoubleType())
-        return self.df.withColumn(column, udf(F.col(ROW_ID_COL)))
+        return self.df.withColumn(column, udf(F.col(ROW_ID_COL))).drop(ROW_ID_COL)
+
+
+def has_duplicates(df: Union[DataFrame, pd.DataFrame]) -> bool:
+    if isinstance(df, DataFrame):
+        return df.distinct().count() > df.count()
+    elif isinstance(df, pd.DataFrame):
+        return len(df.drop_duplicates()) < len(df)
+
+
+def filter_by_dict(df: DataFrame, d: Dict[str, object]) -> DataFrame:
+    equality_l = [F.col(col) == val for col, val in d.items()]
+    return df.filter(reduce(lambda a, b: a and b, equality_l))

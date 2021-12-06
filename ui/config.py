@@ -14,8 +14,6 @@ def get_config(df: DataFrame) -> Config:
     st.header('Create a configuration')
     numeric_columns = get_columns_by_type(df=df, dtype=NumericType)
     categorical_columns = get_columns_by_type(df=df, dtype=StringType)
-    logger.info(f'numeric_columns: {numeric_columns}')
-    logger.info(f'categorical_columns: {categorical_columns}')
 
     target_column = st.selectbox('target column', options=numeric_columns + categorical_columns)
     target_is_categorical = target_column in categorical_columns
@@ -41,25 +39,35 @@ def get_config(df: DataFrame) -> Config:
             options=[None, *numeric_columns],
         )
 
-    group_columns = None
-    if date_column is not None:
-        with st.expander('Is there a group column?'):
-            group_columns = st.multiselect(
-                'Group Columns',
-                options=[c for c in categorical_columns if c != date_column],
-                default=None
-            )
+    with st.expander('Is there a group column?'):
+        group_columns = st.multiselect(
+            'Group Columns (only categorical columns can be used as groups)',
+            options=[c for c in categorical_columns if c != date_column],
+            default=[]
+        )
+    if len(group_columns) == 0:
+        group_columns = None
 
-    non_target_non_date_columns = [
+    # feature columns
+    used_columns = [target_column, date_column, latitude_column, longitude_column]
+    if group_columns is not None:
+        used_columns += group_columns
+    possible_feature_columns = [
         c for c in numeric_columns + categorical_columns
-        if c not in [target_column, date_column, latitude_column, longitude_column]
+        if c not in used_columns
     ]
     feature_columns = st.multiselect(
         label='Feature Columns',
-        options=non_target_non_date_columns,
-        default=non_target_non_date_columns,
+        options=possible_feature_columns,
+        default=possible_feature_columns,
         help='Including all available features is helpful for model training.'
     )
+
+    # group columns must be used as features
+    actual_feature_columns = feature_columns
+    if group_columns is not None:
+        actual_feature_columns += group_columns
+    actual_feature_columns = list(set(actual_feature_columns))
 
     conf = Config(
         target=target_column,
@@ -69,6 +77,6 @@ def get_config(df: DataFrame) -> Config:
         latitude_column=latitude_column,
         longitude_column=longitude_column,
         group_columns=group_columns,
-        feature_columns=feature_columns
+        feature_columns=actual_feature_columns
     )
     return conf

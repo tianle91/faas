@@ -42,7 +42,7 @@ class OrdinalEncoder(BaseTransformer):
 
     @property
     def is_fitted(self):
-        return len(self.distincts) >= 2
+        return len(self.distincts) > 0
 
     def check_is_fitted(self):
         if not self.is_fitted:
