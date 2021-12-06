@@ -36,6 +36,8 @@ def preview_prediction(pdf_predict: pd.DataFrame, config: Config, n: int = 100):
         preview_columns += config.group_columns
     preview_columns += config.feature_columns
 
+    preview_columns = list(set(preview_columns))
+
     st.dataframe(pdf_predict[preview_columns].style.apply(
         lambda s: highlight_target(s, target_column=config.target),
         axis=0
