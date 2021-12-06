@@ -42,13 +42,12 @@ def get_config(df: DataFrame) -> Config:
         )
 
     group_columns = None
-    if date_column is not None:
-        with st.expander('Is there a group column?'):
-            group_columns = st.multiselect(
-                'Group Columns',
-                options=[c for c in categorical_columns if c != date_column],
-                default=None
-            )
+    with st.expander('Is there a group column?'):
+        group_columns = st.multiselect(
+            'Group Columns (only categorical columns can be used as groups)',
+            options=[c for c in categorical_columns if c != date_column],
+            default=None
+        )
 
     used_columns = [target_column, date_column, latitude_column, longitude_column]
     if group_columns is not None:
