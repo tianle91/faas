@@ -1,4 +1,5 @@
-from typing import List, Union
+from functools import reduce
+from typing import Dict, List, Union
 
 import pandas as pd
 import pyspark.sql.functions as F
@@ -32,3 +33,8 @@ def has_duplicates(df: Union[DataFrame, pd.DataFrame]) -> bool:
         return df.distinct().count() > df.count()
     elif isinstance(df, pd.DataFrame):
         return len(df.drop_duplicates()) < len(df)
+
+
+def filter_by_dict(df: DataFrame, d: Dict[str, object]) -> DataFrame:
+    equality_l = [F.col(col) == val for col, val in d.items()]
+    return df.filter(reduce(lambda a, b: a and b, equality_l))
