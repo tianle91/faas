@@ -27,7 +27,7 @@ def plot_evaluate_iid(
         .withColumn(ACTUAL_COL, F.col(config.target))
         .drop(config.target)
     )
-    df_merged = df_actual.join(df_predict, on=config.feature_columns, how='left')
+    df_merged = df_actual.join(df_predict, on=config.used_columns_prediction, how='left')
 
     select_cols = [PREDICTION_COL, ACTUAL_COL]
     if color_feature is not None:
