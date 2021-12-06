@@ -11,7 +11,7 @@ from faas.helper import get_prediction
 from faas.storage import read_model, set_num_calls_remaining
 from faas.utils.io import dump_file_to_location
 from faas.utils.types import load_csv
-from ui.evaluate import get_evaluation
+from ui.evaluate import run_evaluation
 from ui.visualization.vis_df import preview_df
 from ui.visualization.vis_lightgbm import get_vis_lgbmwrapper
 
@@ -37,6 +37,7 @@ def run_predict():
     if model_key != '':
         try:
             stored_model = read_model(key=model_key)
+            st.session_state['model_key'] = model_key
         except KeyError as e:
             st.error(e)
 
@@ -96,16 +97,14 @@ def run_predict():
                                     axis=0
                                 ))
 
-                            # download
+                            # persisting?
                             st.download_button(
                                 f'Download all {len(pdf_predict)} predictions',
                                 data=pdf_predict.to_csv(),
                                 file_name='prediction.csv'
                             )
-
                             if stored_model.config.target in df.columns:
-                                get_evaluation(
-                                    df_actual=df,
-                                    df_predict=df_predict,
-                                    config=stored_model.config
-                                )
+                                if st.button('Go to evaluation'):
+                                    st.session_state['df_predict'] = df_predict
+                                    st.session_state['df_actual'] = df
+                                    run_evaluation()
