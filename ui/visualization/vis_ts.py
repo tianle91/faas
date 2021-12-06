@@ -21,18 +21,12 @@ def plot_ts(
 
     # what do we need?
     select_cols = [config.date_column, config.target]
-    plot_params = {}
+    p = {}
     if color_feature is not None:
         select_cols.append(color_feature)
-        plot_params['color'] = color_feature
-    pdf = (
-        df
-        .select(*select_cols)
-        .orderBy(config.date_column)
-        .toPandas()
-    )
-    fig = px.scatter(
-        pdf, x=config.date_column, y=config.target, marginal_y='histogram', **plot_params)
+        p['color'] = color_feature
+    pdf = df.select(*select_cols).toPandas()
+    fig = px.scatter(pdf, x=config.date_column, y=config.target, marginal_y='histogram', **p)
     return fig
 
 
