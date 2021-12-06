@@ -39,10 +39,11 @@ def plot_evaluate_iid(
     if color_feature is not None:
         select_cols.append(color_feature)
     pdf = df_merged.select(*select_cols).toPandas()
-    fig = px.scatter(pdf, x=ACTUAL_COL, y=PREDICTION_COL, color=color_feature)
 
-    # TODO: confusion matrix if target is categorical
-
+    if config.target_is_categorical:
+        fig = px.density_heatmap(pdf, x=ACTUAL_COL, y=PREDICTION_COL)
+    else:
+        fig = px.scatter(pdf, x=ACTUAL_COL, y=PREDICTION_COL, color=color_feature)
     return fig
 
 
