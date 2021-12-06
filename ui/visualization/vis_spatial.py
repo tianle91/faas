@@ -13,9 +13,6 @@ def plot_spatial(
     config: Config,
     location_name_column: Optional[str] = None
 ) -> Figure:
-    if not config.has_spatial_columns:
-        raise ValueError('Cannot plot spatial if not config.has_spatial_columns')
-
     select_cols = [
         config.latitude_column,
         config.longitude_column,
