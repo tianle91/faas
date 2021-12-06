@@ -75,6 +75,4 @@ class Config:
             out.append(self.date_column)
         if self.latitude_column is not None and self.longitude_column:
             out += [self.latitude_column, self.longitude_column]
-        if self.group_columns is not None:
-            out += self.group_columns
         return out
