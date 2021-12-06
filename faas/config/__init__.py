@@ -70,7 +70,7 @@ class Config:
 
     @property
     def used_columns_prediction(self) -> List[str]:
-        out = self.feature_columns
+        out = self.feature_columns.copy()
         if self.date_column is not None:
             out.append(self.date_column)
         if self.latitude_column is not None and self.longitude_column:
