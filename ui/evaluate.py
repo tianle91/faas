@@ -4,6 +4,7 @@ from pyspark.sql import DataFrame
 from faas.storage import read_model
 from ui.evaluation.utils import validate_evaluation
 from ui.evaluation.vis_iid import vis_evaluate_iid
+from ui.evaluation.vis_ts import vis_evaluate_ts
 
 
 def run_evaluation():
@@ -23,3 +24,7 @@ def run_evaluation():
         validate_evaluation(df=df_actual, config=config)
 
         vis_evaluate_iid(df_predict=df_predict, df_actual=df_actual, config=config)
+
+        if config.date_column is not None:
+            with st.expander('Time Series Visualization'):
+                vis_evaluate_ts(df_predict=df_predict, df_actual=df_actual, config=config)
