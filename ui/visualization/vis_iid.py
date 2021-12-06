@@ -6,7 +6,6 @@ from plotly.graph_objs._figure import Figure
 from pyspark.sql import DataFrame
 
 from faas.config import Config
-from faas.utils.dataframe import has_duplicates
 
 
 def plot_iid(
@@ -55,19 +54,11 @@ def plot_evaluate_iid(
     config: Config,
     color_feature: Optional[str] = None
 ):
-    df_predict = df_predict.select(*config.feature_columns, config.target)
-    if has_duplicates(df_predict):
-        raise ValueError('Cannot evaluate as df_predict has duplicate feature columns.')
-    df_actual = df_actual.select(*config.feature_columns, config.target)
-    if has_duplicates(df_actual):
-        raise ValueError('Cannot evaluate as df_actual has duplicate feature columns.')
-
     PREDICTION_COL = '__PREDICTION__'
     ACTUAL_COL = '__ACTUAL__'
     df_predict = df_predict.withColumnRenamed(config.target, PREDICTION_COL)
     df_actual = df_actual.withColumnRenamed(config.target, ACTUAL_COL)
     df_merged = df_actual.join(df_predict, on=config.feature_columns, how='left')
-    print(df_merged.columns)
 
     select_cols = [PREDICTION_COL, ACTUAL_COL]
     if color_feature is not None:
