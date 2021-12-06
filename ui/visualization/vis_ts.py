@@ -18,18 +18,8 @@ def plot_ts(
     if config.date_column is None:
         raise ValueError('Cannot plot time series if config.date_column is None.')
     if group is not None:
-        if config.group_columns is not None:
-            if set(group.keys()) == set(config.group_columns):
-                for col, val in group.items():
-                    df = df.filter(F.col(col) == val)
-            else:
-                raise ValueError(
-                    f'Provided group: {group} '
-                    f'must match config.group_columns: {config.group_columns}'
-                )
-        else:
-            raise ValueError(
-                f'group: {group} specified but no group specified in config.group_columns')
+        for col, val in group.items():
+            df = df.filter(F.col(col) == val)
 
     # what do we need?
     select_cols = [config.date_column, config.target]
