@@ -23,11 +23,6 @@ def plot_ts(
     select_cols = [config.date_column, config.target]
     plot_params = {}
     if color_feature is not None:
-        if color_feature not in config.feature_columns:
-            raise KeyError(
-                f'comparison_feature: {color_feature} not found in config.feature_columns')
-        if color_feature not in df.columns:
-            raise KeyError(f'comparison_feature: {color_feature} not found in df.columns')
         select_cols.append(color_feature)
         plot_params['color'] = color_feature
     pdf = (
