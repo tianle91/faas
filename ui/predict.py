@@ -1,7 +1,5 @@
 import logging
-import os
 import pprint as pp
-from tempfile import TemporaryDirectory
 
 import pandas as pd
 import streamlit as st
@@ -9,9 +7,7 @@ from pyspark.sql import SparkSession
 
 from faas.helper import get_prediction
 from faas.storage import read_model, set_num_calls_remaining
-from faas.utils.io import dump_file_to_location
-from faas.utils.types import load_csv
-from ui.evaluate import run_evaluation
+from faas.utils.dataframe import has_duplicates
 from ui.visualization.vis_df import preview_df
 from ui.visualization.vis_lightgbm import get_vis_lgbmwrapper
 
@@ -51,60 +47,60 @@ def run_predict():
         predict_file = st.file_uploader('Predict data', type='csv')
 
         if predict_file is not None:
-            with TemporaryDirectory() as temp_dir:
-                # get the file into a local path
-                predict_path = os.path.join(temp_dir, 'predict.csv')
-                dump_file_to_location(predict_file, p=predict_path)
-                df = load_csv(spark=spark, p=predict_path)
+            df = spark.createDataFrame(pd.read_csv(predict_file))
 
-                st.header('Uploaded dataset')
-                preview_df(df=df)
+            st.header('Uploaded dataset')
+            preview_df(df=df)
 
-                if stored_model.num_calls_remaining <= 0:
-                    st.error(f'Num calls remaining: {stored_model.num_calls_remaining}')
-                else:
-                    # TODO: prevent from refreshing if visualization options change
-                    # TODO: streamlit reruns whenever input changes and buttons are one of them
-                    # TODO: keep prediction results in session for evaluation?
-                    if st.button('Predict'):
-                        st.header('Prediction')
-                        df_predict, msgs = get_prediction(
-                            conf=stored_model.config, df=df, m=stored_model.m)
-                        st.markdown('\n\n'.join([f'❌ {msg}' for msg in msgs]))
+            if stored_model.num_calls_remaining <= 0:
+                st.error(f'Num calls remaining: {stored_model.num_calls_remaining}')
+            else:
+                config = stored_model.config
+                # TODO: prevent from refreshing if visualization options change
+                # TODO: streamlit reruns whenever input changes and buttons are one of them
+                # TODO: keep prediction results in session for evaluation?
+                if st.button('Predict'):
+                    st.header('Prediction')
+                    df_predict, msgs = get_prediction(
+                        conf=config, df=df, m=stored_model.m)
+                    st.markdown('\n\n'.join([f'❌ {msg}' for msg in msgs]))
 
-                        if df_predict is not None:
+                    if df_predict is not None:
 
-                            # update num_calls_remaining
-                            set_num_calls_remaining(
-                                key=model_key, n=stored_model.num_calls_remaining - 1)
-                            stored_model = read_model(key=model_key)
-                            st.info(f'Num calls remaining: {stored_model.num_calls_remaining}')
+                        # update num_calls_remaining
+                        set_num_calls_remaining(
+                            key=model_key, n=stored_model.num_calls_remaining - 1)
+                        stored_model = read_model(key=model_key)
+                        st.info(f'Num calls remaining: {stored_model.num_calls_remaining}')
 
-                            pdf_predict = df_predict.toPandas()
+                        pdf_predict = df_predict.toPandas()
 
-                            # preview
-                            with st.expander('Preview'):
-                                preview_n = 100
-                                st.markdown(
-                                    f'Preview for first {preview_n}/{len(pdf_predict)} predictions.')
-                                preview_columns = [
-                                    stored_model.config.target,
-                                    *stored_model.config.feature_columns
-                                ]
-                                st.dataframe(pdf_predict[preview_columns].style.apply(
-                                    lambda s: highlight_target(
-                                        s, target_column=stored_model.config.target),
-                                    axis=0
-                                ))
+                        # preview
+                        with st.expander('Preview'):
+                            preview_n = 100
+                            st.markdown(
+                                f'Preview for first {preview_n}/{len(pdf_predict)} predictions.')
+                            preview_columns = [config.target, *config.feature_columns]
+                            st.dataframe(pdf_predict[preview_columns].style.apply(
+                                lambda s: highlight_target(s, target_column=config.target),
+                                axis=0
+                            ))
 
-                            # persisting?
-                            st.download_button(
-                                f'Download all {len(pdf_predict)} predictions',
-                                data=pdf_predict.to_csv(),
-                                file_name='prediction.csv'
-                            )
-                            if stored_model.config.target in df.columns:
-                                if st.button('Go to evaluation'):
-                                    st.session_state['df_predict'] = df_predict
-                                    st.session_state['df_actual'] = df
-                                    run_evaluation()
+                        # persisting?
+                        st.download_button(
+                            f'Download all {len(pdf_predict)} predictions',
+                            data=pdf_predict.to_csv(),
+                            file_name='prediction.csv'
+                        )
+                        if config.target in df.columns:
+                            st.success(
+                                f'Detected target column: {config.target} in uploaded dataframe.')
+                            if has_duplicates(df.select(config.used_columns_prediction)):
+                                st.error(
+                                    'Cannot perform comparison as df has duplicates in '
+                                    f'used_columns_prediction: {config.used_columns_prediction}.'
+                                )
+                            else:
+                                st.session_state['df_predict'] = df_predict
+                                st.session_state['df_actual'] = df
+                                st.success('Evaluation possible!')
