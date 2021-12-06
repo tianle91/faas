@@ -1,12 +1,12 @@
 from typing import Optional
 
 import plotly.express as px
-import pyspark.sql.functions as F
 import streamlit as st
 from plotly.graph_objs._figure import Figure
 from pyspark.sql import DataFrame
 
 from faas.config import Config
+from faas.utils.dataframe import filter_by_dict
 
 
 def plot_ts(
@@ -16,8 +16,7 @@ def plot_ts(
     color_feature: Optional[str] = None,
 ) -> Figure:
     if group is not None:
-        for col, val in group.items():
-            df = df.filter(F.col(col) == val)
+        df = filter_by_dict(df=df, d=group)
 
     # what do we need?
     select_cols = [config.date_column, config.target]

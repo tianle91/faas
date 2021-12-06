@@ -7,6 +7,7 @@ from plotly.graph_objs._figure import Figure
 from pyspark.sql import DataFrame
 
 from faas.config import Config
+from faas.utils.dataframe import filter_by_dict
 
 
 def plot_ts(
@@ -16,9 +17,8 @@ def plot_ts(
     group: Optional[dict] = None
 ) -> Figure:
     if group is not None:
-        for col, val in group.items():
-            df_predict = df_predict.filter(F.col(col) == val)
-            df_actual = df_actual.filter(F.col(col) == val)
+        df_predict = filter_by_dict(df=df_predict, d=group)
+        df_actual = filter_by_dict(df=df_actual, d=group)
 
     IS_PREDICTION_COL = '__IS_PREDICTION__'
     df_predict = df_predict.withColumn(IS_PREDICTION_COL, F.lit(True))
