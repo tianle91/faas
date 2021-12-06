@@ -13,7 +13,7 @@ def plot_spatial(
     config: Config,
     location_name_column: Optional[str] = None
 ) -> Figure:
-    select_cols = config.used_columns_prediction
+    select_cols = config.used_columns_prediction + [config.target]
     if location_name_column is not None and location_name_column not in select_cols:
         select_cols.append(location_name_column)
     pdf = df.select(*select_cols).toPandas()
