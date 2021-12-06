@@ -4,10 +4,10 @@ import pprint as pp
 import pandas as pd
 import streamlit as st
 from pyspark.sql import SparkSession
-from faas.config import Config
 
+from faas.config import Config
 from faas.helper import get_prediction
-from faas.storage import read_model, decrement_num_calls_remaining
+from faas.storage import decrement_num_calls_remaining, read_model
 from faas.utils.dataframe import has_duplicates
 from ui.visualization.vis_df import preview_df
 from ui.visualization.vis_lightgbm import get_vis_lgbmwrapper
