@@ -42,8 +42,11 @@ def get_config(df: DataFrame) -> Config:
     with st.expander('Is there a group column?'):
         group_columns = st.multiselect(
             'Group Columns (only categorical columns can be used as groups)',
-            options=[None, ] + [c for c in categorical_columns if c != date_column],
+            options=[c for c in categorical_columns if c != date_column],
+            default=[]
         )
+    if len(group_columns) == 0:
+        group_columns = None
 
     # feature columns
     used_columns = [target_column, date_column, latitude_column, longitude_column]
