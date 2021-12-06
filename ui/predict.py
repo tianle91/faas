@@ -26,7 +26,16 @@ def highlight_target(s: pd.Series, target_column: str):
 
 def preview_prediction(pdf_predict: pd.DataFrame, config: Config, n: int = 100):
     st.markdown(f'Preview for first {n}/{len(pdf_predict)} predictions.')
-    preview_columns = [config.target, *config.feature_columns]
+
+    preview_columns = [config.target]
+    if config.date_column is not None:
+        preview_columns.append(config.date_column)
+    if config.has_spatial_columns:
+        preview_columns += [config.latitude_column, config.longitude_column]
+    if config.group_columns is not None:
+        preview_columns += config.group_columns
+    preview_columns += config.feature_columns
+
     st.dataframe(pdf_predict[preview_columns].style.apply(
         lambda s: highlight_target(s, target_column=config.target),
         axis=0
@@ -73,6 +82,7 @@ def run_predict():
 
                     if df_predict is not None:
                         df_predict = df_predict.cache()
+                        logger.info(f'df_predict.columns: {df_predict.columns}')
 
                         # update num_calls_remaining
                         stored_model = decrement_num_calls_remaining(key=model_key)
