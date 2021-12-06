@@ -24,7 +24,7 @@ class JoinableByRowID:
             raise ValueError(f'len(x) should be {len(self.ids)} but received {len(x)} instead.')
         mapping = {self.ids[i]: float(val) for i, val in enumerate(x)}
         udf = F.udf(lambda i: mapping[i], DoubleType())
-        return self.df.withColumn(column, udf(F.col(ROW_ID_COL)))
+        return self.df.withColumn(column, udf(F.col(ROW_ID_COL))).drop(ROW_ID_COL)
 
 
 def has_duplicates(df: Union[DataFrame, pd.DataFrame]) -> bool:
