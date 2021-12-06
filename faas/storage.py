@@ -56,17 +56,16 @@ def read_model(key: str) -> StoredModel:
             return d[key]
 
 
-def set_num_calls_remaining(key: str, n: int):
+def decrement_num_calls_remaining(key: str) -> StoredModel:
     with SqliteDict(MODEL_STORE) as d:
         if key not in d:
             raise KeyError(f'Key: {key} not found!')
         else:
             stored_model: StoredModel = d[key]
-            n_prev = stored_model.num_calls_remaining
-            stored_model.num_calls_remaining = n
+            stored_model.num_calls_remaining -= 1
             d[key] = stored_model
             d.commit()
-            logger.info(f'Updated num_calls_remaining for {key}: {n_prev} -> {n}')
+            logger.info(f'New num_calls_remaining for {key} is {stored_model.num_calls_remaining}')
             return d[key]
 
 

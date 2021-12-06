@@ -4,9 +4,10 @@ import pprint as pp
 import pandas as pd
 import streamlit as st
 from pyspark.sql import SparkSession
+from faas.config import Config
 
 from faas.helper import get_prediction
-from faas.storage import read_model, set_num_calls_remaining
+from faas.storage import read_model, decrement_num_calls_remaining
 from faas.utils.dataframe import has_duplicates
 from ui.visualization.vis_df import preview_df
 from ui.visualization.vis_lightgbm import get_vis_lgbmwrapper
@@ -21,6 +22,15 @@ def highlight_target(s: pd.Series, target_column: str):
         return ['background-color: #ff0000; color: white'] * len(s)
     else:
         return [''] * len(s)
+
+
+def preview_prediction(pdf_predict: pd.DataFrame, config: Config, n: int = 100):
+    st.markdown(f'Preview for first {n}/{len(pdf_predict)} predictions.')
+    preview_columns = [config.target, *config.feature_columns]
+    st.dataframe(pdf_predict[preview_columns].style.apply(
+        lambda s: highlight_target(s, target_column=config.target),
+        axis=0
+    ))
 
 
 def run_predict():
@@ -56,42 +66,29 @@ def run_predict():
                 st.error(f'Num calls remaining: {stored_model.num_calls_remaining}')
             else:
                 config = stored_model.config
-                # TODO: prevent from refreshing if visualization options change
-                # TODO: streamlit reruns whenever input changes and buttons are one of them
-                # TODO: keep prediction results in session for evaluation?
                 if st.button('Predict'):
                     st.header('Prediction')
-                    df_predict, msgs = get_prediction(
-                        conf=config, df=df, m=stored_model.m)
+                    df_predict, msgs = get_prediction(conf=config, df=df, m=stored_model.m)
                     st.markdown('\n\n'.join([f'❌ {msg}' for msg in msgs]))
 
                     if df_predict is not None:
+                        df_predict = df_predict.cache()
 
                         # update num_calls_remaining
-                        set_num_calls_remaining(
-                            key=model_key, n=stored_model.num_calls_remaining - 1)
-                        stored_model = read_model(key=model_key)
+                        stored_model = decrement_num_calls_remaining(key=model_key)
                         st.info(f'Num calls remaining: {stored_model.num_calls_remaining}')
 
+                        # preview and download
                         pdf_predict = df_predict.toPandas()
-
-                        # preview
                         with st.expander('Preview'):
-                            preview_n = 100
-                            st.markdown(
-                                f'Preview for first {preview_n}/{len(pdf_predict)} predictions.')
-                            preview_columns = [config.target, *config.feature_columns]
-                            st.dataframe(pdf_predict[preview_columns].style.apply(
-                                lambda s: highlight_target(s, target_column=config.target),
-                                axis=0
-                            ))
-
-                        # persisting?
+                            preview_prediction(pdf_predict=pdf_predict, config=config)
                         st.download_button(
                             f'Download all {len(pdf_predict)} predictions',
                             data=pdf_predict.to_csv(),
                             file_name='prediction.csv'
                         )
+
+                        # evaluation
                         if config.target in df.columns:
                             st.success(
                                 f'Detected target column: {config.target} in uploaded dataframe.')
