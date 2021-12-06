@@ -15,8 +15,6 @@ def plot_ts(
     group: Optional[dict] = None,
     color_feature: Optional[str] = None,
 ) -> Figure:
-    if config.date_column is None:
-        raise ValueError('Cannot plot time series if config.date_column is None.')
     if group is not None:
         for col, val in group.items():
             df = df.filter(F.col(col) == val)
