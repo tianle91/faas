@@ -1,13 +1,10 @@
 version: '3.9'
 
 services:
-  app:
+  shell:
     build:
       context: .
-    ports:
-      - 8501:8501
     volumes:
       - .:/workdir
     environment:
       - ORS_SECRET=${ORS_SECRET}
-    entrypoint: streamlit run app.py
