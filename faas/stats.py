@@ -34,7 +34,8 @@ def correlation(df: DataFrame, columns: List[str], collapse_categorical=True) ->
         df = enc.transform(df).drop(c)
 
     raw_columns = numeric_columns.copy()
-    raw_columns += reduce(lambda a, b: a + b, categorical_column_mapping.values())
+    if len(categorical_column_mapping) > 0:
+        raw_columns += reduce(lambda a, b: a + b, categorical_column_mapping.values())
 
     assembler = VectorAssembler(
         inputCols=raw_columns,
