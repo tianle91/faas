@@ -96,7 +96,7 @@ spark = SparkSession.builder.appName('test_helpers').getOrCreate()
                 target_is_categorical=False,
                 feature_columns=[f'numeric_{i}' for i in range(1, 10)],
             ),
-            id='sample_spatial:numeric'
+            id='sample_numeric_iid'
         ),
         pytest.param(
             'data/sample_categorical_iid.csv',
@@ -106,7 +106,7 @@ spark = SparkSession.builder.appName('test_helpers').getOrCreate()
                 target_is_categorical=True,
                 feature_columns=[f'categorical_{i}' for i in range(1, 10)],
             ),
-            id='sample_spatial:numeric'
+            id='sample_categorical_iid'
         ),
     ]
 )
