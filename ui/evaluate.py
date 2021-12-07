@@ -1,3 +1,5 @@
+import pprint as pp
+
 import streamlit as st
 from pyspark.sql import DataFrame
 
@@ -6,6 +8,7 @@ from ui.evaluation.utils import validate_evaluation
 from ui.evaluation.vis_iid import vis_evaluate_iid
 from ui.evaluation.vis_spatial import vis_evaluate_spatial
 from ui.evaluation.vis_ts import vis_evaluate_ts
+from ui.visualization.vis_lightgbm import get_vis_lgbmwrapper
 
 
 def run_evaluation():
@@ -21,8 +24,14 @@ def run_evaluation():
         stored_model = read_model(key=model_key)
         config = stored_model.config
 
+        st.markdown(f'Target feature: `{config.target}`')
+
         validate_evaluation(df=df_predict, config=config)
         validate_evaluation(df=df_actual, config=config)
+
+        with st.expander('Model visualization'):
+            st.code(pp.pformat(stored_model.config.__dict__))
+            get_vis_lgbmwrapper(stored_model.m)
 
         vis_evaluate_iid(df_predict=df_predict, df_actual=df_actual, config=config)
 
