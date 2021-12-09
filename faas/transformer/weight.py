@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime
 from typing import List
 
 import numpy as np
@@ -8,10 +8,10 @@ from pyspark.sql.types import DateType, DoubleType, StringType
 
 from faas.transformer.base import BaseTransformer
 
-from .utils import validate_date_types
+from .utils import validate_timestamp_types
 
 
-def historical_decay(annual_rate: float, today_dt: date, dt: date) -> float:
+def historical_decay(annual_rate: float, today_dt: datetime, dt: datetime) -> float:
     """Discounted value of historical observations based on today_dt and dt with an annual rate.
     For dt==today_dt, the amount is 1. For dt==today_dt-1year, the amount is e^-annual_rate.
     """
@@ -48,13 +48,13 @@ class HistoricalDecay(BaseTransformer):
         return [self.feature_column]
 
     def fit(self, df: DataFrame):
-        validate_date_types(df=df, cols=[self.date_column])
+        validate_timestamp_types(df=df, cols=[self.date_column])
         newest_df = df.agg(F.max(F.col(self.date_column)).alias('newest'))
         self.most_recent_date = newest_df.collect()[0].newest
         return self
 
     def transform(self, df: DataFrame):
-        validate_date_types(df=df, cols=[self.date_column])
+        validate_timestamp_types(df=df, cols=[self.date_column])
         udf = F.udf(
             lambda dt: historical_decay(
                 annual_rate=self.annual_rate,

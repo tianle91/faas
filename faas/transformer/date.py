@@ -1,5 +1,5 @@
 import math
-from datetime import date
+from datetime import datetime
 from typing import Dict, List, Tuple, Union
 
 import pyspark.sql.functions as F
@@ -8,7 +8,7 @@ from pyspark.sql.types import FloatType
 
 from faas.transformer.base import BaseTransformer
 
-from .utils import validate_date_types
+from .utils import validate_timestamp_types
 
 
 def normalized_sine(x: float, period: float, phase: int):
@@ -25,7 +25,7 @@ SEASONALITY_FEATURE_MAPPING = {
     'day_of_week': (lambda dt: dt.weekday(), 6, 1),
     'day_of_month': (lambda dt: dt.day, 31, 3),
     'week_of_year': (lambda dt: dt.isocalendar()[1], 52.1429, 7),
-    'day_of_year': (lambda dt: (dt - date(dt.year, 1, 1)).days, 365.25, 13),
+    'day_of_year': (lambda dt: (dt - datetime(dt.year, 1, 1)).days, 365.25, 13),
 }
 
 
@@ -47,7 +47,7 @@ class SeasonalityFeature(BaseTransformer):
     def input_columns(self) -> List[str]:
         return [self.date_column]
 
-    def get_value(self, dt: date) -> float:
+    def get_value(self, dt: datetime) -> float:
         raise NotImplementedError
 
     @property
@@ -77,7 +77,7 @@ class SeasonalityFeature(BaseTransformer):
         return list(self.feature_to_udf_mapping.keys())
 
     def transform(self, df: DataFrame) -> DataFrame:
-        validate_date_types(df, cols=[self.date_column])
+        validate_timestamp_types(df, cols=[self.date_column])
         distincts = df.select(F.col(self.date_column)).distinct()
         for feature_column, udf in self.feature_to_udf_mapping.items():
             distincts = distincts.withColumn(feature_column, udf(F.col(self.date_column)))

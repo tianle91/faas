@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import datetime, timedelta
 from typing import Dict, List, Tuple
 
 from geopy import Point
@@ -74,7 +74,7 @@ class GenerateSynthetic:
         date_column: str = 'date'
     ) -> Dict[str, list]:
         res = self.generate_iid(n=num_days)
-        res[date_column] = [date(2000, 1, 1) + timedelta(days=i) for i in range(num_days)]
+        res[date_column] = [datetime(2000, 1, 1) + timedelta(days=i) for i in range(num_days)]
         return res
 
     def generate_multi_ts(
