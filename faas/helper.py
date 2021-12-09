@@ -1,6 +1,5 @@
 from typing import List, Optional, Tuple
 
-import pyspark.sql.functions as F
 from pyspark.sql.dataframe import DataFrame
 
 from faas.config import Config
@@ -19,9 +18,7 @@ def get_trained(
         m (Optional[ETLWrapperForLGBM], optional): an existing ETLWrapperForLGBM. If None, then a
             new one is created. Defaults to None.
     """
-    if conf.date_column is not None:
-        df = df.withColumn(
-            conf.date_column, F.to_date(conf.date_column, conf.date_column_format))
+    df = conf.conform_df_to_config(df)
     if m is None:
         m = ETLWrapperForLGBM(config=create_etl_config(conf=conf, df=df))
 
@@ -36,9 +33,7 @@ def get_trained(
 def get_prediction(
     conf: Config, df: DataFrame, m: ETLWrapperForLGBM
 ) -> Tuple[DataFrame, List[str]]:
-    if conf.date_column is not None:
-        df = df.withColumn(
-            conf.date_column, F.to_date(conf.date_column, conf.date_column_format))
+    df = conf.conform_df_to_config(df)
 
     ok, msgs = m.check_df_prediction(df=df)
     if not ok:
