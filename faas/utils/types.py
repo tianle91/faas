@@ -10,3 +10,13 @@ def load_csv(spark: SparkSession, p: str) -> DataFrame:
         .load(p)
     )
     return df
+
+
+def load_parquet(spark: SparkSession, p: str) -> DataFrame:
+    df = (
+        spark
+        .read
+        .format('parquet')
+        .load(p)
+    )
+    return df
