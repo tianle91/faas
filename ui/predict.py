@@ -1,5 +1,7 @@
 import logging
+import os
 import pprint as pp
+from tempfile import TemporaryDirectory
 
 import pandas as pd
 import streamlit as st
@@ -9,6 +11,8 @@ from faas.config import Config
 from faas.helper import get_prediction
 from faas.storage import decrement_num_calls_remaining, read_model
 from faas.utils.dataframe import has_duplicates
+from faas.utils.io import dump_file_to_location
+from faas.utils.types import load_csv, load_parquet
 from ui.visualization.vis_df import preview_df
 from ui.visualization.vis_lightgbm import get_vis_lgbmwrapper
 
@@ -65,10 +69,24 @@ def run_predict():
             get_vis_lgbmwrapper(stored_model.m)
 
         st.markdown('# Upload dataset')
-        predict_file = st.file_uploader('Predict data', type='csv')
+        predict_file = st.file_uploader('Predict data', type=['csv', 'parquet'])
 
         if predict_file is not None:
-            df = spark.createDataFrame(pd.read_csv(predict_file))
+            with TemporaryDirectory() as temp_dir:
+
+                # load predict_file as spark dataframe
+                if predict_file.name.endswith('.csv'):
+                    training_path = os.path.join(temp_dir, 'predict.csv')
+                    dump_file_to_location(predict_file, p=training_path)
+                    df = load_csv(spark=spark, p=training_path)
+                elif predict_file.name.endswith('.parquet'):
+                    training_path = os.path.join(temp_dir, 'predict.parquet')
+                    dump_file_to_location(predict_file, p=training_path)
+                    df = load_parquet(spark=spark, p=training_path)
+
+                # cache df in memory
+                df.cache()
+                df.count()
 
             st.header('Uploaded dataset')
             preview_df(df=df)
