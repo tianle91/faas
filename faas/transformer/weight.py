@@ -4,7 +4,7 @@ from typing import List
 import numpy as np
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
-from pyspark.sql.types import DateType, DoubleType, StringType, TimestampType
+from pyspark.sql.types import DoubleType, StringType, TimestampType
 
 from faas.transformer.base import BaseTransformer
 
