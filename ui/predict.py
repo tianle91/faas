@@ -5,7 +5,7 @@ from tempfile import TemporaryDirectory
 
 import pandas as pd
 import streamlit as st
-from pyspark.sql import SparkSession
+from pyspark.sql import DataFrame, SparkSession
 
 from faas.config import Config
 from faas.helper import get_prediction
@@ -28,8 +28,8 @@ def highlight_target(s: pd.Series, target_column: str):
         return [''] * len(s)
 
 
-def preview_prediction(pdf_predict: pd.DataFrame, config: Config, n: int = 100):
-    st.markdown(f'Preview for first {n}/{len(pdf_predict)} predictions.')
+def preview_prediction(df_predict: DataFrame, config: Config, n: int = 100):
+    st.markdown(f'Preview for first {n}/{df_predict.count()} predictions.')
 
     preview_columns = [config.target]
     if config.date_column is not None:
@@ -42,6 +42,7 @@ def preview_prediction(pdf_predict: pd.DataFrame, config: Config, n: int = 100):
 
     preview_columns = list(set(preview_columns))
 
+    pdf_predict = df_predict.limit(n).toPandas()
     st.dataframe(pdf_predict[preview_columns].style.apply(
         lambda s: highlight_target(s, target_column=config.target),
         axis=0
@@ -109,12 +110,11 @@ def run_predict():
                         st.info(f'Num calls remaining: {stored_model.num_calls_remaining}')
 
                         # preview and download
-                        pdf_predict = df_predict.toPandas()
                         with st.expander('Preview'):
-                            preview_prediction(pdf_predict=pdf_predict, config=config)
+                            preview_prediction(df_predict=df_predict, config=config)
                         st.download_button(
-                            f'Download all {len(pdf_predict)} predictions',
-                            data=pdf_predict.to_csv(),
+                            f'Download all {df_predict.count()} predictions',
+                            data=df_predict.toPandas().to_csv(),
                             file_name='prediction.csv'
                         )
 
