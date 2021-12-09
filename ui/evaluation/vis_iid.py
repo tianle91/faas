@@ -48,7 +48,11 @@ def plot_evaluate_iid(
 
 
 def vis_evaluate_iid(df_predict: DataFrame, df_actual: DataFrame, config: Config):
-    color_feature = st.selectbox('Color Feature', options=config.feature_columns)
+
+    # color_feature is counts by default for categorical target
+    color_feature = None
+    if not config.target_is_categorical:
+        color_feature = st.selectbox('Color Feature', options=config.feature_columns)
 
     group = None
     if config.group_columns is not None:
