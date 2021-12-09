@@ -29,7 +29,6 @@ def get_config(df: DataFrame) -> Config:
         date_column_format = st.selectbox(
             'Date format',
             options=['yyyy-MM-dd HH:mm:ss'],
-            help='https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.sql.functions.to_date.html'
         )
     with st.expander('Spatial columns enable location features and map visualization'):
         latitude_column = st.selectbox(
