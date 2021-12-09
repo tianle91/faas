@@ -2,7 +2,7 @@ import logging
 
 import streamlit as st
 from pyspark.sql import DataFrame
-from pyspark.sql.types import NumericType, StringType
+from pyspark.sql.types import DateType, NumericType, StringType, TimestampType
 
 from faas.config import Config
 from faas.config.utils import get_columns_by_type
@@ -13,6 +13,8 @@ logger = logging.getLogger(__name__)
 def get_config(df: DataFrame) -> Config:
     numeric_columns = get_columns_by_type(df=df, dtype=NumericType)
     categorical_columns = get_columns_by_type(df=df, dtype=StringType)
+    timestamp_columns = get_columns_by_type(df=df, dtype=TimestampType)
+    timestamp_columns += get_columns_by_type(df=df, dtype=DateType)
 
     st.header("What's the target column?")
     target_column = st.selectbox('target column', options=numeric_columns + categorical_columns)
@@ -22,11 +24,11 @@ def get_config(df: DataFrame) -> Config:
     with st.expander('Date columns enable date-related features and visualization'):
         date_column = st.selectbox(
             'Date column',
-            options=[None, *categorical_columns],
+            options=[None, *categorical_columns, *timestamp_columns],
         )
         date_column_format = st.selectbox(
             'Date format',
-            options=['yyyy-MM-dd'],
+            options=['yyyy-MM-dd HH:mm:ss'],
             help='https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.sql.functions.to_date.html'
         )
     with st.expander('Spatial columns enable location features and map visualization'):
