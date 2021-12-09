@@ -65,7 +65,7 @@ def run_training():
 
                     # write fitted model
                     model_key = write_model(stored_model)
-                    st.success(f'Model trained! Model key can be now be used for Prediction.')
+                    st.success('Model trained! Model key can be now be used for Prediction.')
                     st.markdown(f'Model key: `{model_key}`')
 
                     # store model key in user session
