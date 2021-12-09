@@ -65,6 +65,7 @@ def get_config(df: DataFrame) -> Config:
         default=possible_feature_columns,
         help='Including all available features is helpful for model training.'
     )
+    st.markdown(f'Number of features: {len(feature_columns)}')
 
     # group columns must be used as features
     actual_feature_columns = feature_columns
