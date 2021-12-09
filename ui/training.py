@@ -58,15 +58,16 @@ def run_training():
                 st.code(pp.pformat(conf.__dict__, compact=True))
 
                 if st.button('Train'):
-                    m = get_trained(conf=conf, df=df)
-                    stored_model = StoredModel(dt=datetime.now(), m=m, config=conf)
-                    with st.expander('Model visualization'):
-                        get_vis_lgbmwrapper(m)
 
-                    # write fitted model
+                    with st.spinner('Running training...'):
+                        m = get_trained(conf=conf, df=df)
+                        stored_model = StoredModel(dt=datetime.now(), m=m, config=conf)
+
+                    # write fitted model and store model key in user session
                     model_key = write_model(stored_model)
+                    st.session_state['model_key'] = model_key
+
                     st.success('Model trained! Model key can be now be used for Prediction.')
                     st.markdown(f'Model key: `{model_key}`')
-
-                    # store model key in user session
-                    st.session_state['model_key'] = model_key
+                    with st.expander('Model visualization'):
+                        get_vis_lgbmwrapper(m)

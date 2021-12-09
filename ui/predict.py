@@ -98,7 +98,10 @@ def run_predict():
                 config = stored_model.config
                 if st.button('Predict'):
                     st.header('Prediction')
-                    df_predict, msgs = get_prediction(conf=config, df=df, m=stored_model.m)
+
+                    with st.spinner('Running predictions...'):
+                        df_predict, msgs = get_prediction(conf=config, df=df, m=stored_model.m)
+
                     st.markdown('\n\n'.join([f'❌ {msg}' for msg in msgs]))
 
                     if df_predict is not None:
@@ -108,15 +111,6 @@ def run_predict():
                         # update num_calls_remaining
                         stored_model = decrement_num_calls_remaining(key=model_key)
                         st.info(f'Num calls remaining: {stored_model.num_calls_remaining}')
-
-                        # preview and download
-                        with st.expander('Preview'):
-                            preview_prediction(df_predict=df_predict, config=config)
-                        st.download_button(
-                            f'Download all {df_predict.count()} predictions',
-                            data=df_predict.toPandas().to_csv(),
-                            file_name='prediction.csv'
-                        )
 
                         # evaluation
                         if config.target in df.columns:
@@ -131,3 +125,14 @@ def run_predict():
                                 st.session_state['df_predict'] = df_predict
                                 st.session_state['df_actual'] = df
                                 st.success('Evaluation possible!')
+
+                        # preview and download
+                        with st.expander('Preview'):
+                            preview_prediction(df_predict=df_predict, config=config)
+                        with st.spinner('Exporting predictions...'):
+                            pdf_predict = df_predict.toPandas()
+                        st.download_button(
+                            f'Download all {df_predict.count()} predictions',
+                            data=pdf_predict.to_csv(),
+                            file_name='prediction.csv'
+                        )
