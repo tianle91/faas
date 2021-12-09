@@ -43,6 +43,17 @@ spark = SparkSession.builder.appName('test_helpers').getOrCreate()
             id='sample_ts:numeric'
         ),
         pytest.param(
+            'data/sample_ts.parquet',
+            # categorical_0,categorical_1,date,numeric_0,numeric_1
+            Config(
+                target='numeric_0',
+                target_is_categorical=False,
+                date_column='date',
+                feature_columns=['categorical_0', 'categorical_1', 'numeric_1'],
+            ),
+            id='sample_ts_parquet:numeric'
+        ),
+        pytest.param(
             'data/sample_ts.csv',
             # categorical_0,categorical_1,date,numeric_0,numeric_1
             Config(
@@ -111,7 +122,13 @@ spark = SparkSession.builder.appName('test_helpers').getOrCreate()
     ]
 )
 def test_helpers(p: str, conf: Config):
-    df = spark.read.options(header=True, inferSchema=True).csv(p)
+    if p.endswith('.csv'):
+        df = spark.read.options(header=True, inferSchema=True).csv(p)
+    elif p.endswith('.parquet'):
+        df = spark.read.parquet(p)
+    else:
+        raise ValueError(f'Unsupported extension for path: {p}')
+
     m = get_trained(conf=conf, df=df)
     df_pred, msgs = get_prediction(conf=conf, df=df.drop(conf.target), m=m)
     df_pred.toPandas()
