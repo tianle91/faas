@@ -1,7 +1,7 @@
 from typing import List
 
 from pyspark.sql import DataFrame
-from pyspark.sql.types import DataType, DateType, NumericType, StringType
+from pyspark.sql.types import DataType, NumericType, StringType, TimestampType
 
 
 def validate_types(df: DataFrame, cols: List[str], expected_dtype: DataType):
@@ -19,8 +19,8 @@ def validate_categorical_types(df: DataFrame, cols: List[str]):
     return validate_types(df=df, cols=cols, expected_dtype=StringType)
 
 
-def validate_date_types(df: DataFrame, cols: List[str]):
-    return validate_types(df=df, cols=cols, expected_dtype=DateType)
+def validate_timestamp_types(df: DataFrame, cols: List[str]):
+    return validate_types(df=df, cols=cols, expected_dtype=TimestampType)
 
 
 def clean_string(s: str) -> str:

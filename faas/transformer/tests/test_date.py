@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
@@ -23,6 +23,6 @@ def test_normalized_sine(x: float, period: float, phase: int, expected: float):
 def test_DayOfWeekFeatures(spark: SparkSession):
     seasonality = SeasonalityFeature(date_column='dt')
     df = spark.createDataFrame(pd.DataFrame({
-        'dt': [date(2021, 1, 1) + timedelta(days=i) for i in range(100)]
+        'dt': [datetime(2021, 1, 1) + timedelta(days=i) for i in range(100)]
     }))
     seasonality.transform(df).toPandas()

@@ -1,17 +1,17 @@
-from datetime import date
+from datetime import datetime
 from typing import List
 
 import numpy as np
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
-from pyspark.sql.types import DateType, DoubleType, StringType
+from pyspark.sql.types import DoubleType, StringType, TimestampType
 
 from faas.transformer.base import BaseTransformer
 
-from .utils import validate_date_types
+from .utils import validate_timestamp_types
 
 
-def historical_decay(annual_rate: float, today_dt: date, dt: date) -> float:
+def historical_decay(annual_rate: float, today_dt: datetime, dt: datetime) -> float:
     """Discounted value of historical observations based on today_dt and dt with an annual rate.
     For dt==today_dt, the amount is 1. For dt==today_dt-1year, the amount is e^-annual_rate.
     """
@@ -48,13 +48,13 @@ class HistoricalDecay(BaseTransformer):
         return [self.feature_column]
 
     def fit(self, df: DataFrame):
-        validate_date_types(df=df, cols=[self.date_column])
+        validate_timestamp_types(df=df, cols=[self.date_column])
         newest_df = df.agg(F.max(F.col(self.date_column)).alias('newest'))
         self.most_recent_date = newest_df.collect()[0].newest
         return self
 
     def transform(self, df: DataFrame):
-        validate_date_types(df=df, cols=[self.date_column])
+        validate_timestamp_types(df=df, cols=[self.date_column])
         udf = F.udf(
             lambda dt: historical_decay(
                 annual_rate=self.annual_rate,
@@ -91,17 +91,33 @@ class Normalize(BaseTransformer):
         return [self.feature_column]
 
     def transform(self, df: DataFrame):
-        dtype = df.schema[self.group_column].dataType
-        if not (isinstance(dtype, StringType) or isinstance(dtype, DateType)):
-            raise TypeError(
-                f'The group_column: {self.group_column} should be StringType or a DateType '
-                f'but received {dtype} instead,'
+
+        # create dummy group col because it can be different from df group col
+        DUMMY_GROUP_COL = '__DUMMY_GROUP_COL__'
+        df = df.withColumn(DUMMY_GROUP_COL, F.col(self.group_column))
+        dtype = df.schema[DUMMY_GROUP_COL].dataType
+        # some changes due to types
+        if isinstance(dtype, TimestampType):
+            df = df.withColumn(
+                DUMMY_GROUP_COL,
+                F.to_date(F.col(DUMMY_GROUP_COL))
             )
+        elif isinstance(dtype, StringType):
+            pass
+        else:
+            raise TypeError(
+                f'The group_column: {self.group_column} should be StringType or a TimestampType '
+                f'but received {dtype} instead'
+            )
+
+        # create the counts
         counts = (
             df
-            .groupBy(self.group_column)
+            .groupBy(DUMMY_GROUP_COL)
             .agg(F.sum(F.lit(1.)).alias(COUNTS_COL))
         )
-        df = df.join(counts, on=self.group_column, how='left')
-        df = df.withColumn(self.feature_column, 1. / F.col(COUNTS_COL)).drop(COUNTS_COL)
+        df = df.join(counts, on=DUMMY_GROUP_COL, how='left')
+        df = df.withColumn(self.feature_column, 1. / F.col(COUNTS_COL))
+
+        df = df.drop(COUNTS_COL, DUMMY_GROUP_COL)
         return df

@@ -96,39 +96,38 @@ def run_predict():
                 st.error(f'Num calls remaining: {stored_model.num_calls_remaining}')
             else:
                 config = stored_model.config
-                if st.button('Predict'):
-                    st.header('Prediction')
+                st.header('Prediction')
 
-                    with st.spinner('Running predictions...'):
-                        df_predict, msgs = get_prediction(conf=config, df=df, m=stored_model.m)
+                with st.spinner('Running predictions...'):
+                    df_predict, msgs = get_prediction(conf=config, df=df, m=stored_model.m)
 
-                    st.markdown('\n\n'.join([f'❌ {msg}' for msg in msgs]))
+                st.markdown('\n\n'.join([f'❌ {msg}' for msg in msgs]))
 
-                    if df_predict is not None:
-                        df_predict = df_predict.cache()
-                        logger.info(f'df_predict.columns: {df_predict.columns}')
+                if df_predict is not None:
+                    df_predict = df_predict.cache()
+                    logger.info(f'df_predict.columns: {df_predict.columns}')
 
-                        # update num_calls_remaining
-                        stored_model = decrement_num_calls_remaining(key=model_key)
-                        st.info(f'Num calls remaining: {stored_model.num_calls_remaining}')
+                    # update num_calls_remaining
+                    stored_model = decrement_num_calls_remaining(key=model_key)
+                    st.info(f'Num calls remaining: {stored_model.num_calls_remaining}')
 
-                        # evaluation
-                        if config.target in df.columns:
-                            st.success(
-                                f'Detected target column: {config.target} in uploaded dataframe.')
-                            if has_duplicates(df.select(config.used_columns_prediction)):
-                                st.error(
-                                    'Cannot perform comparison as df has duplicates in '
-                                    f'used_columns_prediction: {config.used_columns_prediction}.'
-                                )
-                            else:
-                                st.session_state['df_predict'] = df_predict
-                                st.session_state['df_actual'] = df
-                                st.success('Evaluation possible!')
+                    # evaluation
+                    if config.target in df.columns:
+                        st.success(
+                            f'Detected target column: {config.target} in uploaded dataframe.')
+                        if has_duplicates(df.select(config.used_columns_prediction)):
+                            st.error(
+                                'Cannot perform comparison as df has duplicates in '
+                                f'used_columns_prediction: {config.used_columns_prediction}.'
+                            )
+                        else:
+                            st.session_state['df_predict'] = df_predict
+                            st.session_state['df_actual'] = df
+                            st.success('Evaluation possible!')
 
-                        # preview and download
-                        with st.expander('Preview'):
-                            preview_prediction(df_predict=df_predict, config=config)
+                    preview_prediction(df_predict=df_predict, config=config)
+
+                    if st.button('Export predictions'):
                         with st.spinner('Exporting predictions...'):
                             pdf_predict = df_predict.toPandas()
                         st.download_button(

@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import List, Optional
 
+import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
-from pyspark.sql.types import NumericType
+from pyspark.sql.types import NumericType, TimestampType
+
+logger = logging.getLogger(__name__)
 
 
 def equality_or_both_none(a: Optional[object], b: Optional[object]) -> bool:
@@ -19,7 +23,6 @@ class Config:
     target: str = 'target'
     target_is_categorical: bool = False
     date_column: Optional[str] = None
-    date_column_format: str = 'yyyy-MM-dd'
     latitude_column: Optional[str] = None
     longitude_column: Optional[str] = None
     group_columns: Optional[List[str]] = None
@@ -63,6 +66,17 @@ class Config:
             if len(missing_feature_columns) > 0:
                 raise ValueError(
                     f'Feature columns: {missing_feature_columns} are not in df.columns')
+
+    def conform_df_to_config(self, df: DataFrame) -> DataFrame:
+        if self.date_column is not None:
+            dtype = df.schema[self.date_column].dataType
+            if not isinstance(dtype, TimestampType):
+                logger.info(f'Casting {self.date_column} to Timestamp...')
+                df = df.withColumn(
+                    self.date_column,
+                    F.to_timestamp(self.date_column)
+                )
+        return df
 
     @property
     def has_spatial_columns(self):

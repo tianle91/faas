@@ -6,7 +6,7 @@ from typing import List, Optional, Tuple
 
 import pandas as pd
 from pyspark.sql import DataFrame
-from pyspark.sql.types import DataType, DateType, NumericType, StringType
+from pyspark.sql.types import DataType, NumericType, StringType, TimestampType
 
 from faas.transformer.base import (AddTransformer, BaseTransformer,
                                    ConstantTransformer, Passthrough, Pipeline)
@@ -83,7 +83,7 @@ def validate_numeric_with_msgs(df: DataFrame, columns: List[str]) -> Tuple[bool,
 
 
 def validate_date_with_msgs(df: DataFrame, columns: List[str]) -> Tuple[bool, List[str]]:
-    return validate_types_with_msgs(df=df, columns=columns, allowable_types=[DateType])
+    return validate_types_with_msgs(df=df, columns=columns, allowable_types=[TimestampType])
 
 
 def merge_validations(validations: List[Tuple[bool, List[str]]]) -> Tuple[bool, List[str]]:
