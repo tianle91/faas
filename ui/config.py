@@ -11,14 +11,15 @@ logger = logging.getLogger(__name__)
 
 
 def get_config(df: DataFrame) -> Config:
-    st.header('Create a configuration')
     numeric_columns = get_columns_by_type(df=df, dtype=NumericType)
     categorical_columns = get_columns_by_type(df=df, dtype=StringType)
 
+    st.header("What's the target column?")
     target_column = st.selectbox('target column', options=numeric_columns + categorical_columns)
     target_is_categorical = target_column in categorical_columns
 
-    with st.expander('Is there a date column?'):
+    st.header('Any special columns?')
+    with st.expander('Date columns enable date-related features and visualization'):
         date_column = st.selectbox(
             'Date column',
             options=[None, *categorical_columns],
@@ -28,8 +29,7 @@ def get_config(df: DataFrame) -> Config:
             options=['yyyy-MM-dd'],
             help='https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.sql.functions.to_date.html'
         )
-
-    with st.expander('Are there spatial columns?'):
+    with st.expander('Spatial columns enable location features and map visualization'):
         latitude_column = st.selectbox(
             'Latitude Column (-90. to 90.)',
             options=[None, *numeric_columns],
@@ -38,8 +38,7 @@ def get_config(df: DataFrame) -> Config:
             'Longitude Column (-180. to 180.)',
             options=[None, *numeric_columns],
         )
-
-    with st.expander('Is there a group column?'):
+    with st.expander('Groups allow training and visualization to be focused on important segments of data'):
         group_columns = st.multiselect(
             'Group Columns (only categorical columns can be used as groups)',
             options=[c for c in categorical_columns if c != date_column],
@@ -48,7 +47,7 @@ def get_config(df: DataFrame) -> Config:
     if len(group_columns) == 0:
         group_columns = None
 
-    # feature columns
+    st.header('Feature columns')
     used_columns = [target_column, date_column, latitude_column, longitude_column]
     if group_columns is not None:
         used_columns += group_columns
@@ -56,6 +55,10 @@ def get_config(df: DataFrame) -> Config:
         c for c in numeric_columns + categorical_columns
         if c not in used_columns
     ]
+    st.warning(
+        'These columns will all be required at prediction time. '
+        'Do not include unavailable ones in training.'
+    )
     feature_columns = st.multiselect(
         label='Feature Columns',
         options=possible_feature_columns,
