@@ -23,7 +23,6 @@ class Config:
     target: str = 'target'
     target_is_categorical: bool = False
     date_column: Optional[str] = None
-    date_column_format: str = 'yyyy-MM-dd'
     latitude_column: Optional[str] = None
     longitude_column: Optional[str] = None
     group_columns: Optional[List[str]] = None
@@ -72,10 +71,10 @@ class Config:
         if self.date_column is not None:
             dtype = df.schema[self.date_column].dataType
             if not isinstance(dtype, TimestampType):
-                logger.info(f'Casting {self.date_column} to Timestamp')
+                logger.info(f'Casting {self.date_column} to Timestamp...')
                 df = df.withColumn(
                     self.date_column,
-                    F.to_timestamp(self.date_column, self.date_column_format)
+                    F.to_timestamp(self.date_column)
                 )
         return df
 

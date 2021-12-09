@@ -23,12 +23,8 @@ def get_config(df: DataFrame) -> Config:
     st.header('Any special columns?')
     with st.expander('Date columns enable date-related features and visualization'):
         date_column = st.selectbox(
-            'Date column',
+            'Date column (yyyy-MM-dd)',
             options=[None, *categorical_columns, *timestamp_columns],
-        )
-        date_column_format = st.selectbox(
-            'Date format',
-            options=['yyyy-MM-dd HH:mm:ss'],
         )
     with st.expander('Spatial columns enable location features and map visualization'):
         latitude_column = st.selectbox(
@@ -78,7 +74,6 @@ def get_config(df: DataFrame) -> Config:
         target=target_column,
         target_is_categorical=target_is_categorical,
         date_column=date_column,
-        date_column_format=date_column_format,
         latitude_column=latitude_column,
         longitude_column=longitude_column,
         group_columns=group_columns,
