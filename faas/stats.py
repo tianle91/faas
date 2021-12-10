@@ -41,7 +41,7 @@ def correlation(df: DataFrame, columns: List[str], collapse_categorical=True) ->
         inputCols=raw_columns,
         outputCol=__CORRELATION_VECTOR_COL__
     )
-    df = assembler.transform(df).select(__CORRELATION_VECTOR_COL__)
+    df = assembler.transform(df.fillna(0.)).select(__CORRELATION_VECTOR_COL__)
     correlation = Correlation.corr(df, __CORRELATION_VECTOR_COL__)
 
     m = correlation.collect()[0][correlation.columns[0]].toArray()
