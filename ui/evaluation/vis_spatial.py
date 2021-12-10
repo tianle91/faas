@@ -59,8 +59,11 @@ def plot_spatial(df_evaluation: DataFrame, config: Config) -> Figure:
     return fig
 
 
-def vis_evaluate_spatial(df_evaluation: DataFrame, config: Config):
-    st.plotly_chart(plot_spatial(
+def vis_evaluate_spatial(df_evaluation: DataFrame, config: Config, st_container=None):
+    if st_container is None:
+        st_container = st
+
+    st_container.plotly_chart(plot_spatial(
         df_evaluation=df_evaluation,
         config=config,
     ))

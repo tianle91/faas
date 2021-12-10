@@ -1,4 +1,5 @@
 import logging
+from typing import List
 
 import pandas as pd
 import pyspark.sql.functions as F
@@ -24,11 +25,15 @@ spark = (
 PREDICTION_COLUMN = '__PREDICTION__'
 
 
-def highlight_target(s: pd.Series, target_column: str):
-    if s.name == target_column:
-        return ['background-color: #ff0000; color: white'] * len(s)
-    else:
-        return [''] * len(s)
+def highlight_columns(df: pd.DataFrame, columns: List[str]):
+
+    def fn(s: pd.Series) -> List[str]:
+        if s.name in columns:
+            return ['background-color: #ff0000; color: white'] * len(s)
+        else:
+            return [''] * len(s)
+
+    return df.style.apply(fn, axis=0)
 
 
 def preview_prediction(df_predict: DataFrame, config: Config, n: int = 100, st_container=None):
@@ -48,11 +53,11 @@ def preview_prediction(df_predict: DataFrame, config: Config, n: int = 100, st_c
             preview_columns.append(c)
 
     pdf_predict = df_predict.limit(n).toPandas()
-    st_container.markdown(f'Preview for first {n}/{df_predict.count()} predictions.')
-    st_container.dataframe(pdf_predict[preview_columns].style.apply(
-        lambda s: highlight_target(s, target_column=config.target),
-        axis=0
-    ))
+    st_container.markdown(
+        f'Preview for first {n}/{df_predict.count()} predictions '
+        f'for {config.target}.'
+    )
+    st_container.dataframe(highlight_columns(pdf_predict[preview_columns], [config.target]))
 
 
 def run_predict(st_container=None):

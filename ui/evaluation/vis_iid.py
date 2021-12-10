@@ -31,22 +31,25 @@ def plot_evaluate_iid(
     return fig
 
 
-def vis_evaluate_iid(df_evaluation: DataFrame, config: Config):
+def vis_evaluate_iid(df_evaluation: DataFrame, config: Config, st_container=None):
+    if st_container is None:
+        st_container = st
 
     # color_feature is counts by default for categorical target
     color_feature = None
     if not config.target_is_categorical:
-        color_feature = st.selectbox('Color Feature', options=sorted(config.feature_columns))
+        color_feature = st_container.selectbox(
+            'Color Feature', options=sorted(config.feature_columns))
 
     group = None
     if config.group_columns is not None:
-        group = st.selectbox(
+        group = st_container.selectbox(
             label='Plot group',
             options=[None, ] + config.get_distinct_group_values(df=df_evaluation),
             key='vis_evaluate_iid_plot_group'
         )
 
-    st.plotly_chart(plot_evaluate_iid(
+    st_container.plotly_chart(plot_evaluate_iid(
         df_evaluation=df_evaluation,
         config=config,
         group=group,

@@ -24,13 +24,13 @@ def plot_ts(
     actual_df = (
         df_evaluation
         .withColumn(IS_PREDICTION_COLUMN, F.lit(False))
-        .select(config.date_column, config.target)
+        .select(config.date_column, config.target, IS_PREDICTION_COLUMN)
     )
     pred_df = (
         df_evaluation
         .withColumn(config.target, F.col(PREDICTION_COLUMN))
         .withColumn(IS_PREDICTION_COLUMN, F.lit(True))
-        .select(config.date_column, config.target)
+        .select(config.date_column, config.target, IS_PREDICTION_COLUMN)
     )
 
     # what do we need?
@@ -45,17 +45,20 @@ def plot_ts(
     return fig
 
 
-def vis_evaluate_ts(df_evaluation: DataFrame, config: Config):
+def vis_evaluate_ts(df_evaluation: DataFrame, config: Config, st_container=None):
+    if st_container is None:
+        st_container = st
+
     group = None
     if config.group_columns is not None:
-        group = st.selectbox(
+        group = st_container.selectbox(
             label='Plot group',
             options=[None, ] + config.get_distinct_group_values(df=df_evaluation),
             key='vis_evaluate_ts_plot_group'
         )
 
-    st.plotly_chart(plot_ts(
+    st_container.plotly_chart(plot_ts(
         df_evaluation=df_evaluation,
         config=config,
-        group=group
+        group=group,
     ))
