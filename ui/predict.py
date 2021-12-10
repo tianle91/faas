@@ -11,8 +11,7 @@ from faas.config import Config
 from faas.helper import get_prediction
 from faas.storage import decrement_num_calls_remaining, read_model
 from faas.utils.dataframe import has_duplicates
-from faas.utils.io import dump_file_to_location
-from faas.utils.types import load_csv, load_parquet
+from faas.utils.io import load_cached_df_from_st_uploaded
 from ui.visualization.vis_df import preview_df
 from ui.visualization.vis_lightgbm import get_vis_lgbmwrapper
 
@@ -55,11 +54,13 @@ def preview_prediction(df_predict: DataFrame, config: Config, n: int = 100):
     ))
 
 
-def run_predict():
+def run_predict(st_container=None):
+    if st_container is None:
+        st_container = st
 
-    st.title('Predict')
+    st_container.title('Predict')
     model_key = st.session_state.get('model_key', '')
-    model_key = st.text_input('Model key (obtain this from training)', value=model_key)
+    model_key = st_container.text_input('Model key (obtain this from training)', value=model_key)
 
     stored_model = None
     if model_key != '':
@@ -67,47 +68,32 @@ def run_predict():
             stored_model = read_model(key=model_key)
             st.session_state['model_key'] = model_key
         except KeyError as e:
-            st.error(e)
+            st_container.error(e)
 
     if stored_model is not None:
-        st.success('Model loaded!')
-        with st.expander('Model visualization'):
-            st.code(pp.pformat(stored_model.config.__dict__))
+        st_container.success('Model loaded!')
+        with st_container.expander('Model visualization'):
+            st_container.code(pp.pformat(stored_model.config.__dict__))
             get_vis_lgbmwrapper(stored_model.m)
 
-        st.markdown('# Upload dataset')
-        predict_file = st.file_uploader('Predict data', type=['csv', 'parquet'])
+        st_container.markdown('# Upload dataset')
+        predict_file = st_container.file_uploader('Predict data', type=['csv', 'parquet'])
 
         if predict_file is not None:
-            with TemporaryDirectory() as temp_dir:
-
-                # load predict_file as spark dataframe
-                if predict_file.name.endswith('.csv'):
-                    training_path = os.path.join(temp_dir, 'predict.csv')
-                    dump_file_to_location(predict_file, p=training_path)
-                    df = load_csv(spark=spark, p=training_path)
-                elif predict_file.name.endswith('.parquet'):
-                    training_path = os.path.join(temp_dir, 'predict.parquet')
-                    dump_file_to_location(predict_file, p=training_path)
-                    df = load_parquet(spark=spark, p=training_path)
-
-                # cache df in memory
-                df.cache()
-                df.count()
-
-            st.header('Uploaded dataset')
+            df = load_cached_df_from_st_uploaded(f=predict_file, spark=spark)
+            st_container.header('Uploaded dataset')
             preview_df(df=df)
 
             if stored_model.num_calls_remaining <= 0:
-                st.error(f'Num calls remaining: {stored_model.num_calls_remaining}')
+                st_container.error(f'Num calls remaining: {stored_model.num_calls_remaining}')
             else:
                 config = stored_model.config
-                st.header('Prediction')
+                st_container.header('Prediction')
 
-                with st.spinner('Running predictions...'):
+                with st_container.spinner('Running predictions...'):
                     df_predict, msgs = get_prediction(conf=config, df=df, m=stored_model.m)
 
-                st.markdown('\n\n'.join([f'❌ {msg}' for msg in msgs]))
+                st_container.markdown('\n\n'.join([f'❌ {msg}' for msg in msgs]))
 
                 if df_predict is not None:
                     df_predict = df_predict.cache()
@@ -115,28 +101,28 @@ def run_predict():
 
                     # update num_calls_remaining
                     stored_model = decrement_num_calls_remaining(key=model_key)
-                    st.info(f'Num calls remaining: {stored_model.num_calls_remaining}')
+                    st_container.info(f'Num calls remaining: {stored_model.num_calls_remaining}')
 
                     # evaluation
                     if config.target in df.columns:
-                        st.success(
+                        st_container.success(
                             f'Detected target column: {config.target} in uploaded dataframe.')
                         if has_duplicates(df.select(config.used_columns_prediction)):
-                            st.error(
+                            st_container.error(
                                 'Cannot perform comparison as df has duplicates in '
                                 f'used_columns_prediction: {config.used_columns_prediction}.'
                             )
                         else:
-                            st.session_state['df_predict'] = df_predict
-                            st.session_state['df_actual'] = df
-                            st.success('Evaluation possible!')
+                            st_container.session_state['df_predict'] = df_predict
+                            st_container.session_state['df_actual'] = df
+                            st_container.success('Evaluation possible!')
 
                     preview_prediction(df_predict=df_predict, config=config)
 
-                    if st.button('Export predictions'):
-                        with st.spinner('Exporting predictions...'):
+                    if st_container.button('Export predictions'):
+                        with st_container.spinner('Exporting predictions...'):
                             pdf_predict = df_predict.toPandas()
-                        st.download_button(
+                        st_container.download_button(
                             f'Download all {df_predict.count()} predictions',
                             data=pdf_predict.to_csv(),
                             file_name='prediction.csv'

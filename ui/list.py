@@ -6,7 +6,10 @@ from faas.storage import list_models
 from ui.visualization.vis_lightgbm import get_vis_lgbmwrapper
 
 
-def run_list():
+def run_list(st_container=None):
+    if st_container is None:
+        st_container = st
+
     all_models = list_models()
     if len(all_models) == 0:
         st.warning('No trained models yet!')

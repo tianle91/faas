@@ -29,14 +29,20 @@ def plot_ts(
     return fig
 
 
-def vis_ui_ts(df: DataFrame, config: Config):
+def vis_ui_ts(df: DataFrame, config: Config, st_container=None):
+    if st_container is None:
+        st_container = st
+
     group = None
     if config.group_columns is not None:
-        group = st.selectbox(
+        group = st_container.selectbox(
             label='Plot group',
             options=[None, ] + config.get_distinct_group_values(df=df),
             key='vis_ui_ts_plot_group'
         )
 
-    color_feature = st.selectbox(label='Color Feature', options=sorted(config.feature_columns))
-    st.plotly_chart(plot_ts(df, config=config, group=group, color_feature=color_feature))
+    color_feature = st_container.selectbox(
+        label='Color Feature',
+        options=sorted(config.feature_columns)
+    )
+    st_container.plotly_chart(plot_ts(df, config=config, group=group, color_feature=color_feature))

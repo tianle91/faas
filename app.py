@@ -7,4 +7,4 @@ st.sidebar.markdown('To start, head to Training.')
 
 page_selector = st.sidebar.radio(label='page', options=pages.keys())
 if page_selector is not None:
-    pages[page_selector]()
+    pages[page_selector](st.container())
