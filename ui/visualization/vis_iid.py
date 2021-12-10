@@ -55,13 +55,9 @@ def vis_ui_iid(df: DataFrame, config: Config):
 
     group = None
     if config.group_columns is not None:
-        all_groups = [
-            {k: row[k] for k in config.group_columns}
-            for row in df.select(*config.group_columns).distinct().collect()
-        ]
         group = st.selectbox(
             label='Plot group',
-            options=[None, ] + sorted(all_groups),
+            options=[None, ] + config.get_distinct_group_values(df=df),
             key='vis_ui_iid_plot_group'
         )
 

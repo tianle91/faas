@@ -78,6 +78,19 @@ class Config:
                 )
         return df
 
+    def get_distinct_group_values(self, df: DataFrame) -> List[dict]:
+        collected_rows = (
+            df
+            .select(*self.group_columns)
+            .distinct()
+            .orderBy(*self.group_columns)
+            .collect()
+        )
+        return [
+            {k: row[k] for k in self.group_columns}
+            for row in collected_rows
+        ]
+
     @property
     def has_spatial_columns(self):
         return self.latitude_column is not None and self.longitude_column is not None
