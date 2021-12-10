@@ -26,6 +26,11 @@ def run_training(st_container=None):
     if df is not None:
         st_container.header('Uploaded dataset')
         preview_df(df=df, st_container=st_container)
+
+        st_container.header('Train a model')
+        if not st_container.checkbox('Yes', key='training_yes'):
+            return None
+
         conf = get_config(df=df, st_container=st_container)
 
         st_container.header('Exploratory analysis')

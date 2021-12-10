@@ -81,6 +81,8 @@ def run_predict(st_container=None):
 
     config = stored_model.config
     st_container.header('Prediction')
+    if not st_container.checkbox('Yes', key='prediction_yes'):
+        return None
 
     with st.spinner('Running predictions...'):
         df_predict, msgs = get_prediction(conf=config, df=df, m=stored_model.m)
