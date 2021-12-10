@@ -30,7 +30,7 @@ def plot_spatial(
 
 
 def vis_ui_spatial(df: DataFrame, config: Config):
-    location_name_column = st.selectbox('Location name column', options=[None] + df.columns)
+    location_name_column = st.selectbox('Location name column', options=[None] + sorted(df.columns))
     st.plotly_chart(plot_spatial(
         df=df,
         config=config,
