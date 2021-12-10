@@ -41,6 +41,8 @@ def get_config(df: DataFrame) -> Config:
             options=sorted([c for c in categorical_columns if c != date_column]),
             default=[]
         )
+        num_groups = df.select(group_columns).distinct().count()
+        st.info(f'There are {num_groups} groups')
     if len(group_columns) == 0:
         group_columns = None
 
