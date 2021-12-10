@@ -41,7 +41,10 @@ def get_config(df: DataFrame) -> Config:
     with st.expander('Groups allow training and visualization to be focused on important segments of data'):
         group_columns = st.multiselect(
             'Group Columns (only categorical columns can be used as groups)',
-            options=sorted([c for c in categorical_columns if c != date_column]),
+            options=sorted([
+                c for c in categorical_columns
+                if c not in [date_column, target_column]
+            ]),
             default=[]
         )
         num_groups = df.select(group_columns).distinct().count()
