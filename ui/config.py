@@ -16,6 +16,8 @@ def get_config(df: DataFrame) -> Config:
     timestamp_columns = get_columns_by_type(df=df, dtype=TimestampType)
     timestamp_columns += get_columns_by_type(df=df, dtype=DateType)
 
+    summary_pdf = df.describe().toPandas().set_index(keys='summary')
+
     st.header("What's the target column?")
     target_column = st.selectbox(
         'target column',
@@ -54,20 +56,27 @@ def get_config(df: DataFrame) -> Config:
 
     st.header('Feature columns')
     used_columns = [target_column, date_column, latitude_column, longitude_column]
-    if group_columns is not None:
-        used_columns += group_columns
     possible_feature_columns = sorted([
         c for c in numeric_columns + categorical_columns
         if c not in used_columns
     ])
+    useful_columns = []
+    useless_columns = []
+    for c in possible_feature_columns:
+        if int(summary_pdf.loc['count', c]) > 1:
+            useful_columns.append(c)
+        else:
+            useless_columns.append(c)
     st.warning(
         'These columns will all be required at prediction time. '
         'Do not include unavailable ones in training.'
     )
+    if len(useless_columns) > 0:
+        st.warning(f'Columns: {useless_columns} are not useful due to counts <= 1')
     feature_columns = st.multiselect(
         label='Feature Columns',
-        options=possible_feature_columns,
-        default=possible_feature_columns,
+        options=useful_columns,
+        default=useful_columns,
         help='Including all available features is helpful for model training.'
     )
     st.markdown(f'Number of features: {len(feature_columns)}')
