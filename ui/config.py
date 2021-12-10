@@ -19,7 +19,7 @@ def get_config(df: DataFrame) -> Config:
     summary_pdf = df.describe().toPandas().set_index(keys='summary')
     degenerate_columns = [
         c for c in df.columns
-        if int(summary_pdf.loc['count', c]) <= 1
+        if c in summary_pdf.columns and int(summary_pdf.loc['count', c]) <= 1
     ]
     if len(degenerate_columns) > 0:
         st.warning(
