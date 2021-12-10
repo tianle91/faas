@@ -20,4 +20,4 @@ def run_list(st_container=None):
                 f'num_calls_remaining: {stored_model.num_calls_remaining}'
             )
             st.code(pp.pformat(stored_model.config.__dict__, compact=True))
-            get_vis_lgbmwrapper(stored_model.m)
+            get_vis_lgbmwrapper(stored_model.m, st_container=st_container)

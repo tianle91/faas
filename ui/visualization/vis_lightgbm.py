@@ -1,5 +1,3 @@
-import pprint as pp
-
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -23,7 +21,8 @@ def vis_importance(m: LGBMModel) -> Figure:
     return fig
 
 
-def get_vis_lgbmwrapper(m: ETLWrapperForLGBM):
-    st.header('Visualization')
-    st.code(pp.pformat(m.config.to_dict(), compact=True))
-    st.plotly_chart(vis_importance(m.m))
+def get_vis_lgbmwrapper(m: ETLWrapperForLGBM, st_container=None):
+    if st_container is None:
+        st_container = st
+
+    st_container.plotly_chart(vis_importance(m.m))

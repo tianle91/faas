@@ -19,9 +19,8 @@ def get_config(df: DataFrame, st_container=None) -> Config:
     timestamp_columns = get_columns_by_type(df=df, dtype=TimestampType)
     timestamp_columns += get_columns_by_type(df=df, dtype=DateType)
 
-    with st.spinner('Profiling dataframe...'):
-        summary_pdf = df.describe().toPandas().set_index(keys='summary')
-
+    # get degenerate columns
+    summary_pdf = st.session_state.get('summary_pdf', None)
     degenerate_columns = [
         c for c in df.columns
         if c in summary_pdf.columns and int(summary_pdf.loc['count', c]) <= 1
@@ -49,6 +48,17 @@ def get_config(df: DataFrame, st_container=None) -> Config:
         options=[None, ] + sorted(categorical_columns + timestamp_columns),
     )
 
+    # spatial columns
+    latitude_column = st_container.selectbox(
+        'Latitude Column (-90. to 90.)',
+        options=[None, ] + sorted(numeric_columns),
+    )
+    longitude_column = st_container.selectbox(
+        'Longitude Column (-180. to 180.)',
+        options=[None, ] + sorted(numeric_columns),
+    )
+
+    # group columns
     group_columns = st_container.multiselect(
         'Group Columns (only categorical columns can be used as groups)',
         options=sorted([
@@ -57,20 +67,8 @@ def get_config(df: DataFrame, st_container=None) -> Config:
         ]),
         default=[]
     )
-    num_groups = df.select(group_columns).distinct().count()
-    st_container.info(f'There are {num_groups} groups')
     if len(group_columns) == 0:
         group_columns = None
-
-    with st.expander('Spatial columns?'):
-        latitude_column = st_container.selectbox(
-            'Latitude Column (-90. to 90.)',
-            options=[None, ] + sorted(numeric_columns),
-        )
-        longitude_column = st_container.selectbox(
-            'Longitude Column (-180. to 180.)',
-            options=[None, ] + sorted(numeric_columns),
-        )
 
     st_container.header('Feature columns')
     used_columns = [target_column, date_column, latitude_column, longitude_column]
