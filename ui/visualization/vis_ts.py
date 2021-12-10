@@ -38,9 +38,9 @@ def vis_ui_ts(df: DataFrame, config: Config):
         ]
         group = st.selectbox(
             label='Plot group',
-            options=[None, ] + all_groups,
+            options=[None, ] + sorted(all_groups),
             key='vis_ui_ts_plot_group'
         )
 
-    color_feature = st.selectbox(label='Color Feature', options=config.feature_columns)
+    color_feature = st.selectbox(label='Color Feature', options=sorted(config.feature_columns))
     st.plotly_chart(plot_ts(df, config=config, group=group, color_feature=color_feature))
