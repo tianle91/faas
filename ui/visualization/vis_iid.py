@@ -39,7 +39,7 @@ def plot_iid(
 
     # what do we need?
     if df.count() > SAMPLE_SIZE:
-        df = df.sample(n=SAMPLE_SIZE)
+        df = df.sample(fraction=SAMPLE_SIZE / df.count())
     pdf = df.select(*select_cols).toPandas()
     fig = px.scatter(pdf, x=x_axis_feature, y=config.target, color=color_feature)
     return fig
