@@ -44,7 +44,7 @@ def plot_iid(
 def vis_ui_iid(df: DataFrame, config: Config):
     horizontal_feature = st.selectbox(
         'X-Axis Feature',
-        options=config.feature_columns,
+        options=sorted(config.feature_columns),
         key='vis_ui_iid_x_axis_feature'
     )
 
