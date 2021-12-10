@@ -16,7 +16,9 @@ def get_config(df: DataFrame) -> Config:
     timestamp_columns = get_columns_by_type(df=df, dtype=TimestampType)
     timestamp_columns += get_columns_by_type(df=df, dtype=DateType)
 
-    summary_pdf = df.describe().toPandas().set_index(keys='summary')
+    with st.spinner('Profiling dataframe...'):
+        summary_pdf = df.describe().toPandas().set_index(keys='summary')
+
     degenerate_columns = [
         c for c in df.columns
         if c in summary_pdf.columns and int(summary_pdf.loc['count', c]) <= 1
