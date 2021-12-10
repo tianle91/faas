@@ -18,7 +18,13 @@ from ui.visualization.vis_lightgbm import get_vis_lgbmwrapper
 
 logger = logging.getLogger(__name__)
 
-spark = SparkSession.builder.appName('ui_predict').getOrCreate()
+spark = (
+    SparkSession
+    .builder
+    .appName('ui_predict')
+    .config('spark.driver.maxResultsSize', '16g')
+    .getOrCreate()
+)
 
 
 def highlight_target(s: pd.Series, target_column: str):

@@ -17,7 +17,13 @@ from ui.visualization.vis_lightgbm import get_vis_lgbmwrapper
 from ui.visualization.vis_spatial import vis_ui_spatial
 from ui.visualization.vis_ts import vis_ui_ts
 
-spark = SparkSession.builder.appName('ui_training').getOrCreate()
+spark = (
+    SparkSession
+    .builder
+    .appName('ui_training')
+    .config('spark.driver.maxResultsSize','16g')
+    .getOrCreate()
+)
 
 
 def run_training():
