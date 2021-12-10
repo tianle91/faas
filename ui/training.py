@@ -1,7 +1,5 @@
-import os
 import pprint as pp
 from datetime import datetime
-from tempfile import TemporaryDirectory
 
 import streamlit as st
 from pyspark.sql import SparkSession
