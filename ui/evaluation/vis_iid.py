@@ -52,7 +52,7 @@ def vis_evaluate_iid(df_predict: DataFrame, df_actual: DataFrame, config: Config
     # color_feature is counts by default for categorical target
     color_feature = None
     if not config.target_is_categorical:
-        color_feature = st.selectbox('Color Feature', options=config.feature_columns)
+        color_feature = st.selectbox('Color Feature', options=sorted(config.feature_columns))
 
     group = None
     if config.group_columns is not None:
@@ -60,7 +60,7 @@ def vis_evaluate_iid(df_predict: DataFrame, df_actual: DataFrame, config: Config
             {k: row[k] for k in config.group_columns}
             for row in df_actual.select(*config.group_columns).distinct().collect()
         ]
-        group = st.selectbox(label='Plot group', options=[None, ] + all_groups)
+        group = st.selectbox(label='Plot group', options=[None, ] + sorted(all_groups))
 
     st.plotly_chart(plot_evaluate_iid(
         df_predict=df_predict,

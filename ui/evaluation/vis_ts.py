@@ -40,7 +40,7 @@ def vis_evaluate_ts(df_predict: DataFrame, df_actual: DataFrame, config: Config)
             {k: row[k] for k in config.group_columns}
             for row in df_actual.select(*config.group_columns).distinct().collect()
         ]
-        group = st.selectbox(label='Plot group', options=[None, ] + all_groups)
+        group = st.selectbox(label='Plot group', options=[None, ] + sorted(all_groups))
 
     st.plotly_chart(plot_ts(
         df_predict=df_predict,

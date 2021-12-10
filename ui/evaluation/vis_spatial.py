@@ -84,7 +84,10 @@ def plot_spatial(
 
 
 def vis_evaluate_spatial(df_predict: DataFrame, df_actual: DataFrame, config: Config):
-    location_name_column = st.selectbox('Location name column', options=[None] + df_actual.columns)
+    location_name_column = st.selectbox(
+        'Location name column',
+        options=[None] + sorted(df_actual.columns)
+    )
     st.plotly_chart(plot_spatial(
         df_predict=df_predict,
         df_actual=df_actual,
