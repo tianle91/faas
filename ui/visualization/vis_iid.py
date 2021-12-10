@@ -8,6 +8,8 @@ from pyspark.sql import DataFrame
 from faas.config import Config
 from faas.utils.dataframe import filter_by_dict
 
+SAMPLE_SIZE = int(1e6)
+
 
 def plot_iid(
     df: DataFrame,
@@ -36,6 +38,8 @@ def plot_iid(
         select_cols.append(color_feature)
 
     # what do we need?
+    if df.count() > SAMPLE_SIZE:
+        df = df.sample(n=SAMPLE_SIZE)
     pdf = df.select(*select_cols).toPandas()
     fig = px.scatter(pdf, x=x_axis_feature, y=config.target, color=color_feature)
     return fig
