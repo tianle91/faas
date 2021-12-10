@@ -17,7 +17,10 @@ def get_config(df: DataFrame) -> Config:
     timestamp_columns += get_columns_by_type(df=df, dtype=DateType)
 
     st.header("What's the target column?")
-    target_column = st.selectbox('target column', options=numeric_columns + categorical_columns)
+    target_column = st.selectbox(
+        'target column',
+        options=sorted(numeric_columns + categorical_columns)
+    )
     target_is_categorical = target_column in categorical_columns
 
     st.header('Any special columns?')
