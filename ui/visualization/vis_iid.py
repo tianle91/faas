@@ -49,7 +49,7 @@ def vis_ui_iid(df: DataFrame, config: Config):
     )
 
     color_feature = None
-    other_possible_features = [c for c in config.feature_columns if c != horizontal_feature]
+    other_possible_features = sorted([c for c in config.feature_columns if c != horizontal_feature])
     if len(other_possible_features) > 0:
         color_feature = st.selectbox('Color Feature', options=other_possible_features)
 
@@ -61,7 +61,7 @@ def vis_ui_iid(df: DataFrame, config: Config):
         ]
         group = st.selectbox(
             label='Plot group',
-            options=[None, ] + all_groups,
+            options=[None, ] + sorted(all_groups),
             key='vis_ui_iid_plot_group'
         )
 
