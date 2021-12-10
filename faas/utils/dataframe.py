@@ -36,5 +36,6 @@ def has_duplicates(df: Union[DataFrame, pd.DataFrame]) -> bool:
 
 
 def filter_by_dict(df: DataFrame, d: Dict[str, object]) -> DataFrame:
-    equality_l = [F.col(col) == val for col, val in d.items()]
-    return df.filter(reduce(lambda a, b: a and b, equality_l))
+    for col, val in d.items():
+        df = df.filter(F.col(col) == val)
+    return df
