@@ -88,7 +88,10 @@ def get_config(df: DataFrame) -> Config:
     actual_feature_columns = feature_columns
     if group_columns is not None:
         actual_feature_columns += group_columns
-    actual_feature_columns = list(set(actual_feature_columns))
+    actual_feature_columns = [
+        c for c in set(actual_feature_columns)
+        if c not in degenerate_columns
+    ]
 
     conf = Config(
         target=target_column,
