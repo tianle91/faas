@@ -6,7 +6,8 @@ from ui.evaluation.utils import validate_evaluation
 from ui.evaluation.vis_iid import vis_evaluate_iid
 from ui.evaluation.vis_spatial import vis_evaluate_spatial
 from ui.evaluation.vis_ts import vis_evaluate_ts
-from ui.predict import PREDICTION_COLUMN, highlight_columns
+from ui.predict import PREDICTION_COLUMN
+from ui.visualization.vis_df import highlight_columns
 from ui.visualization.vis_lightgbm import get_vis_lgbmwrapper
 
 
@@ -18,11 +19,12 @@ def run_evaluation(st_container=None):
 
     df_evaluation: DataFrame = st.session_state.get('df_evaluation', None)
     stored_model: StoredModel = st.session_state.get('stored_model', None)
-    if df_evaluation is None:
-        st_container.error('Upload dataframe with actuals and run predictions for evaluation.')
+    if df_evaluation is None or stored_model is None:
+        if df_evaluation is None:
+            st_container.error('Run a prediction with actuals for evaluation.')
+        if stored_model is None:
+            st_container.error('No stored model, please provide a model key.')
         return None
-    if stored_model is None:
-        st_container.error('No stored model, please provide a model key.')
 
     get_vis_lgbmwrapper(stored_model.m, st_container=st_container)
 

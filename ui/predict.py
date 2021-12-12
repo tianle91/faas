@@ -1,7 +1,5 @@
 import logging
-from typing import List
 
-import pandas as pd
 import pyspark.sql.functions as F
 import streamlit as st
 from pyspark.sql import DataFrame, SparkSession
@@ -10,6 +8,7 @@ from faas.config import Config
 from faas.helper import get_prediction
 from faas.storage import StoredModel, decrement_num_calls_remaining
 from faas.utils.dataframe import has_duplicates
+from ui.visualization.vis_df import highlight_columns
 from ui.visualization.vis_lightgbm import get_vis_lgbmwrapper
 
 logger = logging.getLogger(__name__)
@@ -23,17 +22,6 @@ spark = (
 )
 
 PREDICTION_COLUMN = '__PREDICTION__'
-
-
-def highlight_columns(df: pd.DataFrame, columns: List[str]):
-
-    def fn(s: pd.Series) -> List[str]:
-        if s.name in columns:
-            return ['background-color: #ff0000; color: white'] * len(s)
-        else:
-            return [''] * len(s)
-
-    return df.style.apply(fn, axis=0)
 
 
 def preview_prediction(df_predict: DataFrame, config: Config, n: int = 100, st_container=None):
@@ -68,10 +56,12 @@ def run_predict(st_container=None):
 
     df: DataFrame = st.session_state.get('df', None)
     stored_model: StoredModel = st.session_state.get('stored_model', None)
-    if df is None:
-        st_container.error('Cannot predict without a dataframe. Please upload one.')
-    if stored_model is None:
-        st_container.error('Cannot predict without model. Please provide model key.')
+    if df is None or stored_model is None:
+        if df is None:
+            st_container.error('Cannot predict without a dataframe. Please upload one.')
+        if stored_model is None:
+            st_container.error('Cannot predict without model. Please provide model key.')
+        return None
 
     get_vis_lgbmwrapper(stored_model.m, st_container=st_container)
 
