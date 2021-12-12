@@ -27,12 +27,13 @@ if f is not None:
 # populate states: model_key, stored_model
 model_key = st.session_state.get('model_key', '')
 model_key_input = st.sidebar.text_input('Model key (obtain this from training)', value=model_key)
-try:
-    st.session_state['model_key'] = model_key_input
-    st.session_state['stored_model'] = read_model(key=st.session_state['model_key'])
-    st.sidebar.success('Model loaded')
-except Exception as e:
-    st.sidebar.error(e)
+if model_key_input != '':
+    try:
+        st.session_state['model_key'] = model_key_input
+        st.session_state['stored_model'] = read_model(key=st.session_state['model_key'])
+        st.sidebar.success('Model loaded')
+    except Exception as e:
+        st.sidebar.error(e)
 
 
 page_selector = st.sidebar.radio(label='Pages', options=pages.keys())
