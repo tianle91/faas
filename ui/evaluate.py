@@ -8,7 +8,7 @@ from ui.evaluation.vis_spatial import vis_evaluate_spatial
 from ui.evaluation.vis_ts import vis_evaluate_ts
 from ui.predict import PREDICTION_COLUMN
 from ui.visualization.vis_df import highlight_columns
-from ui.visualization.vis_lightgbm import get_vis_lgbmwrapper
+from ui.visualization.vis_model import vis_stored_model
 
 
 def run_evaluation(st_container=None):
@@ -30,12 +30,7 @@ def run_evaluation(st_container=None):
     validate_evaluation(df=df_evaluation, config=config)
 
     st_container.header('Loaded model')
-    st_container.markdown(f'''
-    Target feature: `{config.target}`
-
-    Feature columns: `{', '.join(config.feature_columns)}`
-    ''')
-    get_vis_lgbmwrapper(stored_model.m, st_container=st_container)
+    vis_stored_model(stored_model=stored_model, st_container=st_container)
 
     st_container.header('Predictions')
     pdf_evaluation = (

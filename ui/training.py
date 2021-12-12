@@ -8,7 +8,7 @@ from faas.storage import StoredModel, write_model
 from ui.config import get_config
 from ui.visualization.vis_df import preview_df
 from ui.visualization.vis_iid import vis_ui_iid
-from ui.visualization.vis_lightgbm import get_vis_lgbmwrapper
+from ui.visualization.vis_model import vis_stored_model
 from ui.visualization.vis_spatial import vis_ui_spatial
 from ui.visualization.vis_ts import vis_ui_ts
 
@@ -60,4 +60,6 @@ def run_training(st_container=None):
             st_container.success(
                 'Model trained! Model key can be now be used for Prediction.')
             st_container.markdown(f'Model key: `{model_key}`')
-            get_vis_lgbmwrapper(stored_model.m, st_container=st_container)
+
+            st_container.header('Trained model')
+            vis_stored_model(stored_model=stored_model, st_container=st_container)

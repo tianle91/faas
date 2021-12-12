@@ -9,7 +9,9 @@ from faas.helper import get_prediction
 from faas.storage import StoredModel, decrement_num_calls_remaining
 from faas.utils.dataframe import has_duplicates
 from ui.visualization.vis_df import highlight_columns
-from ui.visualization.vis_lightgbm import get_vis_lgbmwrapper
+from ui.visualization.vis_model import vis_lgbmwrapper
+from ui.visualization.vis_model import vis_stored_model
+
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +65,8 @@ def run_predict(st_container=None):
             st_container.error('Cannot predict without model. Please provide model key.')
         return None
 
-    get_vis_lgbmwrapper(stored_model.m, st_container=st_container)
+    st_container.header('Loaded model')
+    vis_stored_model(stored_model=stored_model, st_container=st_container)
 
     if stored_model.num_calls_remaining <= 0:
         st_container.error(f'Num calls remaining: {stored_model.num_calls_remaining}')
