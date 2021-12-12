@@ -3,7 +3,6 @@ import pyspark.sql.functions as F
 import streamlit as st
 from plotly.graph_objs._figure import Figure
 from pyspark.sql import DataFrame
-from pyspark.sql.types import BooleanType, DoubleType
 
 from faas.config import Config
 from ui.predict import PREDICTION_COLUMN
@@ -12,22 +11,20 @@ ERROR_COL = '__ERROR__'
 
 
 def categorical_error(
-    df: DataFrame, actual_col: str, predict_col: str, error_col: str = '__ERROR_'
+    df: DataFrame, actual_col: str, predict_col: str, error_col: str = ERROR_COL
 ) -> DataFrame:
-    udf = F.udf(lambda a, b: a == b, BooleanType())
     return df.withColumn(
         error_col,
-        udf(F.col(actual_col), F.col(predict_col))
+        F.when(F.col(actual_col) == F.col(predict_col), F.lit(False)).otherwise(F.lit(True))
     )
 
 
 def numeric_error(
-    df: DataFrame, actual_col: str, predict_col: str, error_col: str = '__ERROR_'
+    df: DataFrame, actual_col: str, predict_col: str, error_col: str = ERROR_COL
 ) -> DataFrame:
-    udf = F.udf(lambda actual, predict: (predict - actual) / actual, DoubleType())
     return df.withColumn(
         error_col,
-        udf(F.col(actual_col), F.col(predict_col))
+        (F.col(predict_col) - F.col(actual_col)) / F.col(actual_col)
     )
 
 
