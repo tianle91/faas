@@ -9,7 +9,6 @@ from faas.helper import get_prediction
 from faas.storage import StoredModel, decrement_num_calls_remaining
 from faas.utils.dataframe import has_duplicates
 from ui.visualization.vis_df import highlight_columns
-from ui.visualization.vis_model import vis_lgbmwrapper
 from ui.visualization.vis_model import vis_stored_model
 
 
