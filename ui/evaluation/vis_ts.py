@@ -57,6 +57,10 @@ def vis_evaluate_ts(df_evaluation: DataFrame, config: Config, st_container=None)
             key='vis_evaluate_ts_plot_group'
         )
 
+    st_container.markdown('''
+    We plot predicted values against actual values.
+    A good prediction would show up as the predicted lines being close to actual lines.
+    ''')
     st_container.plotly_chart(plot_ts(
         df_evaluation=df_evaluation,
         config=config,

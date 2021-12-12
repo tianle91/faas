@@ -15,7 +15,7 @@ def categorical_error(
 ) -> DataFrame:
     return df.withColumn(
         error_col,
-        F.when(F.col(actual_col) == F.col(predict_col), F.lit(False)).otherwise(F.lit(True))
+        F.when(F.col(actual_col) == F.col(predict_col), F.lit(0)).otherwise(F.lit(1))
     )
 
 
@@ -60,6 +60,9 @@ def vis_evaluate_spatial(df_evaluation: DataFrame, config: Config, st_container=
     if st_container is None:
         st_container = st
 
+    st_container.markdown('''
+    High error values indicate that predictions are far from actuals.
+    ''')
     st_container.plotly_chart(plot_spatial(
         df_evaluation=df_evaluation,
         config=config,

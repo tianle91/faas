@@ -26,11 +26,18 @@ def run_evaluation(st_container=None):
             st_container.error('No stored model, please provide a model key.')
         return None
 
+    config = stored_model.config
+    validate_evaluation(df=df_evaluation, config=config)
+
+    st_container.header('Loaded model')
+    st_container.markdown(f'''
+    Target feature: `{config.target}`
+
+    Feature columns: `{', '.join(config.feature_columns)}`
+    ''')
     get_vis_lgbmwrapper(stored_model.m, st_container=st_container)
 
-    config = stored_model.config
-    st_container.markdown(f'Target feature: `{config.target}`')
-
+    st_container.header('Predictions')
     pdf_evaluation = (
         df_evaluation
         .select(config.target, PREDICTION_COLUMN, *config.feature_columns)
@@ -42,13 +49,11 @@ def run_evaluation(st_container=None):
         columns=[config.target, PREDICTION_COLUMN]
     ))
 
-    validate_evaluation(df=df_evaluation, config=config)
-
     st_container.header('Scatterplot')
     vis_evaluate_iid(df_evaluation=df_evaluation, config=config, st_container=st_container)
     if config.date_column is not None:
-        st_container.header('Time Series')
+        st_container.header('Time Series Plot')
         vis_evaluate_ts(df_evaluation=df_evaluation, config=config, st_container=st_container)
     if config.has_spatial_columns:
-        st_container.header('Spatial')
+        st_container.header('Spatial Plot')
         vis_evaluate_spatial(df_evaluation=df_evaluation, config=config, st_container=st_container)

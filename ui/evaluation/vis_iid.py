@@ -49,6 +49,11 @@ def vis_evaluate_iid(df_evaluation: DataFrame, config: Config, st_container=None
             key='vis_evaluate_iid_plot_group'
         )
 
+    st_container.markdown('''
+    Here we plot actuals on the horizontal axis against the predictions on the vertical axis.
+    A perfect prediction would show up as a 45-degree line, where every prediction is exactly the
+    same as actuals.
+    ''')
     st_container.plotly_chart(plot_evaluate_iid(
         df_evaluation=df_evaluation,
         config=config,
