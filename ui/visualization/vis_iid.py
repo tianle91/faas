@@ -45,8 +45,11 @@ def plot_iid(
     return fig
 
 
-def vis_ui_iid(df: DataFrame, config: Config):
-    horizontal_feature = st.selectbox(
+def vis_ui_iid(df: DataFrame, config: Config, st_container=None):
+    if st_container is None:
+        st_container = st
+
+    horizontal_feature = st_container.selectbox(
         'X-Axis Feature',
         options=sorted(config.feature_columns),
         key='vis_ui_iid_x_axis_feature'
@@ -55,17 +58,17 @@ def vis_ui_iid(df: DataFrame, config: Config):
     color_feature = None
     other_possible_features = sorted([c for c in config.feature_columns if c != horizontal_feature])
     if len(other_possible_features) > 0:
-        color_feature = st.selectbox('Color Feature', options=other_possible_features)
+        color_feature = st_container.selectbox('Color Feature', options=other_possible_features)
 
     group = None
     if config.group_columns is not None:
-        group = st.selectbox(
+        group = st_container.selectbox(
             label='Plot group',
             options=[None, ] + config.get_distinct_group_values(df=df),
             key='vis_ui_iid_plot_group'
         )
 
-    st.plotly_chart(plot_iid(
+    st_container.plotly_chart(plot_iid(
         df=df,
         config=config,
         group=group,
