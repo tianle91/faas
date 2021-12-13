@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
+import pyspark.sql.functions as F
 from lightgbm import LGBMClassifier, LGBMRegressor
 from pyspark.sql import DataFrame
 
@@ -12,6 +13,8 @@ from faas.transformer.etl import (ETLConfig, WTransformer, XTransformer,
 from faas.utils.dataframe import JoinableByRowID
 
 logger = logging.getLogger(__name__)
+
+TEMP_Y_COLUMN = '__TEMP_Y_COLUMN__'
 
 
 class ETLWrapperForLGBM:
@@ -74,22 +77,32 @@ class ETLWrapperForLGBM:
                    categorical_feature=categorical_feature, **p)
         return self
 
-    def predict(self, df: DataFrame) -> DataFrame:
+    def predict(self, df: DataFrame, output_column: Optional[str] = None) -> DataFrame:
         ok, msgs = self.check_df_prediction(df)
         if not ok:
             raise ValueError(msgs)
+
+        target_col = self.ytransformer.feature_columns[0]
+
+        # temporarily store the actual target in some other column
+        store_target_temporarily = output_column is not None and target_col in df.columns
+        if store_target_temporarily:
+            df = df.withColumn(TEMP_Y_COLUMN, F.col(target_col))
+
         # ensure rows are identifiable
         jb = JoinableByRowID(df)
-        # get the matrices
+        # get the matrices and predict
         Xpred = self.xtransformer.get_transformed_as_pdf(jb.df)
-        # predict
         ypred = self.m.predict(Xpred)
+
         # join them back to df
-        # TODO option to write predictions to new column instead of target
-        df_with_y = jb.join_by_row_id(
-            ypred,
-            # ytransformer has a single feature_column
-            column=self.ytransformer.feature_columns[0]
-        )
+        df_with_y = jb.join_by_row_id(ypred, column=target_col)
         df_pred = self.ytransformer.inverse_transform(df_with_y)
+
+        if output_column is not None:
+            df_pred = df_pred.withColumn(output_column, F.col(target_col))
+            if output_column != target_col and store_target_temporarily:
+                # then we can reinstate the original column
+                df_pred = df_pred.withColumn(target_col, F.col(TEMP_Y_COLUMN)).drop(TEMP_Y_COLUMN)
+
         return df_pred

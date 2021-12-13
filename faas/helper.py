@@ -31,7 +31,7 @@ def get_trained(
 
 
 def get_prediction(
-    conf: Config, df: DataFrame, m: ETLWrapperForLGBM
+    conf: Config, df: DataFrame, m: ETLWrapperForLGBM, output_column: Optional[str] = None
 ) -> Tuple[DataFrame, List[str]]:
     df = conf.conform_df_to_config(df)
 
@@ -43,5 +43,5 @@ def get_prediction(
     if len(unused_columns) > 0:
         msgs.append(f'Unused columns: {unused_columns}')
 
-    df_predict = m.predict(df)
+    df_predict = m.predict(df, output_column=output_column)
     return df_predict, msgs
