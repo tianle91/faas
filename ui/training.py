@@ -40,9 +40,12 @@ def run_training():
             st.session_state['model_key'] = model_key
             st.session_state['stored_model'] = stored_model
 
-            st.success(
-                'Model trained! Model key can be now be used for Prediction.')
-            st.markdown(f'Model key: `{model_key}`')
+            st.markdown(f'''
+            ## Trained model
 
-            st.header('Trained model')
-            vis_stored_model(stored_model=stored_model)
+            Please save the following key for prediction if you intend to reuse trained model.
+
+            Model key: `{model_key}`
+            ''')
+            with st.expander('Trained model'):
+                vis_stored_model(stored_model=stored_model)
