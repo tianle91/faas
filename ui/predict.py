@@ -61,6 +61,7 @@ def run_predict():
     config = stored_model.config
     st.header('Prediction')
     with st.spinner('Running predictions...'):
+        # TODO option to write predictions to new column instead of target
         df_predict, msgs = get_prediction(conf=config, df=df, m=stored_model.m)
 
     st.markdown('\n\n'.join([f'❌ {msg}' for msg in msgs]))

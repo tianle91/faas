@@ -85,6 +85,7 @@ class ETLWrapperForLGBM:
         # predict
         ypred = self.m.predict(Xpred)
         # join them back to df
+        # TODO option to write predictions to new column instead of target
         df_with_y = jb.join_by_row_id(
             ypred,
             # ytransformer has a single feature_column
