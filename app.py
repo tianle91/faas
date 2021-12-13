@@ -26,6 +26,7 @@ def update_state_with_new_upload(f):
     with st.spinner('Profiling dataframe...'):
         summary_pdf = df.describe().toPandas().set_index(keys='summary')
     st.session_state['summary_pdf'] = summary_pdf
+    st.success(f'Ingested {df.count()} rows')
 
 
 st.sidebar.title('FaaS 🌲')
