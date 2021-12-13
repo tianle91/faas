@@ -29,15 +29,12 @@ def plot_spatial(
     return fig
 
 
-def vis_ui_spatial(df: DataFrame, config: Config, st_container=None):
-    if st_container is None:
-        st_container = st
-
-    location_name_column = st_container.selectbox(
+def vis_ui_spatial(df: DataFrame, config: Config):
+    location_name_column = st.selectbox(
         'Location name column',
         options=[None] + sorted(df.columns)
     )
-    st_container.plotly_chart(plot_spatial(
+    st.plotly_chart(plot_spatial(
         df=df,
         config=config,
         location_name_column=location_name_column
