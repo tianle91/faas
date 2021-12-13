@@ -85,6 +85,8 @@ def run_predict():
                 f'used_columns_prediction: {config.used_columns_prediction}.'
             )
         else:
+            # TODO option to write predictions to new column instead of target
+            # TODO skip this and the join part later
             df_predict_renamed = (
                 df_predict
                 .withColumn(PREDICTION_COLUMN, F.col(config.target))
