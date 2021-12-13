@@ -1,5 +1,4 @@
-from typing import Optional
-
+import pandas as pd
 import plotly.express as px
 import streamlit as st
 from plotly.graph_objs._figure import Figure
@@ -7,7 +6,6 @@ from pyspark.sql import DataFrame
 
 from faas.config import Config
 from ui.predict import PREDICTION_COLUMN
-import pandas as pd
 
 
 def plot_evaluate_iid(df_evaluation: DataFrame, config: Config) -> Figure:
