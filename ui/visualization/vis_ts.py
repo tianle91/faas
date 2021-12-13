@@ -23,12 +23,9 @@ def plot_ts(
     return fig
 
 
-def vis_ui_ts(df: DataFrame, config: Config, st_container=None):
-    if st_container is None:
-        st_container = st
-
-    color_feature = st_container.selectbox(
+def vis_ui_ts(df: DataFrame, config: Config):
+    color_feature = st.selectbox(
         label='Color Feature',
         options=sorted(config.feature_columns)
     )
-    st_container.plotly_chart(plot_ts(df, config=config, color_feature=color_feature))
+    st.plotly_chart(plot_ts(df, config=config, color_feature=color_feature))

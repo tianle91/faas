@@ -40,11 +40,8 @@ def plot_iid(
     return fig
 
 
-def vis_ui_iid(df: DataFrame, config: Config, st_container=None):
-    if st_container is None:
-        st_container = st
-
-    horizontal_feature = st_container.selectbox(
+def vis_ui_iid(df: DataFrame, config: Config):
+    horizontal_feature = st.selectbox(
         'X-Axis Feature',
         options=sorted(config.feature_columns),
         key='vis_ui_iid_x_axis_feature'
@@ -53,9 +50,9 @@ def vis_ui_iid(df: DataFrame, config: Config, st_container=None):
     color_feature = None
     other_possible_features = sorted([c for c in config.feature_columns if c != horizontal_feature])
     if len(other_possible_features) > 0:
-        color_feature = st_container.selectbox('Color Feature', options=other_possible_features)
+        color_feature = st.selectbox('Color Feature', options=other_possible_features)
 
-    st_container.plotly_chart(plot_iid(
+    st.plotly_chart(plot_iid(
         df=df,
         config=config,
         x_axis_feature=horizontal_feature,
