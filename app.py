@@ -48,4 +48,4 @@ if model_key_input != '':
 # set up the pages
 page_selector = st.sidebar.radio(label='Pages', options=pages.keys())
 if page_selector is not None:
-    pages[page_selector](st.container())
+    pages[page_selector]()
