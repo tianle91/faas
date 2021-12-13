@@ -6,7 +6,6 @@ from plotly.graph_objs._figure import Figure
 from pyspark.sql import DataFrame
 
 from faas.config import Config
-from faas.utils.dataframe import filter_by_dict
 
 
 def plot_ts(
