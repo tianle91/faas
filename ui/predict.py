@@ -2,7 +2,7 @@ import logging
 
 import pyspark.sql.functions as F
 import streamlit as st
-from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import DataFrame
 
 from faas.config import Config
 from faas.helper import get_prediction
@@ -11,23 +11,12 @@ from faas.utils.dataframe import has_duplicates
 from ui.visualization.vis_df import highlight_columns
 from ui.visualization.vis_model import vis_stored_model
 
-
 logger = logging.getLogger(__name__)
-
-spark = (
-    SparkSession
-    .builder
-    .appName('ui_predict')
-    .config('spark.driver.maxResultsSize', '16g')
-    .getOrCreate()
-)
 
 PREDICTION_COLUMN = '__PREDICTION__'
 
 
-def preview_prediction(df_predict: DataFrame, config: Config, n: int = 100, st_container=None):
-    if st_container is None:
-        st_container = st
+def preview_prediction(df_predict: DataFrame, config: Config, n: int = 100):
 
     # nicely order the preview columns
     preview_columns = [config.target]
@@ -42,60 +31,55 @@ def preview_prediction(df_predict: DataFrame, config: Config, n: int = 100, st_c
             preview_columns.append(c)
 
     pdf_predict = df_predict.limit(n).toPandas()
-    st_container.markdown(
+    st.markdown(
         f'Preview for first {n}/{df_predict.count()} predictions '
         f'for {config.target}.'
     )
-    st_container.dataframe(highlight_columns(pdf_predict[preview_columns], [config.target]))
+    st.dataframe(highlight_columns(pdf_predict[preview_columns], [config.target]))
 
 
-def run_predict(st_container=None):
-    if st_container is None:
-        st_container = st
+def run_predict():
 
-    st_container.title('Predict')
+    st.title('Predict')
 
     df: DataFrame = st.session_state.get('df', None)
     stored_model: StoredModel = st.session_state.get('stored_model', None)
     if df is None or stored_model is None:
         if df is None:
-            st_container.error('Cannot predict without a dataframe. Please upload one.')
+            st.error('Cannot predict without a dataframe. Please upload one.')
         if stored_model is None:
-            st_container.error('Cannot predict without model. Please provide model key.')
+            st.error('Cannot predict without model. Please provide model key.')
         return None
 
-    st_container.header('Loaded model')
-    vis_stored_model(stored_model=stored_model, st_container=st_container)
+    with st.expander('Loaded model'):
+        vis_stored_model(stored_model=stored_model)
 
     if stored_model.num_calls_remaining <= 0:
-        st_container.error(f'Num calls remaining: {stored_model.num_calls_remaining}')
+        st.error(f'Num calls remaining: {stored_model.num_calls_remaining}')
         return None
 
     config = stored_model.config
-    st_container.header('Prediction')
-    if not st_container.checkbox('Yes', key='prediction_yes'):
-        return None
-
+    st.header('Prediction')
     with st.spinner('Running predictions...'):
         df_predict, msgs = get_prediction(conf=config, df=df, m=stored_model.m)
 
-    st_container.markdown('\n\n'.join([f'❌ {msg}' for msg in msgs]))
+    st.markdown('\n\n'.join([f'❌ {msg}' for msg in msgs]))
 
     if df_predict is None:
-        st_container.error('Unable to generate forecasts')
+        st.error('Unable to generate forecasts')
         return None
 
     # update num_calls_remaining
     stored_model = decrement_num_calls_remaining(key=st.session_state['model_key'])
     st.session_state['stored_model'] = stored_model
-    st_container.info(f'Num calls remaining: {stored_model.num_calls_remaining}')
+    st.info(f'Num calls remaining: {stored_model.num_calls_remaining}')
 
     # evaluation
     if config.target in df.columns:
-        st_container.success(
+        st.success(
             f'Detected target column: {config.target} in uploaded dataframe.')
         if has_duplicates(df.select(config.used_columns_prediction)):
-            st_container.error(
+            st.error(
                 'Cannot perform comparison as df has duplicates in '
                 f'used_columns_prediction: {config.used_columns_prediction}.'
             )
@@ -112,14 +96,14 @@ def run_predict(st_container=None):
             ).cache()
             df_evaluation.count()
             st.session_state['df_evaluation'] = df_evaluation
-            st_container.success('Evaluation possible!')
+            st.success('Evaluation possible!')
 
-    preview_prediction(df_predict=df_predict, config=config, st_container=st_container)
+    preview_prediction(df_predict=df_predict, config=config)
 
-    if st_container.button('Export predictions'):
-        with st_container.spinner('Exporting predictions...'):
+    if st.button('Export predictions'):
+        with st.spinner('Exporting predictions...'):
             pdf_predict = df_predict.toPandas()
-        st_container.download_button(
+        st.download_button(
             f'Download all {df_predict.count()} predictions',
             data=pdf_predict.to_csv(),
             file_name='prediction.csv'

@@ -6,7 +6,6 @@ from plotly.graph_objs._figure import Figure
 from pyspark.sql import DataFrame
 
 from faas.config import Config
-from faas.utils.dataframe import filter_by_dict
 
 SAMPLE_SIZE = int(1e6)
 
@@ -14,13 +13,9 @@ SAMPLE_SIZE = int(1e6)
 def plot_iid(
     df: DataFrame,
     config: Config,
-    group: Optional[dict] = None,
     x_axis_feature: Optional[str] = None,
     color_feature: Optional[str] = None,
 ) -> Figure:
-    if group is not None:
-        df = filter_by_dict(df=df, d=group)
-
     select_cols = [config.target]
     if x_axis_feature is not None:
         if x_axis_feature not in config.feature_columns:
@@ -45,11 +40,8 @@ def plot_iid(
     return fig
 
 
-def vis_ui_iid(df: DataFrame, config: Config, st_container=None):
-    if st_container is None:
-        st_container = st
-
-    horizontal_feature = st_container.selectbox(
+def vis_ui_iid(df: DataFrame, config: Config):
+    horizontal_feature = st.selectbox(
         'X-Axis Feature',
         options=sorted(config.feature_columns),
         key='vis_ui_iid_x_axis_feature'
@@ -58,20 +50,11 @@ def vis_ui_iid(df: DataFrame, config: Config, st_container=None):
     color_feature = None
     other_possible_features = sorted([c for c in config.feature_columns if c != horizontal_feature])
     if len(other_possible_features) > 0:
-        color_feature = st_container.selectbox('Color Feature', options=other_possible_features)
+        color_feature = st.selectbox('Color Feature', options=other_possible_features)
 
-    group = None
-    if config.group_columns is not None:
-        group = st_container.selectbox(
-            label='Plot group',
-            options=[None, ] + config.get_distinct_group_values(df=df),
-            key='vis_ui_iid_plot_group'
-        )
-
-    st_container.plotly_chart(plot_iid(
+    st.plotly_chart(plot_iid(
         df=df,
         config=config,
-        group=group,
         x_axis_feature=horizontal_feature,
         color_feature=color_feature
     ))

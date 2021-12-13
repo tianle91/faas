@@ -3,8 +3,8 @@ import plotly.express as px
 import streamlit as st
 from lightgbm import LGBMModel
 from plotly.graph_objs._figure import Figure
-from faas.storage import StoredModel
 
+from faas.storage import StoredModel
 from faas.transformer.lightgbm import ETLWrapperForLGBM
 
 
@@ -22,24 +22,17 @@ def vis_importance(m: LGBMModel) -> Figure:
     return fig
 
 
-def vis_lgbmwrapper(m: ETLWrapperForLGBM, st_container=None):
-    if st_container is None:
-        st_container = st
-
-    st_container.plotly_chart(vis_importance(m.m))
+def vis_lgbmwrapper(m: ETLWrapperForLGBM):
+    st.plotly_chart(vis_importance(m.m))
 
 
-def vis_stored_model(stored_model: StoredModel, st_container=None):
-    if st_container is None:
-        st_container = st
-
+def vis_stored_model(stored_model: StoredModel):
     config = stored_model.config
-
-    st_container.markdown(f'''
+    st.markdown(f'''
     Created on: `{stored_model.dt}`
 
     Target feature: `{config.target}`
 
     Feature columns: `{', '.join(config.feature_columns)}`
     ''')
-    vis_lgbmwrapper(stored_model.m, st_container=st_container)
+    vis_lgbmwrapper(stored_model.m)

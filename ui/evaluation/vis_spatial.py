@@ -1,3 +1,5 @@
+from typing import Optional
+
 import plotly.express as px
 import pyspark.sql.functions as F
 import streamlit as st
@@ -28,13 +30,15 @@ def numeric_error(
     )
 
 
-def plot_spatial(df_evaluation: DataFrame, config: Config) -> Figure:
-
+def plot_spatial(
+    df_evaluation: DataFrame,
+    config: Config,
+    location_name_column: Optional[str] = None
+) -> Figure:
     if config.target_is_categorical:
         f = categorical_error
     else:
         f = numeric_error
-
     df_evaluation = f(
         df=df_evaluation,
         actual_col=config.target,
@@ -43,27 +47,29 @@ def plot_spatial(df_evaluation: DataFrame, config: Config) -> Figure:
     )
 
     select_cols = config.used_columns_prediction + [config.target, PREDICTION_COLUMN, ERROR_COL]
-
     pdf = df_evaluation.select(*select_cols).toPandas()
     fig = px.scatter_geo(
         pdf,
         lat=config.latitude_column,
         lon=config.longitude_column,
         color=ERROR_COL,
+        hover_name=location_name_column,
         hover_data=[config.target, PREDICTION_COLUMN, ERROR_COL],
         fitbounds='locations'
     )
     return fig
 
 
-def vis_evaluate_spatial(df_evaluation: DataFrame, config: Config, st_container=None):
-    if st_container is None:
-        st_container = st
-
-    st_container.markdown('''
+def vis_evaluate_spatial(df_evaluation: DataFrame, config: Config):
+    st.markdown('''
     High error values indicate that predictions are far from actuals.
     ''')
-    st_container.plotly_chart(plot_spatial(
+    location_name_column = st.selectbox(
+        'Location name column',
+        options=[None] + sorted(df_evaluation.columns)
+    )
+    st.plotly_chart(plot_spatial(
         df_evaluation=df_evaluation,
         config=config,
+        location_name_column=location_name_column
     ))
