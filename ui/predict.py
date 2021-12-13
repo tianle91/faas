@@ -2,7 +2,7 @@ import logging
 
 import pyspark.sql.functions as F
 import streamlit as st
-from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import DataFrame
 
 from faas.config import Config
 from faas.helper import get_prediction
@@ -11,16 +11,7 @@ from faas.utils.dataframe import has_duplicates
 from ui.visualization.vis_df import highlight_columns
 from ui.visualization.vis_model import vis_stored_model
 
-
 logger = logging.getLogger(__name__)
-
-spark = (
-    SparkSession
-    .builder
-    .appName('ui_predict')
-    .config('spark.driver.maxResultsSize', '16g')
-    .getOrCreate()
-)
 
 PREDICTION_COLUMN = '__PREDICTION__'
 
