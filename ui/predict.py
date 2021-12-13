@@ -18,24 +18,30 @@ PREDICTION_COLUMN = '__PREDICTION__'
 
 def preview_prediction(df_predict: DataFrame, config: Config, n: int = 100):
 
-    # nicely order the preview columns
-    preview_columns = [config.target]
-    if config.date_column is not None:
-        preview_columns.append(config.date_column)
-    if config.has_spatial_columns:
-        preview_columns += [config.latitude_column, config.longitude_column]
-    if config.group_columns is not None:
-        preview_columns += config.group_columns
-    for c in config.feature_columns:
-        if c not in preview_columns:
-            preview_columns.append(c)
+    cols_to_highlight = [PREDICTION_COLUMN]
+    if config.target in df_predict.columns:
+        cols_to_highlight.append(config.target)
+    if not all([c in df_predict.columns for c in cols_to_highlight]):
+        raise ValueError(f'Cannot find all cols_to_highlight: {cols_to_highlight} in df.columns')
 
-    pdf_predict = df_predict.limit(n).toPandas()
+    # nicely order the preview columns
+    other_cols = []
+    if config.date_column is not None:
+        other_cols.append(config.date_column)
+    if config.has_spatial_columns:
+        other_cols += [config.latitude_column, config.longitude_column]
+    if config.group_columns is not None:
+        other_cols += config.group_columns
+    for c in config.feature_columns:
+        if c not in other_cols:
+            other_cols.append(c)
+
+    pdf_predict = df_predict.select(*cols_to_highlight, *other_cols).limit(n).toPandas()
     st.markdown(
         f'Preview for first {n}/{df_predict.count()} predictions '
         f'for {config.target}.'
     )
-    st.dataframe(highlight_columns(pdf_predict[preview_columns], [config.target]))
+    st.dataframe(highlight_columns(pdf_predict, cols_to_highlight))
 
 
 def run_predict():
@@ -62,7 +68,8 @@ def run_predict():
     st.header('Prediction')
     with st.spinner('Running predictions...'):
         # TODO option to write predictions to new column instead of target
-        df_predict, msgs = get_prediction(conf=config, df=df, m=stored_model.m)
+        df_predict, msgs = get_prediction(
+            conf=config, df=df, m=stored_model.m, output_column=PREDICTION_COLUMN)
 
     st.markdown('\n\n'.join([f'❌ {msg}' for msg in msgs]))
 
@@ -79,27 +86,8 @@ def run_predict():
     if config.target in df.columns:
         st.success(
             f'Detected target column: {config.target} in uploaded dataframe.')
-        if has_duplicates(df.select(config.used_columns_prediction)):
-            st.error(
-                'Cannot perform comparison as df has duplicates in '
-                f'used_columns_prediction: {config.used_columns_prediction}.'
-            )
-        else:
-            # TODO option to write predictions to new column instead of target
-            # TODO skip this and the join part later
-            df_predict_renamed = (
-                df_predict
-                .withColumn(PREDICTION_COLUMN, F.col(config.target))
-                .drop(config.target)
-            )
-            df_evaluation = df.join(
-                df_predict_renamed,
-                on=config.used_columns_prediction,
-                how='left'
-            ).cache()
-            df_evaluation.count()
-            st.session_state['df_evaluation'] = df_evaluation
-            st.success('Evaluation possible!')
+        st.session_state['df_evaluation'] = df_predict.cache()
+        st.success('Evaluation possible!')
 
     preview_prediction(df_predict=df_predict, config=config)
 
