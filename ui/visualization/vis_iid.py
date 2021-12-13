@@ -6,7 +6,6 @@ from plotly.graph_objs._figure import Figure
 from pyspark.sql import DataFrame
 
 from faas.config import Config
-from faas.utils.dataframe import filter_by_dict
 
 SAMPLE_SIZE = int(1e6)
 
@@ -14,13 +13,9 @@ SAMPLE_SIZE = int(1e6)
 def plot_iid(
     df: DataFrame,
     config: Config,
-    group: Optional[dict] = None,
     x_axis_feature: Optional[str] = None,
     color_feature: Optional[str] = None,
 ) -> Figure:
-    if group is not None:
-        df = filter_by_dict(df=df, d=group)
-
     select_cols = [config.target]
     if x_axis_feature is not None:
         if x_axis_feature not in config.feature_columns:
@@ -60,18 +55,9 @@ def vis_ui_iid(df: DataFrame, config: Config, st_container=None):
     if len(other_possible_features) > 0:
         color_feature = st_container.selectbox('Color Feature', options=other_possible_features)
 
-    group = None
-    if config.group_columns is not None:
-        group = st_container.selectbox(
-            label='Plot group',
-            options=[None, ] + config.get_distinct_group_values(df=df),
-            key='vis_ui_iid_plot_group'
-        )
-
     st_container.plotly_chart(plot_iid(
         df=df,
         config=config,
-        group=group,
         x_axis_feature=horizontal_feature,
         color_feature=color_feature
     ))

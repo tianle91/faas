@@ -3,8 +3,8 @@ import plotly.express as px
 import streamlit as st
 from lightgbm import LGBMModel
 from plotly.graph_objs._figure import Figure
-from faas.storage import StoredModel
 
+from faas.storage import StoredModel
 from faas.transformer.lightgbm import ETLWrapperForLGBM
 
 
