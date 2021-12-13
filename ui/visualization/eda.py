@@ -8,14 +8,10 @@ from ui.visualization.vis_spatial import vis_ui_spatial
 from ui.visualization.vis_ts import vis_ui_ts
 
 
-def run_eda(conf: Config, df: DataFrame, st_container=None):
-    if st_container is None:
-        st_container = st
-
-    st_container.header('Exploratory analysis')
+def run_eda(conf: Config, df: DataFrame):
     group = None
     if conf.group_columns is not None:
-        group = st_container.selectbox(
+        group = st.selectbox(
             label='Plot group',
             options=[None, ] + conf.get_distinct_group_values(df=df),
             key='vis_ui_iid_plot_group'
@@ -24,11 +20,11 @@ def run_eda(conf: Config, df: DataFrame, st_container=None):
     if group is not None:
         vis_df_group = filter_by_dict(df=df, d=group).cache()
 
-    st_container.markdown('## Scatter Plot')
-    vis_ui_iid(df=vis_df_group, config=conf, st_container=st_container)
+    st.markdown('## Scatter Plot')
+    vis_ui_iid(df=vis_df_group, config=conf)
     if conf.date_column is not None:
-        st_container.markdown('## Time Series Plot')
-        vis_ui_ts(df=vis_df_group, config=conf, st_container=st_container)
+        st.markdown('## Time Series Plot')
+        vis_ui_ts(df=vis_df_group, config=conf)
     if conf.has_spatial_columns:
-        st_container.markdown('## Spatial Plot')
-        vis_ui_spatial(df=vis_df_group, config=conf, st_container=st_container)
+        st.markdown('## Spatial Plot')
+        vis_ui_spatial(df=vis_df_group, config=conf)
