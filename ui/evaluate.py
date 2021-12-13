@@ -2,8 +2,8 @@ import streamlit as st
 from pyspark.sql import DataFrame
 
 from faas.storage import StoredModel
-from ui.evaluation.utils import validate_evaluation
 from ui.evaluation.eval import run_eval
+from ui.evaluation.utils import validate_evaluation
 from ui.predict import PREDICTION_COLUMN
 from ui.visualization.vis_df import highlight_columns
 from ui.visualization.vis_model import vis_stored_model
