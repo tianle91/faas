@@ -12,6 +12,7 @@ def get_spark():
         .builder
         .appName('ui')
         .config('spark.driver.maxResultsSize', '16g')
+        .config('spark.driver.memory', '16g')
         .getOrCreate()
     )
     return spark
