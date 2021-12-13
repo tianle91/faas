@@ -26,7 +26,6 @@ def update_state_with_new_upload(f):
     with st.spinner('Profiling dataframe...'):
         summary_pdf = df.describe().toPandas().set_index(keys='summary')
     st.session_state['summary_pdf'] = summary_pdf
-    st.success(f'Ingested {df.count()} rows')
 
 
 st.sidebar.title('FaaS 🌲')
@@ -35,6 +34,8 @@ st.sidebar.title('FaaS 🌲')
 f = st.sidebar.file_uploader('Upload dataframe', type=['csv', 'parquet'])
 if f is not None:
     update_state_with_new_upload(f)
+    df = st.session_state['df']
+    st.sidebar.success(f'Ingested {df.count()} rows')
 
 # populate states: model_key, stored_model
 model_key = st.session_state.get('model_key', '')
