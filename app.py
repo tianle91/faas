@@ -34,8 +34,9 @@ st.sidebar.title('FaaS 🌲')
 f = st.sidebar.file_uploader('Upload dataframe', type=['csv', 'parquet'])
 if f is not None:
     update_state_with_new_upload(f)
-    df = st.session_state['df']
-    st.sidebar.success(f'Ingested {df.count()} rows')
+    df = st.session_state.get('df', None)
+    if df is not None:
+        st.sidebar.success(f'Ingested {df.count()} rows')
 
 # populate states: model_key, stored_model
 model_key = st.session_state.get('model_key', '')
