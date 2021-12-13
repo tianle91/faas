@@ -56,14 +56,11 @@ def plot_spatial(df_evaluation: DataFrame, config: Config) -> Figure:
     return fig
 
 
-def vis_evaluate_spatial(df_evaluation: DataFrame, config: Config, st_container=None):
-    if st_container is None:
-        st_container = st
-
-    st_container.markdown('''
+def vis_evaluate_spatial(df_evaluation: DataFrame, config: Config):
+    st.markdown('''
     High error values indicate that predictions are far from actuals.
     ''')
-    st_container.plotly_chart(plot_spatial(
+    st.plotly_chart(plot_spatial(
         df_evaluation=df_evaluation,
         config=config,
     ))
