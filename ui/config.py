@@ -64,6 +64,8 @@ def get_config(df: DataFrame) -> Config:
     )
     if len(group_columns) == 0:
         group_columns = None
+    else:
+        group_columns = tuple(group_columns)
 
     used_columns = [target_column, date_column, latitude_column, longitude_column]
     possible_feature_columns = sorted([
@@ -100,7 +102,7 @@ def get_config(df: DataFrame) -> Config:
         date_column=date_column,
         latitude_column=latitude_column,
         longitude_column=longitude_column,
-        group_columns=tuple(group_columns),
+        group_columns=group_columns,
         feature_columns=tuple(actual_feature_columns)
     )
     return conf
