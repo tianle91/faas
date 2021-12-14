@@ -35,6 +35,9 @@ class OrdinalEncoder(BaseTransformer):
         self.categorical_column = categorical_column
         self.distincts: list = []
 
+    def __str__(self) -> str:
+        return f'OrdinalEncoder({self.categorical_column})'
+
     @property
     def num_classes(self):
         self.check_is_fitted()

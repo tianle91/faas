@@ -120,6 +120,12 @@ class PipelineTransformer(BaseTransformer):
     def inverse_transform(self, df: DataFrame) -> DataFrame:
         return self.pipeline.inverse_transform(df)
 
+    def __str__(self) -> str:
+        if isinstance(self.pipeline, list):
+            return '->'.join([str(step) for step in self.pipeline])
+        else:
+            return str(self.pipeline)
+
 
 class XTransformer(PipelineTransformer):
     def __init__(self, conf: FeatureConfig):
