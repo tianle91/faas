@@ -18,7 +18,10 @@ def test_LGBMWrapper_numeric_iid(spark: SparkSession, num_categorical: int):
     d = GenerateSynthetic(num_categorical=num_categorical, num_numeric=2)
     dict_of_lists = d.generate_iid()
     conf = ETLConfig(
-        target=TargetConfig(column=d.numeric_names[0]),
+        target=TargetConfig(
+            column=d.numeric_names[0],
+            is_categorical=False
+        ),
         feature=FeatureConfig(
             categorical_columns=d.categorical_names,
             numeric_columns=d.numeric_names[1:],
@@ -54,7 +57,10 @@ def test_LGBMWrapper_ts(spark: SparkSession):
     d = GenerateSynthetic(num_categorical=2, num_numeric=2)
     dict_of_lists = d.generate_ts(date_column='dt')
     conf = ETLConfig(
-        target=TargetConfig(column=d.numeric_names[0]),
+        target=TargetConfig(
+            column=d.numeric_names[0],
+            is_categorical=False
+        ),
         feature=FeatureConfig(
             categorical_columns=d.categorical_names,
             numeric_columns=d.numeric_names[1:],
