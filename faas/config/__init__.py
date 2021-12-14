@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
@@ -25,8 +25,8 @@ class Config:
     date_column: Optional[str] = None
     latitude_column: Optional[str] = None
     longitude_column: Optional[str] = None
-    group_columns: Optional[List[str]] = None
-    feature_columns: Optional[List[str]] = None
+    group_columns: Optional[Tuple[str]] = None
+    feature_columns: Optional[Tuple[str]] = None
 
     def validate(self):
         if self.feature_columns is None:
@@ -97,7 +97,7 @@ class Config:
 
     @property
     def used_columns_prediction(self) -> List[str]:
-        out = self.feature_columns.copy()
+        out = list(self.feature_columns)
         if self.date_column is not None:
             out.append(self.date_column)
         if self.latitude_column is not None and self.longitude_column:
