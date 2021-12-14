@@ -82,12 +82,16 @@ class ETLWrapperForLGBM:
         if not ok:
             raise ValueError(msgs)
 
-        target_col = self.ytransformer.feature_columns[0]
+        # manage output column and target column
+        target_col = self.config.target.column
+        if output_column is None:
+            output_column = target_col
 
-        # temporarily store the actual target in some other column
-        store_target_temporarily = output_column is not None and target_col in df.columns
+        # if target column already present and output column is not the same, we recover it later
+        store_target_temporarily = output_column != target_col and target_col in df.columns
         if store_target_temporarily:
-            df = df.withColumn(TEMP_Y_COLUMN, F.col(target_col))
+            # withColumnRenamed doesn't check that columns exist
+            df = df.withColumn(TEMP_Y_COLUMN, F.col(target_col)).drop(target_col)
 
         # ensure rows are identifiable
         jb = JoinableByRowID(df)
@@ -95,14 +99,15 @@ class ETLWrapperForLGBM:
         Xpred = self.xtransformer.get_transformed_as_pdf(jb.df)
         ypred = self.m.predict(Xpred)
 
-        # join them back to df
-        df_with_y = jb.join_by_row_id(ypred, column=target_col)
+        # join them back to df as the final step in ytransformer
+        y_transformed_target_col = self.ytransformer.feature_columns[0]
+        df_with_y = jb.join_by_row_id(ypred, column=y_transformed_target_col)
         df_pred = self.ytransformer.inverse_transform(df_with_y)
+        df_pred = df_pred.withColumn(output_column, F.col(target_col))
 
-        if output_column is not None:
-            df_pred = df_pred.withColumn(output_column, F.col(target_col))
-            if output_column != target_col and store_target_temporarily:
-                # then we can reinstate the original column
-                df_pred = df_pred.withColumn(target_col, F.col(TEMP_Y_COLUMN)).drop(TEMP_Y_COLUMN)
+        if store_target_temporarily:
+            # then we can reinstate the original column
+            # withColumnRenamed doesn't check that columns exist
+            df_pred = df_pred.withColumn(target_col, F.col(TEMP_Y_COLUMN)).drop(TEMP_Y_COLUMN)
 
         return df_pred
