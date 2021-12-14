@@ -17,10 +17,10 @@ PREDICTION_COLUMN = '__PREDICTION__'
 def preview_prediction(df_predict: DataFrame, config: Config, n: int = 100):
 
     cols_to_highlight = [PREDICTION_COLUMN]
+    if PREDICTION_COLUMN not in df_predict.columns:
+        raise ValueError(f'Cannot find {PREDICTION_COLUMN} in df.columns')
     if config.target in df_predict.columns:
         cols_to_highlight.append(config.target)
-    if not all([c in df_predict.columns for c in cols_to_highlight]):
-        raise ValueError(f'Cannot find all cols_to_highlight: {cols_to_highlight} in df.columns')
 
     # nicely order the preview columns
     other_cols = []
