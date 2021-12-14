@@ -1,3 +1,5 @@
+import pprint as pp
+
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -27,12 +29,17 @@ def vis_lgbmwrapper(m: ETLWrapperForLGBM):
 
 
 def vis_stored_model(stored_model: StoredModel):
-    config = stored_model.config
     st.markdown(f'''
     Created on: `{stored_model.dt}`
 
-    Target feature: `{config.target}`
+    Config:
+    ```python
+    {pp.pformat(stored_model.config.__dict__, compact=True)}
+    ```
 
-    Feature columns: `{', '.join(config.feature_columns)}`
+    ETLConfig:
+    ```python
+    {pp.pformat(stored_model.m.config.to_dict(), compact=True)}
+    ```
     ''')
     vis_lgbmwrapper(stored_model.m)
