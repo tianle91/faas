@@ -42,8 +42,8 @@ def test_LGBMWrapper_categorical_iid(spark: SparkSession, num_categorical: int =
             is_categorical=True
         ),
         feature=FeatureConfig(
-            categorical_columns=d.categorical_names,
-            numeric_columns=d.numeric_names[1:],
+            categorical_columns=d.categorical_names[1:],
+            numeric_columns=d.numeric_names,
         )
     )
     ewlgbm = ETLWrapperForLGBM(conf)
