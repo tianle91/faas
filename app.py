@@ -13,6 +13,7 @@ def get_spark():
         .appName('ui')
         .config('spark.driver.maxResultsSize', '16g')
         .config('spark.driver.memory', '16g')
+        .config('spark.sql.execution.arrow.pyspark.enabled', True)
         .getOrCreate()
     )
     return spark
