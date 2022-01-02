@@ -1,3 +1,5 @@
+import uuid
+
 import streamlit as st
 from pyspark.sql import SparkSession
 
@@ -7,10 +9,11 @@ from ui import pages
 
 
 def get_spark():
+    uuid_str = uuid.uuid4().hex
     spark = (
         SparkSession
         .builder
-        .appName('ui')
+        .appName(f'ui_{uuid_str}')
         .config('spark.driver.maxResultsSize', '16g')
         .config('spark.driver.memory', '16g')
         .config('spark.sql.execution.arrow.pyspark.enabled', True)
@@ -19,7 +22,7 @@ def get_spark():
     return spark
 
 
-@st.cache(max_entries=1)
+@st.cache(max_entries=1, ttl=3600)
 def update_state_with_new_upload(f):
     spark = get_spark()
     df = load_cached_df_from_st_uploaded(f=f, spark=spark)
