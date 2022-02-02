@@ -2,4 +2,4 @@ lightgbm==3.3.0
 streamlit==1.1.0
 sqlitedict==1.7.0
 plotly==5.4.0
-Tim-kit-Transformers==0.0.1.dev0
+Tim-kit-Transformers==0.0.1.dev1
